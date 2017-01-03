@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>设备状态信息</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="css/cssReset.css">
+	<script src="js/system_setting.js"></script>
+	<script src="js/jquery-1.12.0.js"></script>
+	<style>
+	#table-box {
+		width: 80%;
+		height: 70%;
+		position: relative;
+		box-sizing: border-box;
+		padding-bottom: 34px;
+		padding-top: 30px;
+		padding-left: 200px;
+	}
+
+	.table-content {
+		height: 100%;
+		overflow-y: auto;
+	}
+	.table-content > table {
+		table-layout: fixed;
+		width: 100%;
+		border-collapse: collapse;
+	}
+	.table-content tr {
+		height: 40px;
+		background-color: #e4eff5;
+	}
+
+	.table-content tr td {
+		width: 10%;
+		text-align: center;
+		color: #393c3d;
+		border: 1px solid #a2a1a1;
+	}
+
+	.table-content tr td+td {
+		width: 25%;
+		text-align: center;
+		color: #393c3d;
+	}
+
+	.table-content tr:nth-child(odd) {
+		//background-color: #e0e0e0;
+		background-color: #dde6ea;
+	}
+
+	.table-content tr:nth-child(even) {
+		background-color: #fff;
+	}
+	
+	.system_repair_box {
+		width: 80%;
+		height: 10%;
+		text-align: right;
+	}
+
+	#update_btn {
+		background-color: #e0e0e0;
+		color: #000000;
+		width: 120px;
+		height: 30px;
+		font-size: 12px;
+		margin-left:30px;
+	}
+	</style>
+</head>
+
+<body>
+	<div id="table-box">
+		<div class="table-content">
+			<table id="system_info_table">
+			</table>
+		</div>
+	</div>
+
+	<div class="system_repair_box">
+		<input type="button" id="update_btn" id="add_btn" value="更新固件" onclick="add_sms_contact()">
+    </div>
+
+    <script>
+        $(document).ready(function () {
+			load_system_info();
+        })
+    </script>
+</body>
+</html>

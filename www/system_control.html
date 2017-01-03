@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>系统参数设置</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="css/cssReset.css">
+	<style>
+	.system_param_box {
+		margin-top: 20px;
+	}
+
+	.system_param_box .item {
+		margin-top: 20px;
+	}
+	
+	.system_param_box .item > input[type="text"] {
+		height:30px;
+		width:200px;
+	}
+	
+	.horizental_split {
+		height: 2px;
+		width: 95%;
+		background: #e5e5e5;
+		overflow: hidden;
+		margin-top: 10px;
+	}
+
+	.fix_span {
+		display:inline-block;
+		width:60px;
+		margin-left: 30px;
+	}
+
+	.confirm_btn {
+		background-color: #117daf;
+		color: #fff;
+		width: 100px;
+		height: 30px;
+		font-size: 14px;
+		font-weight:bold;  
+		border: none;
+		margin-left:50px;
+	}
+
+	.repair_btn {
+		background-color: #e0e0e0;
+		color: #000000;
+		width: 130px;
+		height: 30px;
+		font-size: 14px;
+		margin-left:30px;
+	}
+	</style>
+</head>
+
+<body>
+	<div class="system_param_box">
+		<span style="width:150px;font-size:16px;">系统参数设置</span>
+		<div class="horizental_split"></div>
+		<div class="item">
+			<span class="fix_span">安装地点</span><input type="text" id="mac_addr">
+		</div>
+		<div class="item">
+			<span class="fix_span">设备编号</span><input type="text" id="mac_addr">
+			<input type="button" class="confirm_btn" id="add_btn" value="确定" onclick="add_sms_contact()">
+		</div>
+	</div>
+	<div class="system_param_box">
+		<span style="width:150px;font-size:16px;">系统控制</span>
+		<div class="horizental_split"></div>
+		<div class="item">
+			<input type="button" class="repair_btn" id="add_btn" value="重启设备" onclick="add_sms_contact()">
+			<input type="button" class="repair_btn" id="add_btn" value="恢复出厂设置" onclick="add_sms_contact()">
+		</div>
+	</div>
+</body>
+</html>

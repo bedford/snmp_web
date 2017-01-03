@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>外部接口设置</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="css/param_setting_io.css" type="text/css">
+	<link rel="stylesheet" href="css/cssReset.css" type="text/css">
+</head>
+<body>
+	<div class="uart_box">
+		<span style="width:150px;font-size:16px;">RS232串口设置</span>
+		<div class="horizental_split"></div>
+		<div class="uart_content_box">
+			<label>协议类型</label>
+			<select id="rs232_protocol_select">
+                <option>UPS001</option>
+                <option>UPS002</option>
+                <option>UPS003</option>
+                <option>UPS004</option>
+                <option>UPS005</option>
+            </select>
+			<label>波特率</label>
+            <select id="rs232_baudrate_select">
+                <option>2400</option>
+                <option>4800</option>
+                <option>9600</option>
+                <option>19200</option>
+                <option>38400</option>
+                <option>57600</option>
+                <option>115200</option>
+            </select>
+			<input type="checkbox"><label>是否启用</label>
+            <input type="button" class="confirm_btn" id="rs232_confirm_btn" value="确定" onclick="add_sms_contact()">
+		</div>
+	</div>
+		<div class="uart_box">
+		<span style="width:150px;font-size:16px;">RS485串口设置</span>
+		<div class="horizental_split"></div>
+		<div class="uart_content_box">
+			<label>协议类型</label>
+			<select id="rs485_protocol_select">
+                <option>UPS001</option>
+                <option>UPS002</option>
+                <option>UPS003</option>
+                <option>UPS004</option>
+                <option>UPS005</option>
+            </select>
+			<label>波特率</label>
+            <select id="rs485_baudrate_select">
+                <option>2400</option>
+                <option>4800</option>
+                <option>9600</option>
+                <option>19200</option>
+                <option>38400</option>
+                <option>57600</option>
+                <option>115200</option>
+            </select>
+			<input type="checkbox"><label>是否启用</label>
+            <input type="button" class="confirm_btn" id="rs485_confirm_btn" value="确定" onclick="add_sms_contact()">
+		</div>
+	</div>
+	<div class="do-status-box">
+		<span style="width:150px;font-size:16px;">继电器输出</span>
+		<div class="horizental_split"></div>
+        <div class="do-status">
+			<ul class="clear-fix">
+				<li class="do-status-on"><span>DO-1</span></li>
+				<li class="do-status-off"><span>DO-2</span></li>
+				<li class="do-status-on"><span>DO-3</span></li>
+				<li class="do-status-on"><span>DO-4</span></li>
+			</ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>SNMP设置</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+    <link rel="stylesheet" href="css/cssReset.css">
+	<script src="js/jquery-1.12.0.js"></script>
+    <script src="js/param_setting.js"></script>
+	<style>
+	.snmp_box {
+		margin-top: 20px;
+		width: 100%;
+		height: 40%;
+	}
+
+	.horizental_split {
+		height: 2px;
+		width: 95%;
+		background: #e5e5e5;
+		overflow: hidden;
+		margin-top: 10px;
+	}
+
+	.snmp_content_box {
+		margin-top: 10px;
+		margin-left: 30px;
+	}
+
+	#left_side {
+		float: left;
+		width: 8%;
+		hight: 100%;
+	}
+	#right_side {
+		float: right;
+		width: 92%;
+		hight: 100%;
+	}
+
+	.snmp_item {
+		height: 40px;
+	}
+
+	.snmp_item .fix_span {
+		display:inline-block;
+		width:50px;
+	}
+	
+	.snmp_item .fix_span > input[type="checkbox"] {
+		vertical-align:middle;
+		width: 25px;
+		height: 25px;
+	}
+
+	.snmp_item > input[type="text"] {
+		height: 30px;
+		width: 200px;
+	}
+	
+	.other_content_box {
+		margin-top: 20px;
+	}
+
+	.other_content_box .item {
+		margin-top: 20px;
+		margin-left: 70px;
+	}
+	
+	.confirm_btn {
+		background-color: #117daf;
+		color: #fff;
+		width: 100px;
+		height: 30px;
+		font-size: 14px;
+		font-weight:bold;  
+		border: none;
+		margin-left:50px;
+	}
+
+	#download_btn {
+		background-color: #e0e0e0;
+		color: #000000;
+		width: 100px;
+		height: 30px;
+		font-size: 12px;
+		font-weight:bold;
+		margin-left:185px;
+		margin-top:15px;
+	}
+	</style>
+</head>
+<body>
+	<div class="snmp_box">
+		<span style="width:150px;font-size:16px;">SNMP设置</span>
+		<div class="horizental_split"></div>
+		<ul class="snmp_content_box">
+			<div id="left_side">授权IP地址</div>
+			<div id="right_side">
+
+			</div>
+		</ul>
+	</div>
+	<div class="other_content_box">
+		<span style="width:150px;font-size:16px;">TRAP设置</span>
+		<div class="horizental_split"></div>
+		<div class="item">
+			<span>TRAP服务器IP:</span>
+			<input style="height:30px;width:200px" type="text" id="trap_server_ip">
+			<input type="button" class="confirm_btn" id="trap_btn" value="确定" onclick="add_sms_contact()">
+		</div>
+	</div>
+	<div class="other_content_box">
+		<span style="width:150px;font-size:16px;">MIB文件</span>
+		<div class="horizental_split"></div>
+		<input type="button" id="download_btn" value="下载MIB" onclick="add_sms_contact()">
+	</div>
+
+	<script>
+	    $(document).ready(function () {
+			load_snmp_param();
+        })
+	</script>
+</body>
+</html>

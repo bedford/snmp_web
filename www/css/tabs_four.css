@@ -1,0 +1,54 @@
+.content-wr {
+    height: 100%;
+    padding: 0 20px;
+}
+
+.page-iframe-box {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/*系统设置*/
+#tabs {
+    /*height: 100%;*/
+	height: 48px;
+    padding-bottom: 10px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+.tabs-items {
+    width: 100%;
+    margin-top: 10px;
+    font-size: 0;
+}
+.tabs-items li {
+    display: inline-block;
+    width: 24%;
+    height: 38px;
+    line-height: 38px;
+    background-color: #1d6e94;
+    text-align: center;
+    font-size: 14px;
+    color: #a8bfce;
+    cursor: pointer;
+}
+.tabs-items li+li {
+    margin-left: 5px;
+}
+.tabs-items .select {
+    background-color: #4faeda;
+    color: #fff;
+}
+.tabs-items li a {
+	text-decoration: none;
+	color: #fff;
+}
+.tabs-content {
+    height: 100%;
+    overflow: hidden;
+}
+.tabs-content > div {
+    height: 100%;
+    overflow: hidden;
+}

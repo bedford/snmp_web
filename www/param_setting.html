@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>history</title>
+    <link rel="stylesheet" href="css/cssReset.css">
+    <link rel="stylesheet" href="css/tabs_four.css">
+</head>
+<body>
+    <div class="content-wr">
+        <div id="tabs">
+            <ul class="tabs-items">
+                <li><a href="param_setting_network.html">网络设置</a></li>
+                <li><a href="param_setting_snmp.html">SNMP设置</a></li>
+                <li><a href="param_setting_io.html">外部接口设置</a></li>
+				<li><a href="param_setting_timestamp.html">系统时间设置</a></li>
+            </ul>
+        </div>
+		<div class="page-iframe-box">
+            <iframe id="content_iframe" src="" name="content_iframe" frameborder="0" width="100%" height="100%"></iframe>
+        </div>
+    </div>
+    <script src="js/jquery-1.12.0.js"></script>
+    <script src="js/tabs.js"></script>
+    <script>
+        $(document).ready(function () {
+            $( '#tabs' ).h_tab({
+                open : 'li:first-child' //如果不配置此项，默认打开第一项；
+            });
+        })
+    </script>
+</body>
+</html>

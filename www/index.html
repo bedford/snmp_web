@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SNMP管理器</title>
+    <link rel="stylesheet" href="css/cssReset.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="wrapper">
+        <ul class="nav-side">
+            <li><a class="state-item" href="status_monitor.html"><span>状态监测</span></a></li>
+            <li><a class="history-item" href="query_history.html"><span>历史记录</span></a></li>
+            <li><a class="warning-item" href="alarm_contact_manage.html"><span>报警设置</span></a></li>
+            <li><a class="parameter-item" href="param_setting.html"><span>参数设置</span></a></li>
+            <li><a class="settings-item" href="system_settings.html"><span>系统设置</span></a></li>
+        </ul>
+        <div class="content">
+            <div class="header">
+                <h1>snmp适配器</h1>
+                <ul class="user-box">
+                    <li class="login">登录</li>
+                    <li class="exit">退出</li>
+                </ul>
+            </div>
+            <div class="page-iframe-box">
+                <iframe id="main" src="" frameborder="0" width="100%" height="100%"></iframe>
+            </div>
+        </div>
+    </div>
+    <script src="js/jquery-1.12.0.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+        $(document).ready(function () {
+            $( '.nav-side' ).h_nav( {
+                open : ".state-item" //如果不配置此项，默认打开第一项；
+            } );
+        })
+    </script>
+</body>
+</html>

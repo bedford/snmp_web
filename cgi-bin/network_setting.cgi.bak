@@ -1,0 +1,11 @@
+#! /bin/sh
+
+echo "Content-Type: test/html"
+echo ""
+echo ""
+echo "Hello World"
+echo "<>"
+echo "the time is :"
+echo "<>"
+date
+

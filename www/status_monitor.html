@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>status monitor</title>
+    <link rel="stylesheet" href="css/cssReset.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="content-wr">
+        <div class="data-status-box">
+            <ol class="breadcrumb">
+                <li>串口数据状态：</li>
+                <li><a href="">全部</a></li>
+                <li><a href="">设备1</a></li>
+                <li class="active">设备2</li>
+            </ol>
+            <div id="table-box">
+                <ul class="table-title">
+                    <li>设备编号</li>
+                    <li>设备名称</li>
+                    <li>参数名称</li>
+                    <li>参数值</li>
+                    <li>报警值</li>
+                    <li>状态</li>
+                </ul>
+                <div class="table-content">
+                    <table>
+                        <tr>
+                            <td>20160820010001</td>
+                            <td>UPS</td>
+                            <td>输入电压</td>
+                            <td>221.3V</td>
+                            <td>235.0</td>
+                            <td>正常</td>
+                        </tr>
+                        <tr class="warning">
+                            <td>20160820010001</td>
+                            <td>UPS</td>
+                            <td>温度</td>
+                            <td>55℃</td>
+                            <td>50</td>
+                            <td>报警</td>
+                        </tr>
+                        <tr>
+                            <td>20160820010001</td>
+                            <td>UPS</td>
+                            <td>输入电压</td>
+                            <td>221.3V</td>
+                            <td>235.0</td>
+                            <td>正常</td>
+                        </tr>
+                        <tr>
+                            <td>20160820010001</td>
+                            <td>UPS</td>
+                            <td>温度</td>
+                            <td>55℃</td>
+                            <td>50</td>
+                            <td>报警</td>
+                        </tr>
+                        <tr>
+                            <td>20160820010001</td>
+                            <td>UPS</td>
+                            <td>输入电压</td>
+                            <td>221.3V</td>
+                            <td>235.0</td>
+                            <td>正常</td>
+                        </tr>
+                        <tr>
+                            <td>20160820010001</td>
+                            <td>UPS</td>
+                            <td>温度</td>
+                            <td>55℃</td>
+                            <td>50</td>
+                            <td>报警</td>
+                        </tr>
+                        <tr>
+                            <td>20160820010001</td>
+                            <td>UPS</td>
+                            <td>输入电压</td>
+                            <td>221.3V</td>
+                            <td>235.0</td>
+                            <td>正常</td>
+                        </tr>
+                        <tr>
+                            <td>20160820010001</td>
+                            <td>UPS</td>
+                            <td>温度</td>
+                            <td>55℃</td>
+                            <td>50</td>
+                            <td>报警</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="dodi-status-box">
+            <div class="do-status">
+                <h3>DO状态</h3>
+                <ul class="clear-fix">
+                    <li class="do-status-on"><span>IO输出1</span></li>
+                    <li class="do-status-off"><span>IO输出1</span></li>
+                    <li class="do-status-on"><span>IO输出1</span></li>
+                    <li class="do-status-on"><span>IO输出1</span></li>
+                </ul>
+            </div>
+            <div class="di-status">
+                <h3>DI状态</h3>
+                <ul class="clear-fix">
+                    <li class="di-status-on"><span>IO输入1</span></li>
+                    <li class="di-status-off"><span>IO输入1</span></li>
+                    <li class="di-status-on"><span>IO输入1</span></li>
+                    <li class="di-status-on"><span>IO输入1</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="js/jquery-1.12.0.js"></script>
+    <script>
+        $(document).ready(function () {
+            //当table-content出现滚动条时，设置table-title的padding-right为17px
+            if ($(".table-content table").height() > $(".table-content").height()){
+                $(".table-title").css("padding-right", "17px");
+            }
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+.uart_box {
+	margin-top: 20px;
+	width: 100%;
+	height: 15%;
+}
+
+.horizental_split {
+	height: 2px;
+	width: 95%;
+	background: #e5e5e5;
+	overflow: hidden;
+	margin-top: 10px;
+}
+
+.uart_content_box {
+	height: 40px;
+	margin-top: 15px;
+	margin-left: 30px;
+}
+
+.uart_content_box > label {
+	width: 80px;
+	height: 30px;
+	margin-left: 5px;
+	vertical-align: middle;
+}
+
+.uart_content_box > select {
+	width: 160px;
+	height: 30px;
+	margin-left: 5px;
+	margin-right: 10px;
+}
+
+.uart_content_box > input[type="checkbox"] {
+	width: 25px;
+	height: 25px;
+	vertical-align: middle;
+	margin-left: 40px;
+}
+
+.confirm_btn {
+		background-color: #117daf;
+		color: #fff;
+		width: 100px;
+		height: 30px;
+		font-size: 14px;
+		font-weight:bold;  
+		border: none;
+		margin-left:80px;
+	}
+
+.do-status-box {
+    height: 40%;
+	margin-top: 20px;
+}
+.do-status {
+    width: 49%;
+    height: 100%;
+    box-sizing: border-box;
+    padding-bottom: 10px;
+	padding-top: 10px;
+    float: left;
+}
+
+.do-status li {
+    width: 25%;
+    height: 100%;
+    float: left;
+    box-sizing: border-box;
+    padding-top: 134px;
+}
+.do-status li span{
+    display: block;
+    width: 80px;
+    height: 24px;
+    margin: 0 auto;
+    border-radius: 20px;
+    background-color: #d7d7d7;
+    text-align: center;
+    color: #555;
+}
+.do-status-off {
+    background: url("../images/do_off.png") center 30px no-repeat;
+}
+.do-status-on {
+    background: url("../images/do_on.png") center 30px no-repeat;
+}
