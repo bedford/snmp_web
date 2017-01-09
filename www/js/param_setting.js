@@ -9,15 +9,19 @@ function display_network_param(network_param) {
 }
 
 function init_network_param() {
-	var network_param = {
-		"mac_addr" : "F0:FF:04:00:5D:F4",
-		"ip_addr" : "192.168.0.100",
-		"gateway" : "192.168.0.1",
-		"netmask" : "255.255.255.0",
-		"master_dns" : "8.8.8.8",
-		"slave_dns" : ""
-	};
-	display_network_param(network_param);
+    var json = new Object();
+    json.msg_type = 0;
+    json.cmd_type = 0;
+    var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    display_network_param(msg);
+                },
+            });
 }
 
 /* 系统时间设置相关js */
@@ -33,12 +37,8 @@ function update_pc_time() {
 
 var interval_handle;
 
-function init_timestamp() {
-	var ntp_info = {
-		"ntp_server_ip" : "192.168.0.100",
-		"ntp_interval" : "60"
-	};
-
+function display_ntp_param(ntp_info)
+{
 	$('#ntp_server').val(ntp_info.ntp_server_ip);
 	$('#ntp_interval').val(ntp_info.ntp_interval);
 	update_pc_time();
@@ -46,54 +46,65 @@ function init_timestamp() {
 	interval_handle = setInterval("update_pc_time()", 1000);
 }
 
+function init_timestamp() {
+    var json = new Object();
+    json.msg_type = 0;
+    json.cmd_type = 3;
+    var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    display_ntp_param(msg);
+                },
+            });
+}
+
 function checkLeave() {
 	clearInterval(interval_handle);
 }
 
 /* SNMP设置相关js */
-function load_snmp_param() {
-	var snmp_param = {
-		"snmp_unio" : "public",
-		"trap_server_ip" : "192.168.0.100",
-		"authority_ip" : [
-			{
-				"valid_flag" : "1",
-				"ip" : "192.168.0.200"
-			},
-			{
-				"valid_flag" : "1",
-				"ip":"192.168.0.201"
-			},
-			{
-				"valid_flag" : "0",
-				"ip" : "192.168.0.202"
-			},
-			{
-				"valid_flag" : "0",
-				"ip":"192.168.0.203"
-			},
-		]
-	};
-
-	$('#trap_server_ip').val(snmp_param.trap_server_ip);
-	$('#snmp_unio').val(snmp_param.snmp_unio);
-
+function display_snmp_param(snmp_param) {
 	var html = "";
 	for (var i in snmp_param.authority_ip) {
 		if (snmp_param.authority_ip[i].valid_flag == "1") {
-			html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" onchange="update(\''+i+'\')" checked="checked"></span>';
+			html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" onchange="update(\''
+                +i+'\')" checked="checked"></span>';
 		} else {
-			html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" onchange="update(\''+i+'\')"></span>';
+			html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" onchange="update(\''
+                +i+'\')"></span>';
 		}
 		html += '<input type="text" id="authority_ip_'+i+'" value="'+snmp_param.authority_ip[i].ip+'"></li>';
 	}
-	html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_unio">';
-	html += '<input type="button" class="confirm_btn" id="snmp_unio_btn" value="确定" onclick="add_sms_contact()"></li>';
+	html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_union">';
+	html += '<input type="button" class="confirm_btn" id="snmp_union_btn" value="确定" onclick="add_sms_contact()"></li>';
 	$('#right_side').append(html);
+
+	$('#trap_server_ip').val(snmp_param.trap_server_ip);
+	$('#snmp_union').val(snmp_param.snmp_union);
+}
+
+function load_snmp_param() {
+    var json = new Object();
+    json.msg_type = 0;
+    json.cmd_type = 1;
+    var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    display_snmp_param(msg);
+                },
+            });
 }
 
 function update(i) {
-	
 	var input_name = "\'#authority_ip_" + i + "\'";
 	//$(input_name).attributes
 }
+

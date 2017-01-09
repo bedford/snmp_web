@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "cJSON.h"
 
@@ -20,8 +21,59 @@ static int get_network_param(req_buf_t *req_buf)
     cJSON_AddStringToObject(root, "ip_addr", "192.168.0.100");
     cJSON_AddStringToObject(root, "gateway", "192.168.0.1");
     cJSON_AddStringToObject(root, "netmask", "255.255.255.0");
-    cJSON_AddStringToObject(root, "master_dns", "8.8.8.8");
-    cJSON_AddStringToObject(root, "slave_dns", "");
+    cJSON_AddStringToObject(root, "master_dns", "192.168.8.8");
+    cJSON_AddStringToObject(root, "slave_dns", "8.8.8.8");
+    req_buf->fb_buf = cJSON_Print(root);
+    cJSON_Delete(root);
+
+    return 0;
+}
+
+static int get_snmp_param(req_buf_t *req_buf)
+{
+    cJSON *root;
+    cJSON *sub_dir;
+    cJSON *child;
+    root = cJSON_CreateObject();
+
+    cJSON_AddStringToObject(root, "snmp_union", "public");
+    cJSON_AddStringToObject(root, "trap_server_ip", "192.168.0.100");
+    sub_dir = cJSON_CreateArray();
+    cJSON_AddItemToObject(root, "authority_ip", sub_dir);
+
+    child = cJSON_CreateObject();
+    cJSON_AddStringToObject(child, "valid_flag", "1");
+    cJSON_AddStringToObject(child, "ip", "192.168.0.200");
+    cJSON_AddItemToArray(sub_dir, child);
+
+    child = cJSON_CreateObject();
+    cJSON_AddStringToObject(child, "valid_flag", "1");
+    cJSON_AddStringToObject(child, "ip", "192.168.0.201");
+    cJSON_AddItemToArray(sub_dir, child);
+
+    child = cJSON_CreateObject();
+    cJSON_AddStringToObject(child, "valid_flag", "0");
+    cJSON_AddStringToObject(child, "ip", "192.168.0.202");
+    cJSON_AddItemToArray(sub_dir, child);
+
+    child = cJSON_CreateObject();
+    cJSON_AddStringToObject(child, "valid_flag", "0");
+    cJSON_AddStringToObject(child, "ip", "192.168.0.208");
+    cJSON_AddItemToArray(sub_dir, child);
+
+    req_buf->fb_buf = cJSON_Print(root);
+    cJSON_Delete(root);
+
+    return 0;
+}
+
+static int get_ntp_param(req_buf_t *req_buf)
+{
+    cJSON *root;
+    root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "ntp_server_ip", "192.168.0.201");
+    cJSON_AddStringToObject(root, "ntp_interval", "60");
+
     req_buf->fb_buf = cJSON_Print(root);
     cJSON_Delete(root);
 
@@ -38,11 +90,15 @@ static int parse_get_param(cJSON *root, req_buf_t *req_buf)
         ret = 0;
         break;
     case 1:
+        get_snmp_param(req_buf);
         ret = 0;
         break;
     case 2:
         ret = 0;
         break;
+    case 3:
+        get_ntp_param(req_buf);
+        ret = 0;
     default:
         break;
     }
@@ -60,7 +116,7 @@ static int parse_query_data(cJSON *root, req_buf_t *req_buf)
     return 0;
 }
 
-staitc int parse_system_ctl(cJSON *root, req_buf_t *req_buf)
+static int parse_system_ctl(cJSON *root, req_buf_t *req_buf)
 {
     return 0;
 }
@@ -79,7 +135,7 @@ static int parse_request(req_buf_t *req_buf)
         printf("request method: GET, query_string %s\n", query_string);
         query_string = NULL;
     } else if (strcmp(req_method, "POST") == 0) {
-        char env_string = getenv("CONTENT_LENGTH");
+        char *env_string = getenv("CONTENT_LENGTH");
         if (env_string != NULL) {
             len = atoi(env_string);
             if (len >= req_buf->max_len) {
@@ -95,6 +151,7 @@ static int parse_request(req_buf_t *req_buf)
 
             ret = 0;
         }
+        env_string = NULL;
     }
 
     return ret;
@@ -107,8 +164,8 @@ int main(void)
     memset(&request, 0, sizeof(req_buf_t));
     request.max_len = 512 * 1024;
     request.buf     = (char *)calloc(1, request.max_len);
-    if (parse_request(&req_buf) == 0) {
-        cJSON *root = cJSON_Parse(req_buf.buf);
+    if (parse_request(&request) == 0) {
+        cJSON *root = cJSON_Parse(request.buf);
         request.fb_buf = NULL;
         //request.fb_buf = (char *)calloc(1, RET_BUF_MAX);
         int msg_type = cJSON_GetObjectItem(root, "msg_type")->valueint;
@@ -130,6 +187,7 @@ int main(void)
         }
 
         if (request.fb_buf) {
+            fprintf(stdout, "Content-type: text/html\n\n");
             fprintf(stdout, "%s", request.fb_buf);
             free(request.fb_buf);
             request.fb_buf = NULL;
