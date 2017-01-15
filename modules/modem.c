@@ -88,8 +88,7 @@ static int at_cmd_implement(priv_info_t *priv, const char *cmd, unsigned int cmd
 
     char tmp[256] = {0};
     int i = 0;
-    sleep(1);
-    int ret = uart->read(uart, tmp, 256);
+    int ret = uart->read(uart, tmp, 256, 2);
 
     ret = -1;
     switch (cmd_index) {

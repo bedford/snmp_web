@@ -10,8 +10,8 @@
 #include "uart.h"
 
 static char *device_name[] = {
-    //"/dev/ttySAC0",
-    "/dev/ttyUSB0",
+    //"/dev/ttyUSB0",
+    "/dev/ttySAC0",
     "/dev/ttySAC1",
     "/dev/ttySAC2",
     "/dev/ttySAC3",
@@ -156,7 +156,7 @@ static int safe_read(int fd, char *buf, int len)
     return (len - left);
 }
 
-static int uart_read(uart_t *thiz, char *buf, int len)
+static int uart_read(uart_t *thiz, char *buf, int len, int timeout)
 {
     if (thiz == NULL) {
         return -1;
@@ -170,7 +170,7 @@ static int uart_read(uart_t *thiz, char *buf, int len)
     FD_ZERO(&read_fds);
     FD_SET(priv->fd, &read_fds);
 
-    time.tv_sec     = 2;
+    time.tv_sec     = timeout;
     time.tv_usec    = 0;
 
     int ret = select(priv->fd + 1, &read_fds, NULL, NULL, &time);
