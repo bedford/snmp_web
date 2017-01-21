@@ -25,24 +25,30 @@ typedef struct
 
 #define AT_CMD_TAILER_LEN   (1)
 
+/**
+ * [utf8_to_unicode utf8转成unicode]
+ * @param  utf8    [utf8格式字符串地址]
+ * @param  unicode [返回的unicode值]
+ * @return         [该字符占的字节数，以便对整个字符串进行移位处理]
+ */
 static int utf8_to_unicode(const char *utf8, unsigned int *unicode)
 {
     int ret = 0;
-    *unicode = 0;     
-    if ((*utf8 & 0x80) == 0x00) {          
-        *unicode = *utf8;              
-        ret = 1;  
-    } else if ((*utf8 & 0xE0) == 0xC0) {   
+    *unicode = 0;
+    if ((*utf8 & 0x80) == 0x00) {
+        *unicode = *utf8;
+        ret = 1;
+    } else if ((*utf8 & 0xE0) == 0xC0) {
         *unicode += (utf8[0] & 0x1F) << 6;
-        *unicode += (utf8[1] & 0x3F);  
-        ret = 2;  
-    } else if ((*utf8 & 0xF0) == 0xE0) {   
+        *unicode += (utf8[1] & 0x3F);
+        ret = 2;
+    } else if ((*utf8 & 0xF0) == 0xE0) {
         *unicode += (utf8[0] & 0x0F) << 12;
         *unicode += (utf8[1] & 0x3F) << 6;
-        *unicode += (utf8[2] & 0x3F);  
-        ret = 3;  
-    } else {          
-        ret = -1; 
+        *unicode += (utf8[2] & 0x3F);
+        ret = 3;
+    } else {
+        ret = -1;
     }
 
     return ret;
@@ -68,6 +74,10 @@ static void utf8_string_convert(char *utf8_string, char *dst)
     strcpy(dst, buf);
 }
 
+/**
+ * [send_tailer 发送AT指令结束符0x0D]
+ * @param uart [串口操作句柄]
+ */
 static inline void send_tailer(uart_t *uart)
 {
     char tailer[AT_CMD_TAILER_LEN] = {0x0D};
