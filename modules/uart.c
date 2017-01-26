@@ -22,6 +22,10 @@ typedef struct {
     uart_param_t    param;
 } priv_info_t;
 
+/**
+ * [set_uart_param 串口初始化时，设置相应的参数]
+ * @param priv [实例私有成员数据]
+ */
 static void set_uart_param(priv_info_t *priv)
 {
     struct termios options;
@@ -38,9 +42,6 @@ static void set_uart_param(priv_info_t *priv)
     /* 设置波特率 */
     speed_t speed;
     switch (priv->param.baud) {
-    case UART_BAUD_300:
-        speed = B300;
-        break;
     case UART_BAUD_2400:
         speed = B2400;
         break;
@@ -118,6 +119,11 @@ static void set_uart_param(priv_info_t *priv)
     tcsetattr(priv->fd, TCSANOW, &options);
 }
 
+/**
+ * [uart_open 打开串口设备文件]
+ * @param  thiz [实例本身]
+ * @return      [是否打开成功]
+ */
 static int uart_open(uart_t *thiz)
 {
     priv_info_t *priv = (priv_info_t *)thiz->priv;
@@ -156,6 +162,14 @@ static int safe_read(int fd, char *buf, int len)
     return (len - left);
 }
 
+/**
+ * [uart_read 读串口数据]
+ * @param  thiz    [实例本身]
+ * @param  buf     [读数据缓存]
+ * @param  len     [期望读取数据长度]
+ * @param  timeout [超时时间]
+ * @return         [是否读取成功或读到的数据长度]
+ */
 static int uart_read(uart_t *thiz, char *buf, int len, int timeout)
 {
     if (thiz == NULL) {
@@ -189,6 +203,13 @@ static int uart_read(uart_t *thiz, char *buf, int len, int timeout)
     return ret;
 }
 
+/**
+ * [uart_write 往串口中写数据]
+ * @param  thiz [实例本身]
+ * @param  buf  [写数据缓存]
+ * @param  len  [数据长度]
+ * @return      [是否写入成功]
+ */
 static int uart_write(uart_t *thiz, const char *buf, int len)
 {
     int bytes = 0;
@@ -199,6 +220,10 @@ static int uart_write(uart_t *thiz, const char *buf, int len)
     return bytes;
 }
 
+/**
+ * [uart_destroy 释放实例内存并关闭串口设备文件]
+ * @param thiz [实例本身]
+ */
 static void uart_destroy(uart_t *thiz)
 {
     if (thiz != NULL) {

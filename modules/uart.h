@@ -1,28 +1,36 @@
 #ifndef _UART_H_
 #define _UART_H_
 
+/**
+ * 串口波特率枚举
+ */
 typedef enum
 {
-    UART_BAUD_300   = 0,
-    UART_BAUD_2400,
+    UART_BAUD_2400 = 0,
     UART_BAUD_4800,
     UART_BAUD_9600,
     UART_BAUD_19200,
     UART_BAUD_38400,
     UART_BAUD_57600,
     UART_BAUD_115200,
-    UART_BAUD_MAX 
+    UART_BAUD_MAX
 } uart_baud_t;
 
+/**
+ * 串口数据位枚举
+ */
 typedef enum
 {
     UART_BITS_5 = 0,
     UART_BITS_6,
     UART_BITS_7,
     UART_BITS_8,
-    UART_BITS_MAX    
+    UART_BITS_MAX
 } uart_data_bits_t;
 
+/**
+ * 串口停止位枚举
+ */
 typedef enum
 {
     UART_STOP_1 = 0,
@@ -30,6 +38,9 @@ typedef enum
     UART_STOP_MAX
 } uart_stop_bits_t;
 
+/**
+ * 串口校验方式枚举
+ */
 typedef enum
 {
     UART_PARITY_NONE = 0,
@@ -38,6 +49,9 @@ typedef enum
     UART_PARITY_MAX
 } uart_parity_t;
 
+/**
+ * 串口设置参数
+ */
 typedef struct
 {
     unsigned int        device_index;
@@ -54,6 +68,9 @@ typedef int (*_uart_read)(uart_t *thiz, char *buf, int len, int timeout);
 typedef int (*_uart_write)(uart_t *thiz, const char *buf, int len);
 typedef void (*_uart_destroy)(uart_t *thiz);
 
+/**
+ * 串口类定义
+ */
 struct _uart
 {
     _uart_open      open;
@@ -64,6 +81,11 @@ struct _uart
     char            priv[1];
 };
 
+/**
+ * [uart_create 创建一个串口实例]
+ * @param  param [串口初始化参数]
+ * @return       [是否创建成功]
+ */
 uart_t *uart_create(uart_param_t *param);
 
 #endif
