@@ -45,7 +45,7 @@
 		width: 100px;
 		height: 30px;
 		font-size: 14px;
-		font-weight:bold;  
+		font-weight:bold;
 		border: none;
 		margin-left:80px;
 	}
@@ -70,7 +70,7 @@
     box-sizing: border-box;
     padding-top: 134px;
 }
-.do-status li span{
+.do-status li span {
     display: block;
     width: 80px;
     height: 24px;
@@ -80,9 +80,11 @@
     text-align: center;
     color: #555;
 }
-.do-status-off {
-    background: url("../images/do_off.png") center 30px no-repeat;
+
+.do-status .do-status-off {
+	background: url("../images/do_off.png") center 30px no-repeat;
 }
-.do-status-on {
-    background: url("../images/do_on.png") center 30px no-repeat;
+
+.do-status .do-status-on {
+	background: url("../images/do_on.png") center 30px no-repeat;
 }
