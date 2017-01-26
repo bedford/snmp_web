@@ -14,6 +14,27 @@ typedef struct {
     int     fb_len;     /* 返回值长度 */
 } req_buf_t;
 
+typedef struct {
+    int     value;
+    char    *text;
+} map_t;
+
+map_t uart_param[] = {
+    {0,     "2400"},
+    {1,     "4800"},
+    {2,     "9600"},
+    {3,     "19200"},
+    {4,     "38400"},
+    {5,     "57600"},
+    {6,     "115200"}
+};
+
+map_t protocol_param[] = {
+    {100,   "UPS100"},
+    {101,   "UPS101"},
+    {200,   "UPS200"}
+};
+
 static int get_network_param(req_buf_t *req_buf, dictionary *dic)
 {
     cJSON *root;
@@ -37,8 +58,10 @@ static int get_snmp_param(req_buf_t *req_buf, dictionary *dic)
     cJSON *child;
     root = cJSON_CreateObject();
 
-    cJSON_AddStringToObject(root, "snmp_union", iniparser_getstring(dic, "SNMP:snmp_union", "public"));
-    cJSON_AddStringToObject(root, "trap_server_ip", iniparser_getstring(dic, "SNMP:trap_server_ip", "192.168.0.100"));
+    cJSON_AddStringToObject(root, "snmp_union",
+            iniparser_getstring(dic, "SNMP:snmp_union", "public"));
+    cJSON_AddStringToObject(root, "trap_server_ip",
+            iniparser_getstring(dic, "SNMP:trap_server_ip", "192.168.0.100"));
     sub_dir = cJSON_CreateArray();
     cJSON_AddItemToObject(root, "authority_ip", sub_dir);
 
@@ -47,11 +70,68 @@ static int get_snmp_param(req_buf_t *req_buf, dictionary *dic)
 	for (i = 0; i < 4; i++) {
     	child = cJSON_CreateObject();
 		sprintf(item_name, "SNMP:valid_flag_%d", i);
-    	cJSON_AddNumberToObject(child, "valid_flag", iniparser_getint(dic, item_name, 0));
+    	cJSON_AddNumberToObject(child, "valid_flag",
+                iniparser_getint(dic, item_name, 0));
 		sprintf(item_name, "SNMP:authority_ip_%d", i);
-    	cJSON_AddStringToObject(child, "ip", iniparser_getstring(dic, item_name, "192.168.0.100"));
+    	cJSON_AddStringToObject(child, "ip",
+                iniparser_getstring(dic, item_name, "192.168.0.100"));
     	cJSON_AddItemToArray(sub_dir, child);
 	}
+
+    req_buf->fb_buf = cJSON_Print(root);
+    cJSON_Delete(root);
+
+    return 0;
+}
+
+static int get_io_param(req_buf_t *req_buf, dictionary *dic)
+{
+    cJSON *root;
+    cJSON *sub_dir;
+    cJSON *child;
+    root = cJSON_CreateObject();
+
+	int i = 0;
+    sub_dir = cJSON_CreateArray();
+    cJSON_AddItemToObject(root, "uart_param", sub_dir);
+	for (i = 0; i < 7; i++) {
+    	child = cJSON_CreateObject();
+    	cJSON_AddNumberToObject(child, "value", uart_param[i].value);
+    	cJSON_AddStringToObject(child, "text", uart_param[i].text);
+    	cJSON_AddItemToArray(sub_dir, child);
+	}
+
+    sub_dir = cJSON_CreateArray();
+    cJSON_AddItemToObject(root, "protocol_param", sub_dir);
+    for (i = 0; i < 3; i++) {
+        child = cJSON_CreateObject();
+    	cJSON_AddNumberToObject(child, "value", protocol_param[i].value);
+    	cJSON_AddStringToObject(child, "text", protocol_param[i].text);
+    	cJSON_AddItemToArray(sub_dir, child);
+    }
+
+    int io_status[4] = {1, 0, 0, 1};
+    sub_dir = cJSON_CreateArray();
+    cJSON_AddItemToObject(root, "io_status", sub_dir);
+    for (i = 0; i < 4; i++) {
+        child = cJSON_CreateObject();
+    	cJSON_AddNumberToObject(child, "value", io_status[i]);
+    	cJSON_AddItemToArray(sub_dir, child);
+    }
+
+    cJSON_AddNumberToObject(root, "rs232_protocol",
+            iniparser_getint(dic, "PROTOCOL:rs232_protocol", 101));
+    cJSON_AddNumberToObject(root, "rs232_baudrate",
+            iniparser_getint(dic, "PROTOCOL:rs232_baudrate", 1));
+    cJSON_AddNumberToObject(root, "rs232_flag",
+            iniparser_getint(dic, "PROTOCOL:rs232_flag", 1));
+
+    cJSON_AddNumberToObject(root, "rs485_protocol",
+            iniparser_getint(dic, "PROTOCOL:rs485_protocol", 101));
+    cJSON_AddNumberToObject(root, "rs485_baudrate",
+            iniparser_getint(dic, "PROTOCOL:rs485_baudrate", 1));
+    cJSON_AddNumberToObject(root, "rs485_flag",
+            iniparser_getint(dic, "PROTOCOL:rs485_flag", 0));
 
     req_buf->fb_buf = cJSON_Print(root);
     cJSON_Delete(root);
@@ -86,6 +166,7 @@ static int parse_get_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
         ret = 0;
         break;
     case 2:
+        get_io_param(req_buf, dic);
         ret = 0;
         break;
     case 3:
@@ -164,7 +245,6 @@ int main(void)
     if (parse_request(&request) == 0) {
         cJSON *root = cJSON_Parse(request.buf);
         request.fb_buf = NULL;
-        //request.fb_buf = (char *)calloc(1, RET_BUF_MAX);
         int msg_type = cJSON_GetObjectItem(root, "msg_type")->valueint;
         switch (msg_type) {
         case 0:
