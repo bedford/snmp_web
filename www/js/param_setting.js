@@ -24,6 +24,37 @@ function init_network_param() {
             });
 }
 
+function set_network_param() {
+	var json = new Object();
+	json.msg_type = 1;
+	json.cmd_type = 0;
+
+	var cfg = new Object();
+	cfg.ip_addr = $("#ip_addr").val();
+	cfg.gateway = $("#gateway").val();
+	cfg.netmask = $("#netmask").val();
+	cfg.master_dns = $("#master_dns").val();
+	cfg.slave_dns = $("#slave_dns").val();
+	json.cfg = cfg;
+
+	$('#set_network_btn').attr("disabled", "disabled");
+	var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    $('#set_network_btn').removeAttr("disabled");
+					if (msg.status == 1) {
+						alert("设置成功");
+					} else {
+						alert("设置失败");
+					}
+                },
+			});
+}
+
 /* 系统时间设置相关js */
 function addzero(v) {
 	if (v < 10) return '0' + v;

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>网络参数设置</title> 
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> 
+    <title>网络参数设置</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<link rel="stylesheet" href="css/cssReset.css">
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
@@ -15,12 +15,12 @@
 	.network_box .item {
 		margin-top: 10px;
 	}
-	
+
 	.network_box .item > input[type="text"] {
 		height:30px;
 		width:200px;
 	}
-	
+
 	.horizental_split {
 		height: 2px;
 		width: 95%;
@@ -41,12 +41,12 @@
 		width: 100px;
 		height: 30px;
 		font-size: 14px;
-		font-weight:bold;  
+		font-weight:bold;
 		border: none;
 		margin-left:50px;
 	}
 	</style>
-</head> 
+</head>
 <body>
 	<div class="network_box">
 		<span style="width:150px;font-size:16px;">网络参数设置</span>
@@ -68,14 +68,14 @@
 		</div>
 		<div class="item">
 			<span class="fix_span">备用DNS</span><input type="text" id="slave_dns">
-			<input class="confirm_btn" type="button" id="set_network" value="确定" onclick="add_sms_contact()">
+			<input class="confirm_btn" type="button" id="set_network_btn" value="确定" onclick="set_network_param()">
 		</div>
 	</div>
-	
+
 	<script>
 	$(document).ready(function() {
 		init_network_param();
 	});
 	</script>
-</body> 
+</body>
 </html>

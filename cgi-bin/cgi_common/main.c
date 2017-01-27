@@ -5,6 +5,8 @@
 #include "cJSON.h"
 #include "iniparser.h"
 
+#define INI_FILE_NAME	"param.ini"
+
 typedef struct {
     int     req_len;
     int     max_len;
@@ -179,9 +181,76 @@ static int parse_get_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return ret;
 }
 
-static int parse_set_param(cJSON *root, req_buf_t *req_buf)
+static void write_profile(dictionary    *dic,
+                          const char    *section,
+                          const char    *key,
+                          const char    *value)
 {
+    if (!iniparser_find_entry(dic, section)) {
+            printf("dump section %s\n", section);
+            iniparser_set(dic, section, NULL);
+    }
+
+    char tmp[256] = {0};
+    sprintf(tmp, "%s:%s", section, key);
+    iniparser_set(dic, tmp, value);
+}
+
+static void dump_profile(dictionary *dic, char *filename)
+{
+    FILE *fp = fopen(filename, "w");
+    if (fp != NULL) {
+        iniparser_dump_ini(dic, fp);
+        fclose(fp);
+        fp = NULL;
+    }
+}
+
+static int set_network_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+{
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    write_profile(dic, "NETWORK", "ip_addr", cJSON_GetObjectItem(cfg, "ip_addr")->valuestring);
+    write_profile(dic, "NETWORK", "gateway", cJSON_GetObjectItem(cfg, "gateway")->valuestring);
+    write_profile(dic, "NETWORK", "netmask", cJSON_GetObjectItem(cfg, "netmask")->valuestring);
+    write_profile(dic, "NETWORK", "master_dns", cJSON_GetObjectItem(cfg, "master_dns")->valuestring);
+    write_profile(dic, "NETWORK", "slave_dns", cJSON_GetObjectItem(cfg, "slave_dns")->valuestring);
+    printf("ip %s\n", cJSON_GetObjectItem(cfg, "ip_addr")->valuestring);
+    dump_profile(dic, INI_FILE_NAME);
+
+    cJSON *response;
+    response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
     return 0;
+}
+
+static int parse_set_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+{
+    int ret = -1;
+    int cmd_type = cJSON_GetObjectItem(root, "cmd_type")->valueint;
+    switch (cmd_type) {
+    case 0: /* 网络参数 */
+        set_network_param(root, req_buf, dic);
+        ret = 0;
+        break;
+    case 1:
+       // set_snmp_param(req_buf, dic);
+        ret = 0;
+        break;
+    case 2:
+       // set_io_param(req_buf, dic);
+        ret = 0;
+        break;
+    case 3:
+        //set_ntp_param(req_buf, dic);
+        ret = 0;
+    default:
+        break;
+    }
+
+    return ret;
 }
 
 static int parse_query_data(cJSON *root, req_buf_t *req_buf)
@@ -230,8 +299,6 @@ static int parse_request(req_buf_t *req_buf)
     return ret;
 }
 
-#define INI_FILE_NAME	"param.ini"
-
 int main(void)
 {
     int ret = -1;
@@ -251,7 +318,7 @@ int main(void)
             ret = parse_get_param(root, &request, ini);
             break;
         case 1:
-            ret = parse_set_param(root, &request);
+            ret = parse_set_param(root, &request, ini);
             break;
         case 2:
             ret = parse_query_data(root, &request);
