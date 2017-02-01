@@ -101,20 +101,59 @@ function checkLeave() {
 }
 
 /* SNMP设置相关js */
+function set_snmp_param() {
+	var json = new Object();
+	json.msg_type = 1;
+	json.cmd_type = 1;
+
+	var cfg = new Object();
+	var newArray = new Array();
+	for (var i = 0; i < 4; i++) {
+		var obj = new Object();
+		if (document.getElementById('snmp_check_box_'+i).checked) {
+			obj.valid_flag = 1;
+		} else {
+			obj.valid_flag = 0;
+		}
+		obj.ip = document.getElementById('authority_ip_'+i).value;
+		newArray[i] = obj;
+	}
+	cfg.authority_ip = newArray;
+	cfg.snmp_union = $('#snmp_union').val();
+	json.cfg = cfg;
+
+	$('#set_snmp_btn').attr("disabled", "disabled");
+	var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    $('#set_snmp_btn').removeAttr("disabled");
+					if (msg.status == 1) {
+						alert("设置成功");
+					} else {
+						alert("设置失败");
+					}
+                },
+			});
+}
+
 function display_snmp_param(snmp_param) {
 	var html = "";
 	for (var i in snmp_param.authority_ip) {
 		if (snmp_param.authority_ip[i].valid_flag == 1) {
-			html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" onchange="update(\''
-                +i+'\')" checked="checked"></span>';
+			html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" id="snmp_check_box_'
+				+i+'" checked="checked"></span>';
 		} else {
-			html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" onchange="update(\''
-                +i+'\')"></span>';
+			html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" id="snmp_check_box_'
+                +i+'"></span>';
 		}
 		html += '<input type="text" id="authority_ip_'+i+'" value="'+snmp_param.authority_ip[i].ip+'"></li>';
 	}
 	html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_union">';
-	html += '<input type="button" class="confirm_btn" id="snmp_union_btn" value="确定" onclick="add_sms_contact()"></li>';
+	html += '<input type="button" class="confirm_btn" id="set_snmp_btn" value="确定" onclick="set_snmp_param()"></li>';
 	$('#right_side').append(html);
 
 	$('#trap_server_ip').val(snmp_param.trap_server_ip);
@@ -202,9 +241,4 @@ function load_io_param() {
                     display_io_param(msg);
                 },
             });
-}
-
-function update(i) {
-	var input_name = "\'#authority_ip_" + i + "\'";
-	//$(input_name).attributes
 }

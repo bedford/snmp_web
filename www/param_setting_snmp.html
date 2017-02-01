@@ -46,7 +46,7 @@
 		display:inline-block;
 		width:50px;
 	}
-	
+
 	.snmp_item .fix_span > input[type="checkbox"] {
 		vertical-align:middle;
 		width: 25px;
@@ -57,7 +57,7 @@
 		height: 30px;
 		width: 200px;
 	}
-	
+
 	.other_content_box {
 		margin-top: 20px;
 	}
@@ -66,14 +66,14 @@
 		margin-top: 20px;
 		margin-left: 70px;
 	}
-	
+
 	.confirm_btn {
 		background-color: #117daf;
 		color: #fff;
 		width: 100px;
 		height: 30px;
 		font-size: 14px;
-		font-weight:bold;  
+		font-weight:bold;
 		border: none;
 		margin-left:50px;
 	}
@@ -96,9 +96,7 @@
 		<div class="horizental_split"></div>
 		<ul class="snmp_content_box">
 			<div id="left_side">授权IP地址</div>
-			<div id="right_side">
-
-			</div>
+			<div id="right_side"></div>
 		</ul>
 	</div>
 	<div class="other_content_box">
@@ -107,13 +105,13 @@
 		<div class="item">
 			<span>TRAP服务器IP:</span>
 			<input style="height:30px;width:200px" type="text" id="trap_server_ip">
-			<input type="button" class="confirm_btn" id="trap_btn" value="确定" onclick="add_sms_contact()">
+			<input type="button" class="confirm_btn" id="set_trap_btn" value="确定" onclick="set_trap_param()">
 		</div>
 	</div>
 	<div class="other_content_box">
 		<span style="width:150px;font-size:16px;">MIB文件</span>
 		<div class="horizental_split"></div>
-		<input type="button" id="download_btn" value="下载MIB" onclick="add_sms_contact()">
+		<input type="button" id="download_btn" value="下载MIB" onclick="down_mib()">
 	</div>
 
 	<script>
