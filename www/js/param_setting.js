@@ -110,12 +110,12 @@ function set_snmp_param() {
 	var newArray = new Array();
 	for (var i = 0; i < 4; i++) {
 		var obj = new Object();
-		if (document.getElementById('snmp_check_box_'+i).checked) {
+		if ($('#snmp_check_box_'+i).is(':checked')) {
 			obj.valid_flag = 1;
 		} else {
 			obj.valid_flag = 0;
 		}
-		obj.ip = document.getElementById('authority_ip_'+i).value;
+		obj.ip = $('#authority_ip_'+i).val();
 		newArray[i] = obj;
 	}
 	cfg.authority_ip = newArray;
