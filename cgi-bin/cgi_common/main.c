@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #include "cJSON.h"
 #include "iniparser.h"
@@ -302,6 +303,26 @@ static int parse_system_ctl(cJSON *root, req_buf_t *req_buf)
     return 0;
 }
 
+static int mib_download(req_buf_t *req_buf, const char *filename)
+{
+    struct stat s;
+    stat(filename, &s);
+    printf("Content-Type: application/octet-stream\r\n");
+    printf("Content-Length: %ld\r\n", s.st_size);
+    printf("Content-Disposition: attachment; filename=%s\r\n\r\n", filename);
+
+    FILE *fp = fopen(filename, "rb");
+    char buf[1024] = {0};
+    int n = 0;
+    while ((n = fread(buf, 1, 1024, fp)) > 0) {
+        fwrite(buf, 1, n, stdout);
+    }
+    fclose(fp);
+    fp = NULL;
+
+    return 0;
+}
+
 #define RET_BUF_MAX (512 * 1024)
 
 static int parse_request(req_buf_t *req_buf)
@@ -310,11 +331,12 @@ static int parse_request(req_buf_t *req_buf)
     int ret = -1;
 
     char *req_method = getenv("REQUEST_METHOD");
-
     if (strcmp(req_method, "GET") == 0) {
         char *query_string = getenv("QUERY_STRING");
-        printf("request method: GET, query_string %s\n", query_string);
-        query_string = NULL;
+        if (query_string != NULL) {
+            strcpy(req_buf->buf, query_string);
+            ret = 1;
+        }
     } else if (strcmp(req_method, "POST") == 0) {
         char *env_string = getenv("CONTENT_LENGTH");
         if (env_string != NULL) {
@@ -342,13 +364,13 @@ int main(void)
 {
     int ret = -1;
 	dictionary *ini = iniparser_load(INI_FILE_NAME);
-	iniparser_dump(ini, stdout);
 
     req_buf_t request;
     memset(&request, 0, sizeof(req_buf_t));
     request.max_len = 512 * 1024;
     request.buf     = (char *)calloc(1, request.max_len);
-    if (parse_request(&request) == 0) {
+    ret = parse_request(&request);
+    if (ret == 0) {
         cJSON *root = cJSON_Parse(request.buf);
         request.fb_buf = NULL;
         int msg_type = cJSON_GetObjectItem(root, "msg_type")->valueint;
@@ -362,8 +384,10 @@ int main(void)
         case 2:
             ret = parse_query_data(root, &request);
             break;
-        case 3:
+        case 3: //重启及恢复出厂设置、固件更新等
             ret = parse_system_ctl(root, &request);
+            break;
+        case 4: //报警设置相关操作
             break;
         default:
             break;
@@ -376,6 +400,11 @@ int main(void)
             request.fb_buf = NULL;
         }
         cJSON_Delete(root);
+    } else if (ret == 1) {
+        //下载MIB
+        if (strstr(request.buf, "mib") != NULL) {
+            ret = mib_download(&request, "param.ini");
+        }
     }
     free(request.buf);
     request.buf = NULL;
