@@ -101,6 +101,11 @@ function checkLeave() {
 }
 
 /* SNMP设置相关js */
+function down_mib() {
+	var download_window = window.open("/cgi-bin/common.cgi?file_type=mib");
+	download_window.focus();
+}
+
 function set_snmp_param() {
 	var json = new Object();
 	json.msg_type = 1;
