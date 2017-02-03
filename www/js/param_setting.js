@@ -120,6 +120,7 @@ function set_snmp_param() {
 	}
 	cfg.authority_ip = newArray;
 	cfg.snmp_union = $('#snmp_union').val();
+	cfg.trap_server_ip = $('#trap_server_ip').val();
 	json.cfg = cfg;
 
 	$('#set_snmp_btn').attr("disabled", "disabled");
@@ -152,8 +153,7 @@ function display_snmp_param(snmp_param) {
 		}
 		html += '<input type="text" id="authority_ip_'+i+'" value="'+snmp_param.authority_ip[i].ip+'"></li>';
 	}
-	html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_union">';
-	html += '<input type="button" class="confirm_btn" id="set_snmp_btn" value="确定" onclick="set_snmp_param()"></li>';
+	html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_union"></li>';
 	$('#right_side').append(html);
 
 	$('#trap_server_ip').val(snmp_param.trap_server_ip);

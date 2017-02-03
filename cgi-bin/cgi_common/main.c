@@ -214,7 +214,46 @@ static int set_network_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     write_profile(dic, "NETWORK", "netmask", cJSON_GetObjectItem(cfg, "netmask")->valuestring);
     write_profile(dic, "NETWORK", "master_dns", cJSON_GetObjectItem(cfg, "master_dns")->valuestring);
     write_profile(dic, "NETWORK", "slave_dns", cJSON_GetObjectItem(cfg, "slave_dns")->valuestring);
-    printf("ip %s\n", cJSON_GetObjectItem(cfg, "ip_addr")->valuestring);
+    dump_profile(dic, INI_FILE_NAME);
+
+    cJSON *response;
+    response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int set_snmp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+{
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    write_profile(dic, "SNMP", "snmp_union",
+            cJSON_GetObjectItem(cfg, "snmp_union")->valuestring);
+    write_profile(dic, "SNMP", "trap_server_ip",
+            cJSON_GetObjectItem(cfg, "trap_server_ip")->valuestring);
+
+    cJSON *array_item = cJSON_GetObjectItem(cfg, "authority_ip");
+    if (array_item != NULL) {
+        int size = cJSON_GetArraySize(array_item);
+        int i = 0;
+        char item_name[32] = {0};
+        char item_value[32] = {0};
+        cJSON *object = NULL;
+        for (i = 0; i < size; i++) {
+            object = cJSON_GetArrayItem(array_item, i);
+            sprintf(item_name, "valid_flag_%d", i);
+            sprintf(item_value, "%d",
+                    cJSON_GetObjectItem(object, "valid_flag")->valueint);
+            write_profile(dic, "SNMP", item_name, item_value);
+
+            memset(item_name, 0, sizeof(item_name));
+            sprintf(item_name, "authority_ip_%d", i);
+            write_profile(dic, "SNMP", item_name,
+                    cJSON_GetObjectItem(object, "ip")->valuestring);
+        }
+        object = NULL;
+    }
     dump_profile(dic, INI_FILE_NAME);
 
     cJSON *response;
@@ -236,7 +275,7 @@ static int parse_set_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
         ret = 0;
         break;
     case 1:
-       // set_snmp_param(req_buf, dic);
+        set_snmp_param(root, req_buf, dic);
         ret = 0;
         break;
     case 2:
