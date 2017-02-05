@@ -316,8 +316,10 @@ static int parse_set_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
         break;
     case 3:
         ret = set_ntp_param(root, req_buf, dic);
+        break;
     case 4:
         ret = set_device_time(root, req_buf);
+        break;
     default:
         break;
     }
@@ -330,9 +332,61 @@ static int parse_query_data(cJSON *root, req_buf_t *req_buf)
     return 0;
 }
 
-static int parse_system_ctl(cJSON *root, req_buf_t *req_buf)
+static int system_setting(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
-    return 0;
+    int ret = -1;
+    int cmd_type = cJSON_GetObjectItem(root, "cmd_type")->valueint;
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    cJSON *response = cJSON_CreateObject();
+    switch (cmd_type) {
+    case 0: /* 获取系统参数 */
+        cJSON_AddStringToObject(response, "site",
+                iniparser_getstring(dic, "SYSTEM:site", ""));
+        cJSON_AddStringToObject(response, "device_number",
+                iniparser_getstring(dic, "SYSTEM:device_number", "20170201007"));
+        req_buf->fb_buf = cJSON_Print(response);
+
+        ret = 0;
+        break;
+    case 1: /* 设置系统参数 */
+        write_profile(dic, "SYSTEM", "site",
+                cJSON_GetObjectItem(cfg, "site")->valuestring);
+        write_profile(dic, "SYSTEM", "device_number",
+                cJSON_GetObjectItem(cfg, "device_number")->valuestring);
+        dump_profile(dic, INI_FILE_NAME);
+
+        cJSON_AddNumberToObject(response, "status", 1);
+        req_buf->fb_buf = cJSON_Print(response);
+
+        ret = 0;
+        break;
+    case 2: /* 重启设备 */
+        ret = 0;
+        break;
+    case 3: /* 恢复出厂设置 */
+        ret = 0;
+        break;
+    case 4: /* 获取系统信息 */
+        ret = 0;
+        break;
+    case 5: /* 用户信息获取 */
+        ret = 0;
+        break;
+    case 6: /* 新增用户信息 */
+        ret = 0;
+        break;
+    case 7: /* 删除用户信息 */
+        ret = 0;
+        break;
+    case 8: /* 修改用户信息 */
+        ret = 0;
+        break;
+    default:
+        break;
+    }
+    cJSON_Delete(response);
+
+    return ret;
 }
 
 static int mib_download(req_buf_t *req_buf, const char *filename)
@@ -417,7 +471,7 @@ int main(void)
             ret = parse_query_data(root, &request);
             break;
         case 3: //重启及恢复出厂设置、固件更新等
-            ret = parse_system_ctl(root, &request);
+            ret = system_setting(root, &request, ini);
             break;
         case 4: //报警设置相关操作
             break;
