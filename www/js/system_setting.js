@@ -1,3 +1,95 @@
+/* 加载系统参数 */
+function load_system_param() {
+    var json = new Object();
+    json.msg_type = 3;
+    json.cmd_type = 0;
+    var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                	$("#site").val(msg.site);
+					$("#device_number").val(msg.device_number);
+                },
+            });
+}
+
+function set_system_param() {
+	var json = new Object();
+	json.msg_type = 3;
+	json.cmd_type = 1;
+
+	var cfg = new Object();
+	cfg.site = $("#site").val();
+	cfg.device_number = $("#device_number").val();
+	json.cfg = cfg;
+
+	$('#set_system_btn').attr("disabled", "disabled");
+	var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    $('#set_system_btn').removeAttr("disabled");
+					if (msg.status == 1) {
+						alert("设置成功");
+					} else {
+						alert("设置失败");
+					}
+                },
+			});
+}
+
+function reboot() {
+	var json = new Object();
+	json.msg_type = 3;
+	json.cmd_type = 2;
+
+	$('#reboot_btn').attr("disabled", "disabled");
+	var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    $('#reboot_btn').removeAttr("disabled");
+					if (msg.status == 1) {
+						alert("设置成功");
+					} else {
+						alert("设置失败");
+					}
+                },
+			});
+}
+
+function recovery() {
+	var json = new Object();
+	json.msg_type = 3;
+	json.cmd_type = 3;
+
+	$('#recovery_btn').attr("disabled", "disabled");
+	var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    $('#recovery_btn').removeAttr("disabled");
+					if (msg.status == 1) {
+						alert("设置成功");
+					} else {
+						alert("设置失败");
+					}
+                },
+			});
+}
+
 function load_system_info() {
 	var param_list = [
 	{

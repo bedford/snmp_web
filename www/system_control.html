@@ -4,6 +4,9 @@
     <title>系统参数设置</title>
     <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
 	<link rel="stylesheet" href="css/cssReset.css">
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/system_setting.js"></script>
 	<style>
 	.system_param_box {
 		margin-top: 20px;
@@ -12,12 +15,12 @@
 	.system_param_box .item {
 		margin-top: 20px;
 	}
-	
+
 	.system_param_box .item > input[type="text"] {
 		height:30px;
 		width:200px;
 	}
-	
+
 	.horizental_split {
 		height: 2px;
 		width: 95%;
@@ -38,7 +41,7 @@
 		width: 100px;
 		height: 30px;
 		font-size: 14px;
-		font-weight:bold;  
+		font-weight:bold;
 		border: none;
 		margin-left:50px;
 	}
@@ -59,20 +62,26 @@
 		<span style="width:150px;font-size:16px;">系统参数设置</span>
 		<div class="horizental_split"></div>
 		<div class="item">
-			<span class="fix_span">安装地点</span><input type="text" id="mac_addr">
+			<span class="fix_span">安装地点</span><input type="text" id="site">
 		</div>
 		<div class="item">
-			<span class="fix_span">设备编号</span><input type="text" id="mac_addr">
-			<input type="button" class="confirm_btn" id="add_btn" value="确定" onclick="add_sms_contact()">
+			<span class="fix_span">设备编号</span><input type="text" id="device_number">
+			<input type="button" class="confirm_btn" id="set_system_btn" value="确定" onclick="set_system_param()">
 		</div>
 	</div>
 	<div class="system_param_box">
 		<span style="width:150px;font-size:16px;">系统控制</span>
 		<div class="horizental_split"></div>
 		<div class="item">
-			<input type="button" class="repair_btn" id="add_btn" value="重启设备" onclick="add_sms_contact()">
-			<input type="button" class="repair_btn" id="add_btn" value="恢复出厂设置" onclick="add_sms_contact()">
+			<input type="button" class="repair_btn" id="reboot_btn" value="重启设备" onclick="reboot()">
+			<input type="button" class="repair_btn" id="recovery_btn" value="恢复出厂设置" onclick="recovery()">
 		</div>
 	</div>
+
+    <script>
+        $(document).ready(function () {
+			load_system_param();
+        })
+    </script>
 </body>
 </html>
