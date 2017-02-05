@@ -341,8 +341,7 @@ int iniparser_getsecnkeys(const dictionary * d, const char * s)
     if (! iniparser_find_entry(d, s)) return nkeys;
 
     seclen  = (int)strlen(s);
-    strlwc(s, keym, sizeof(keym));
-    keym[seclen] = ':';
+    sprintf(keym, "%s:", s);
 
     for (j=0 ; j<d->size ; j++) {
         if (d->key[j]==NULL)
@@ -380,8 +379,7 @@ const char ** iniparser_getseckeys(const dictionary * d, const char * s, const c
     if (! iniparser_find_entry(d, s)) return NULL;
 
     seclen  = (int)strlen(s);
-    strlwc(s, keym, sizeof(keym));
-    keym[seclen] = ':';
+    sprintf(keym, "%s:", s);
 
     i = 0;
 
@@ -414,15 +412,12 @@ const char ** iniparser_getseckeys(const dictionary * d, const char * s, const c
 /*--------------------------------------------------------------------------*/
 const char * iniparser_getstring(const dictionary * d, const char * key, const char * def)
 {
-    const char * lc_key ;
     const char * sval ;
-    char tmp_str[ASCIILINESZ+1];
 
     if (d==NULL || key==NULL)
         return def ;
 
-    lc_key = strlwc(key, tmp_str, sizeof(tmp_str));
-    sval = dictionary_get(d, lc_key, def);
+    sval = dictionary_get(d, key, def);
     return sval ;
 }
 
@@ -602,8 +597,7 @@ int iniparser_find_entry(const dictionary * ini, const char * entry)
 /*--------------------------------------------------------------------------*/
 int iniparser_set(dictionary * ini, const char * entry, const char * val)
 {
-    char tmp_str[ASCIILINESZ+1];
-    return dictionary_set(ini, strlwc(entry, tmp_str, sizeof(tmp_str)), val) ;
+    return dictionary_set(ini, entry, val);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -618,8 +612,7 @@ int iniparser_set(dictionary * ini, const char * entry, const char * val)
 /*--------------------------------------------------------------------------*/
 void iniparser_unset(dictionary * ini, const char * entry)
 {
-    char tmp_str[ASCIILINESZ+1];
-    dictionary_unset(ini, strlwc(entry, tmp_str, sizeof(tmp_str)));
+    dictionary_unset(ini, entry);
 }
 
 /*-------------------------------------------------------------------------*/
@@ -656,19 +649,16 @@ static line_status iniparser_line(
         /* Section name */
         sscanf(line, "[%[^]]", section);
         strstrip(section);
-        strlwc(section, section, len);
         sta = LINE_SECTION ;
     } else if (sscanf (line, "%[^=] = \"%[^\"]\"", key, value) == 2
            ||  sscanf (line, "%[^=] = '%[^\']'",   key, value) == 2) {
         /* Usual key=value with quotes, with or without comments */
         strstrip(key);
-        strlwc(key, key, len);
         /* Don't strip spaces from values surrounded with quotes */
         sta = LINE_VALUE ;
     } else if (sscanf (line, "%[^=] = %[^;#]", key, value) == 2) {
         /* Usual key=value without quotes, with or without comments */
         strstrip(key);
-        strlwc(key, key, len);
         strstrip(value);
         /*
          * sscanf cannot handle '' or "" as empty values
@@ -687,7 +677,6 @@ static line_status iniparser_line(
          * key=#
          */
         strstrip(key);
-        strlwc(key, key, len);
         value[0]=0 ;
         sta = LINE_VALUE ;
     } else {
