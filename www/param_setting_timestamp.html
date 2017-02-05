@@ -16,12 +16,12 @@
 	.ntp_time_box .item {
 		margin-top: 15px;
 	}
-	
+
 	.ntp_time_box .item > input[type="text"] {
 		height:30px;
 		width:200px;
 	}
-	
+
 	.horizental_split {
 		height: 2px;
 		width: 95%;
@@ -42,7 +42,7 @@
 		width: 100px;
 		height: 30px;
 		font-size: 14px;
-		font-weight:bold;  
+		font-weight:bold;
 		border: none;
 		margin-left:50px;
 	}
@@ -53,11 +53,11 @@
 		<span style="width:150px;font-size:16px;">NTP校时</span>
 		<div class="horizental_split"></div>
 		<div class="item">
-			<span class="fix_span">NTP服务器</span><input type="text" id="ntp_server">
+			<span class="fix_span">NTP服务器</span><input type="text" id="ntp_server_ip">
 		</div>
 		<div class="item">
 			<span class="fix_span">校时间隔(分钟)</span><input type="text" id="ntp_interval">
-			<input type="button" class="confirm_btn" id="add_btn" value="确定" onclick="add_sms_contact()">
+			<input type="button" class="confirm_btn" id="set_ntp_btn" value="确定" onclick="set_ntp_param()">
 		</div>
 	</div>
 	<div class="ntp_time_box">
@@ -66,7 +66,7 @@
 		<div class="item">
 			<span class="fix_span">PC当前时间</span>
 			<input class="Wdate" type="text" id="pc_time" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})">
-			<input type="button" class="confirm_btn" id="add_btn" value="确定" onclick="add_sms_contact()">
+			<input type="button" class="confirm_btn" id="calibration_btn" value="确定" onclick="calibration_with_pc()">
 		</div>
 	</div>
 	<script>

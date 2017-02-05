@@ -73,7 +73,7 @@ var interval_handle;
 
 function display_ntp_param(ntp_info)
 {
-	$('#ntp_server').val(ntp_info.ntp_server_ip);
+	$('#ntp_server_ip').val(ntp_info.ntp_server_ip);
 	$('#ntp_interval').val(ntp_info.ntp_interval);
 	update_pc_time();
 
@@ -98,6 +98,61 @@ function init_timestamp() {
 
 function checkLeave() {
 	clearInterval(interval_handle);
+}
+
+function set_ntp_param() {
+	var json = new Object();
+	json.msg_type = 1;
+	json.cmd_type = 3;
+
+	var cfg = new Object();
+	cfg.ntp_server_ip = $("#ntp_server_ip").val();
+	cfg.ntp_interval = $("#ntp_interval").val();
+	json.cfg = cfg;
+
+	$('#set_ntp_btn').attr("disabled", "disabled");
+	var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    $('#set_ntp_btn').removeAttr("disabled");
+					if (msg.status == 1) {
+						alert("设置成功");
+					} else {
+						alert("设置失败");
+					}
+                },
+			});
+}
+
+function calibration_with_pc() {
+	var json = new Object();
+	json.msg_type = 1;
+	json.cmd_type = 4;
+
+	var cfg = new Object();
+	cfg.calibration_pc_time = $("#pc_time").val();
+	json.cfg = cfg;
+
+	$('#calibration_btn').attr("disabled", "disabled");
+	var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    $('#calibration_btn').removeAttr("disabled");
+					if (msg.status == 1) {
+						alert("设置成功");
+					} else {
+						alert("设置失败");
+					}
+                },
+			});
 }
 
 /* SNMP设置相关js */
