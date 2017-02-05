@@ -52,7 +52,7 @@
 	.table-content tr:nth-child(even) {
 		background-color: #fff;
 	}
-	
+
 	.system_repair_box {
 		width: 80%;
 		height: 10%;
@@ -79,7 +79,10 @@
 	</div>
 
 	<div class="system_repair_box">
-		<input type="button" id="update_btn" id="add_btn" value="更新固件" onclick="add_sms_contact()">
+		<form id="update_form" enctype="multipart/form-data">
+			<input id="update_file" type="file" name="update_file">
+			<input type="button" id="update_btn" value="更新固件" onclick="update_firmware()">
+		</form>
     </div>
 
     <script>

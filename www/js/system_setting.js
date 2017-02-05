@@ -46,6 +46,23 @@ function show_system_info(system_param_list) {
 	$("#system_info_table").append(html);
 }
 
+function update_firmware() {
+	var filename = $('#update_file').val();
+	var form_data = new FormData($('#update_form')[0]);
+
+    $.ajax({
+                url     : "/cgi-bin/update.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : form_data,
+				cache	: false,
+				contentType: false,
+				processData: false,
+                success : function(msg) {
+                    alert(msg);
+                },
+            });
+}
 
 function load_user() {
 	var user_list = [
@@ -83,7 +100,7 @@ function show_user_list(user_list) {
 		html+="<tr onclick='onClick(this)' id='"+item.id+"'>";
 		html+="<td>"+(i+1)+"</td>"+"<td>"+item.user+"</div></td>";
 		html+="<td>"+item.password+"</td>";
-		html+="<td>"+item.authority+"</td>"; 
+		html+="<td>"+item.authority+"</td>";
 		html+='<td><a href="#" onclick="edit_item(\''+item.id+'\')">编辑</a> <a href="#" onclick="delete_item(\''+item.id+'\')">删除</a></td>';
 		html+="</tr>"
 	});
