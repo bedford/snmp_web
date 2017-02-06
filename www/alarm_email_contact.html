@@ -87,26 +87,43 @@
 		width: 150px;
 		height: 40px;
 		font-size: 14px;
-		font-weight:bold;  
-		border-radius:5px; 
+		font-weight:bold;
+		border-radius:5px;
 		border: none;
 		letter-spacing: 5px;
 	}
+
+	.jq-dialog form fieldset {
+		padding: 0;
+		border: 0;
+		margin-top: 25px;
+	}
+
+	.jq-dialog form fieldset > label {
+		display: block;
+	}
+
+	.jq-dialog form fieldset > input[type="text"] {
+		margin-bottom: 12px;
+		width: 95%;
+		padding: .4em;
+	}
+
 	</style>
 	<link rel="stylesheet" href="css/cssReset.css">
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<script src="js/jquery-1.12.0.js"></script>
-    <script src="js/alarm_contact_manage.js"></script>
-	<script src="js/layer.js"></script>
-</head> 
+	<script src="js/jquery-ui.min.js"></script>
+</head>
 <body>
 	<div class="operation_box">
 		<div id="add_user_box">
-			<input type="button" id="add_btn" value="新增" onclick="add_sms_contact()">
+			<input type="button" id="add_btn" value="新增" onclick="add_email_contact()">
 		</div>
 	</div>
 	<div id="table-box">
 		<div class="table-content">
-			<table id="sms_table">
+			<table id="email_table">
 				<tr id="head">
 					<th>序号</th>
 					<th>姓名</th>
@@ -117,15 +134,92 @@
 		</div>
 	</div>
 
+    <div class="jq-dialog" id="new_dialog" title="新增邮件联系人">
+		<form>
+			<fieldset>
+				<label for="name">名字</label>
+				<input type="text" name="new_name" id="new_name">
+				<label for="name">E-Mail</label>
+				<input type="text" name="new_email" id="new_email">
+			</fieldset>
+		</form>
+	</div>
+
+	<div class="jq-dialog" id="modify_dialog" title="编辑邮件联系人">
+		<form>
+			<fieldset>
+				<label for="name">名字</label>
+				<input type="text" name="modify_name" id="modify_name">
+				<label for="name">E-Mail</label>
+				<input type="text" name="modify_email" id="modify_email">
+			</fieldset>
+		</form>
+	</div>
+
+	<div class="jq-dialog" id="confirm_dialog" title="删除邮件联系人">
+		<label>确认要删除该邮件联系人吗？</label>
+	</div>
+
 	<script>
-		$('#add_btn').on('click', function(){
-			layer.open({
-				type: 1,
-				area: ['600px', '360px'],
-				shadeClose: true,
-				content: '\<\div style="padding:20px;">自定义内容\<\/div>'
-			})
-		});
+        function delete_item(index) {
+			$('#confirm_dialog').dialog({
+				resizable: false,
+				height: 150,
+				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
+			});
+		}
+
+        function edit_item(index) {
+			$('#modify_dialog').dialog({
+				width: 300,
+				height: 300,
+				modal: true,
+			});
+		}
+
+		function add_email_contact() {
+			$('#new_dialog').dialog({
+				width: 300,
+				height: 300,
+				modal: true,
+			});
+		}
+
+		function load_email_param() {
+			var param_list = [
+			{
+				"id":"100",
+				"name":"张三",
+				"email":"13828891024@qq.com"
+			},
+			{
+				"id":"101",
+				"name":"李四",
+				"email":"13828891024@139.com"
+			}
+			];
+			show_email_list(param_list);
+		}
+
+		function show_email_list(email_param_list) {
+			var html="";
+			$.each(email_param_list, function(i, item) {
+				html += "<tr>";
+				html+="<td>"+(i+1)+"</td>"+"<td>"+item.name+"</div></td>";
+				html+="<td>"+item.email+"</td>";
+				html+='<td><a href="javascript:edit_item('+item.id+')">编辑</a> <a href="javascript:delete_item('+item.id+')">删除</a></td>';
+				html+="</tr>"
+			});
+			$("#email_table").append(html);
+		}
 
         $(document).ready(function () {
 			load_email_param();
