@@ -125,7 +125,7 @@
 		<div class="table-content">
 			<table id="email_table">
 				<tr id="head">
-					<th>序号</th>
+					<th>编号</th>
 					<th>姓名</th>
 					<th>E-MAIL</th>
 					<th>操作</th>
@@ -161,7 +161,7 @@
 	</div>
 
 	<script>
-        function delete_item(index) {
+		function delete_item(index) {
 			$('#confirm_dialog').dialog({
 				resizable: false,
 				height: 150,
@@ -178,10 +178,22 @@
 		}
 
         function edit_item(index) {
+			var name = $('#email_table').find('tr').eq(index + 1).find('td').eq(1).html();
+			var email = $('#email_table').find('tr').eq(index + 1).find('td').eq(2).html();
+			$('#modify_name').val(name);
+			$('#modify_email').val(email);
 			$('#modify_dialog').dialog({
 				width: 300,
 				height: 300,
 				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
 			});
 		}
 
@@ -190,6 +202,14 @@
 				width: 300,
 				height: 300,
 				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
 			});
 		}
 
@@ -213,9 +233,9 @@
 			var html="";
 			$.each(email_param_list, function(i, item) {
 				html += "<tr>";
-				html+="<td>"+(i+1)+"</td>"+"<td>"+item.name+"</div></td>";
+				html+="<td>"+item.id+"</td>"+"<td>"+item.name+"</div></td>";
 				html+="<td>"+item.email+"</td>";
-				html+='<td><a href="javascript:edit_item('+item.id+')">编辑</a> <a href="javascript:delete_item('+item.id+')">删除</a></td>';
+				html+='<td><a href="javascript:edit_item('+i+')">编辑</a> <a href="javascript:delete_item('+i+')">删除</a></td>';
 				html+="</tr>"
 			});
 			$("#email_table").append(html);

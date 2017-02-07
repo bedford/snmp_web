@@ -123,9 +123,9 @@
 	</div>
 	<div id="table-box">
 		<div class="table-content">
-			<table id="sms_table">
+			<table id="phone_table">
 				<tr id="head">
-					<th>序号</th>
+					<th>编号</th>
 					<th>姓名</th>
 					<th>手机号码</th>
 					<th>操作</th>
@@ -139,7 +139,7 @@
 			<fieldset>
 				<label for="name">名字</label>
 				<input type="text" name="new_name" id="new_name">
-				<label for="name">E-Mail</label>
+				<label for="name">手机号码</label>
 				<input type="text" name="new_phone" id="new_phone">
 			</fieldset>
 		</form>
@@ -178,10 +178,22 @@
 		}
 
         function edit_item(index) {
+			var name = $('#phone_table').find('tr').eq(index + 1).find('td').eq(1).html();
+			var phone = $('#phone_table').find('tr').eq(index + 1).find('td').eq(2).html();
+			$('#modify_name').val(name);
+			$('#modify_phone').val(phone);
 			$('#modify_dialog').dialog({
 				width: 300,
 				height: 300,
 				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
 			});
 		}
 
@@ -190,6 +202,14 @@
 				width: 300,
 				height: 300,
 				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
 			});
 		}
 
@@ -213,12 +233,12 @@
 			var html="";
 			$.each(sms_param_list, function(i, item) {
 				html += "<tr>";
-				html+="<td>"+(i+1)+"</td>"+"<td>"+item.name+"</div></td>";
+				html+="<td>"+item.id+"</td>"+"<td>"+item.name+"</div></td>";
 				html+="<td>"+item.phone+"</td>";
-				html+='<td><a href="javascript:edit_item('+item.id+')">编辑</a> <a href="javascript:delete_item('+item.id+')">删除</a></td>';
+				html+='<td><a href="javascript:edit_item('+i+')">编辑</a> <a href="javascript:delete_item('+i+')">删除</a></td>';
 				html+="</tr>"
 			});
-			$("#sms_table").append(html);
+			$("#phone_table").append(html);
 		}
 
         $(document).ready(function () {
