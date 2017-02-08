@@ -38,33 +38,38 @@ map_t protocol_param[] = {
     {200,   "UPS200"}
 };
 
-static int get_network_param(req_buf_t *req_buf, dictionary *dic)
+static int get_network_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "mac_addr", "F0:FF:04:00:5D:F4");
-    cJSON_AddStringToObject(root, "ip_addr", iniparser_getstring(dic, "NETWORK:ip_addr", "192.168.0.100"));
-    cJSON_AddStringToObject(root, "gateway", iniparser_getstring(dic, "NETWORK:gateway", "192.168.0.1"));
-    cJSON_AddStringToObject(root, "netmask", iniparser_getstring(dic, "NETWORK:netmask", "255.255.255.0"));
-    cJSON_AddStringToObject(root, "master_dns", iniparser_getstring(dic, "NETWORK:master_dns", "192.168.8.8"));
-    cJSON_AddStringToObject(root, "slave_dns", iniparser_getstring(dic, "NETWORK:slave_dns", "8.8.8.8"));
-    req_buf->fb_buf = cJSON_Print(root);
-    cJSON_Delete(root);
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "mac_addr", "F0:FF:04:00:5D:F4");
+    cJSON_AddStringToObject(response, "ip_addr",
+            iniparser_getstring(dic, "NETWORK:ip_addr", "192.168.0.100"));
+    cJSON_AddStringToObject(response, "gateway",
+            iniparser_getstring(dic, "NETWORK:gateway", "192.168.0.1"));
+    cJSON_AddStringToObject(response, "netmask",
+            iniparser_getstring(dic, "NETWORK:netmask", "255.255.255.0"));
+    cJSON_AddStringToObject(response, "master_dns",
+            iniparser_getstring(dic, "NETWORK:master_dns", "192.168.8.8"));
+    cJSON_AddStringToObject(response, "slave_dns",
+            iniparser_getstring(dic, "NETWORK:slave_dns", "8.8.8.8"));
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
 
     return 0;
 }
 
-static int get_snmp_param(req_buf_t *req_buf, dictionary *dic)
+static int get_snmp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
     cJSON *sub_dir;
     cJSON *child;
 
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "snmp_union",
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "snmp_union",
             iniparser_getstring(dic, "SNMP:snmp_union", "public"));
-    cJSON_AddStringToObject(root, "trap_server_ip",
+    cJSON_AddStringToObject(response, "trap_server_ip",
             iniparser_getstring(dic, "SNMP:trap_server_ip", "192.168.0.100"));
     sub_dir = cJSON_CreateArray();
-    cJSON_AddItemToObject(root, "authority_ip", sub_dir);
+    cJSON_AddItemToObject(response, "authority_ip", sub_dir);
 
 	int i = 0;
 	char item_name[32] = {0};
@@ -79,21 +84,21 @@ static int get_snmp_param(req_buf_t *req_buf, dictionary *dic)
     	cJSON_AddItemToArray(sub_dir, child);
 	}
 
-    req_buf->fb_buf = cJSON_Print(root);
-    cJSON_Delete(root);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
 
     return 0;
 }
 
-static int get_io_param(req_buf_t *req_buf, dictionary *dic)
+static int get_io_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
     cJSON *sub_dir;
     cJSON *child;
 
-    cJSON *root = cJSON_CreateObject();
+    cJSON *response = cJSON_CreateObject();
 	int i = 0;
     sub_dir = cJSON_CreateArray();
-    cJSON_AddItemToObject(root, "uart_param", sub_dir);
+    cJSON_AddItemToObject(response, "uart_param", sub_dir);
 	for (i = 0; i < 7; i++) {
     	child = cJSON_CreateObject();
     	cJSON_AddNumberToObject(child, "value", uart_param[i].value);
@@ -102,7 +107,7 @@ static int get_io_param(req_buf_t *req_buf, dictionary *dic)
 	}
 
     sub_dir = cJSON_CreateArray();
-    cJSON_AddItemToObject(root, "protocol_param", sub_dir);
+    cJSON_AddItemToObject(response, "protocol_param", sub_dir);
     for (i = 0; i < 3; i++) {
         child = cJSON_CreateObject();
     	cJSON_AddNumberToObject(child, "value", protocol_param[i].value);
@@ -112,72 +117,45 @@ static int get_io_param(req_buf_t *req_buf, dictionary *dic)
 
     int io_status[4] = {1, 0, 0, 1};
     sub_dir = cJSON_CreateArray();
-    cJSON_AddItemToObject(root, "io_status", sub_dir);
+    cJSON_AddItemToObject(response, "io_status", sub_dir);
     for (i = 0; i < 4; i++) {
         child = cJSON_CreateObject();
     	cJSON_AddNumberToObject(child, "value", io_status[i]);
     	cJSON_AddItemToArray(sub_dir, child);
     }
 
-    cJSON_AddNumberToObject(root, "rs232_protocol",
+    cJSON_AddNumberToObject(response, "rs232_protocol",
             iniparser_getint(dic, "PROTOCOL:rs232_protocol", 101));
-    cJSON_AddNumberToObject(root, "rs232_baudrate",
+    cJSON_AddNumberToObject(response, "rs232_baudrate",
             iniparser_getint(dic, "PROTOCOL:rs232_baudrate", 1));
-    cJSON_AddNumberToObject(root, "rs232_flag",
+    cJSON_AddNumberToObject(response, "rs232_flag",
             iniparser_getint(dic, "PROTOCOL:rs232_flag", 1));
 
-    cJSON_AddNumberToObject(root, "rs485_protocol",
+    cJSON_AddNumberToObject(response, "rs485_protocol",
             iniparser_getint(dic, "PROTOCOL:rs485_protocol", 101));
-    cJSON_AddNumberToObject(root, "rs485_baudrate",
+    cJSON_AddNumberToObject(response, "rs485_baudrate",
             iniparser_getint(dic, "PROTOCOL:rs485_baudrate", 1));
-    cJSON_AddNumberToObject(root, "rs485_flag",
+    cJSON_AddNumberToObject(response, "rs485_flag",
             iniparser_getint(dic, "PROTOCOL:rs485_flag", 0));
 
-    req_buf->fb_buf = cJSON_Print(root);
-    cJSON_Delete(root);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
 
     return 0;
 }
 
-static int get_ntp_param(req_buf_t *req_buf, dictionary *dic)
+static int get_ntp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "ntp_server_ip",
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddStringToObject(response, "ntp_server_ip",
             iniparser_getstring(dic, "NTP:ntp_server_ip", "192.168.0.201"));
-    cJSON_AddNumberToObject(root, "ntp_interval",
+    cJSON_AddNumberToObject(response, "ntp_interval",
             iniparser_getint(dic, "NTP:ntp_interval", 60));
 
-    req_buf->fb_buf = cJSON_Print(root);
-    cJSON_Delete(root);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
 
     return 0;
-}
-
-static int parse_get_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
-{
-    int ret = -1;
-    int cmd_type = cJSON_GetObjectItem(root, "cmd_type")->valueint;
-    switch (cmd_type) {
-    case 0: /* 网络参数 */
-        get_network_param(req_buf, dic);
-        ret = 0;
-        break;
-    case 1:
-        get_snmp_param(req_buf, dic);
-        ret = 0;
-        break;
-    case 2:
-        get_io_param(req_buf, dic);
-        ret = 0;
-        break;
-    case 3:
-        get_ntp_param(req_buf, dic);
-        ret = 0;
-    default:
-        break;
-    }
-
-    return ret;
 }
 
 static void write_profile(dictionary    *dic,
@@ -208,11 +186,16 @@ static void dump_profile(dictionary *dic, char *filename)
 static int set_network_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
-    write_profile(dic, "NETWORK", "ip_addr", cJSON_GetObjectItem(cfg, "ip_addr")->valuestring);
-    write_profile(dic, "NETWORK", "gateway", cJSON_GetObjectItem(cfg, "gateway")->valuestring);
-    write_profile(dic, "NETWORK", "netmask", cJSON_GetObjectItem(cfg, "netmask")->valuestring);
-    write_profile(dic, "NETWORK", "master_dns", cJSON_GetObjectItem(cfg, "master_dns")->valuestring);
-    write_profile(dic, "NETWORK", "slave_dns", cJSON_GetObjectItem(cfg, "slave_dns")->valuestring);
+    write_profile(dic, "NETWORK", "ip_addr",
+            cJSON_GetObjectItem(cfg, "ip_addr")->valuestring);
+    write_profile(dic, "NETWORK", "gateway",
+            cJSON_GetObjectItem(cfg, "gateway")->valuestring);
+    write_profile(dic, "NETWORK", "netmask",
+            cJSON_GetObjectItem(cfg, "netmask")->valuestring);
+    write_profile(dic, "NETWORK", "master_dns",
+            cJSON_GetObjectItem(cfg, "master_dns")->valuestring);
+    write_profile(dic, "NETWORK", "slave_dns",
+            cJSON_GetObjectItem(cfg, "slave_dns")->valuestring);
     dump_profile(dic, INI_FILE_NAME);
 
     cJSON *response;
@@ -264,6 +247,11 @@ static int set_snmp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
+static int set_io_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+{
+    return 0;
+}
+
 static int set_ntp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
@@ -282,7 +270,7 @@ static int set_ntp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int set_device_time(cJSON *root, req_buf_t *req_buf)
+static int set_device_time(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
     char cmd[128] = {0};
@@ -299,94 +287,130 @@ static int set_device_time(cJSON *root, req_buf_t *req_buf)
     return 0;
 }
 
-static int parse_set_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int get_system_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
 {
-    int ret = -1;
-    int cmd_type = cJSON_GetObjectItem(root, "cmd_type")->valueint;
-    switch (cmd_type) {
-    case 0: /* 网络参数 */
-        ret = set_network_param(root, req_buf, dic);
-        break;
-    case 1:
-        ret = set_snmp_param(root, req_buf, dic);
-        break;
-    case 2:
-        //set_io_param(root, req_buf, dic);
-        ret = 0;
-        break;
-    case 3:
-        ret = set_ntp_param(root, req_buf, dic);
-        break;
-    case 4:
-        ret = set_device_time(root, req_buf);
-        break;
-    default:
-        break;
-    }
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    cJSON *response = cJSON_CreateObject();
 
-    return ret;
+    cJSON_AddStringToObject(response, "site",
+            iniparser_getstring(dic, "SYSTEM:site", ""));
+    cJSON_AddStringToObject(response, "device_number",
+            iniparser_getstring(dic, "SYSTEM:device_number", "20170201007"));
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
 }
+
+static int set_system_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+{
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    cJSON *response = cJSON_CreateObject();
+    write_profile(dic, "SYSTEM", "site",
+            cJSON_GetObjectItem(cfg, "site")->valuestring);
+    write_profile(dic, "SYSTEM", "device_number",
+            cJSON_GetObjectItem(cfg, "device_number")->valuestring);
+    dump_profile(dic, INI_FILE_NAME);
+
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+typedef int (*msg_fun)(cJSON *root, req_buf_t *req_buf, dictionary *dic);
+
+typedef struct {
+    const char  *cmd_type;
+    msg_fun     action;
+} cmd_fun_t;
+
+typedef struct {
+    const char  *msg_type;
+    cmd_fun_t   *cmd_fun_array;
+    int         cmd_num;
+} msg_fun_t;
+
+/* 获取参数相关命令及操作 */
+cmd_fun_t cmd_get_param[] = {
+    {
+        "network",
+        get_network_param
+    },
+    {
+        "snmp",
+        get_snmp_param
+    },
+    {
+        "io",
+        get_io_param
+    },
+    {
+        "ntp",
+        get_ntp_param
+    }
+};
+
+/* 设置参数相关命令及操作 */
+cmd_fun_t cmd_set_param[] = {
+    {
+        "network",
+        set_network_param
+    },
+    {
+        "snmp",
+        set_snmp_param
+    },
+    {
+        "io",
+        set_io_param
+    },
+    {
+        "ntp",
+        set_ntp_param
+    },
+    {
+        "calibration",
+        set_device_time
+    }
+};
+
+/* 系统参数控制 */
+cmd_fun_t cmd_system_setting[] = {
+    {
+        "get_system_param",
+        get_system_param
+    },
+    {
+        "set_system_param",
+        set_system_param
+    }
+};
+
+/* 消息类型及其对应的 命令:操作函数 数组 */
+msg_fun_t msg_flow[] = {
+    {
+        "get_param",
+        cmd_get_param,
+        sizeof(cmd_get_param) / sizeof(cmd_fun_t)
+    },
+    {
+        "set_param",
+        cmd_set_param,
+        sizeof(cmd_set_param) / sizeof(cmd_fun_t)
+    },
+    {
+        "system_setting",
+        cmd_system_setting,
+        sizeof(cmd_system_setting) / sizeof(cmd_fun_t)
+    }
+};
 
 static int parse_query_data(cJSON *root, req_buf_t *req_buf)
 {
     return 0;
-}
-
-static int system_setting(cJSON *root, req_buf_t *req_buf, dictionary *dic)
-{
-    int ret = -1;
-    int cmd_type = cJSON_GetObjectItem(root, "cmd_type")->valueint;
-    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
-    cJSON *response = cJSON_CreateObject();
-    switch (cmd_type) {
-    case 0: /* 获取系统参数 */
-        cJSON_AddStringToObject(response, "site",
-                iniparser_getstring(dic, "SYSTEM:site", ""));
-        cJSON_AddStringToObject(response, "device_number",
-                iniparser_getstring(dic, "SYSTEM:device_number", "20170201007"));
-        req_buf->fb_buf = cJSON_Print(response);
-
-        ret = 0;
-        break;
-    case 1: /* 设置系统参数 */
-        write_profile(dic, "SYSTEM", "site",
-                cJSON_GetObjectItem(cfg, "site")->valuestring);
-        write_profile(dic, "SYSTEM", "device_number",
-                cJSON_GetObjectItem(cfg, "device_number")->valuestring);
-        dump_profile(dic, INI_FILE_NAME);
-
-        cJSON_AddNumberToObject(response, "status", 1);
-        req_buf->fb_buf = cJSON_Print(response);
-
-        ret = 0;
-        break;
-    case 2: /* 重启设备 */
-        ret = 0;
-        break;
-    case 3: /* 恢复出厂设置 */
-        ret = 0;
-        break;
-    case 4: /* 获取系统信息 */
-        ret = 0;
-        break;
-    case 5: /* 用户信息获取 */
-        ret = 0;
-        break;
-    case 6: /* 新增用户信息 */
-        ret = 0;
-        break;
-    case 7: /* 删除用户信息 */
-        ret = 0;
-        break;
-    case 8: /* 修改用户信息 */
-        ret = 0;
-        break;
-    default:
-        break;
-    }
-    cJSON_Delete(response);
-
-    return ret;
 }
 
 static int mib_download(req_buf_t *req_buf, const char *filename)
@@ -408,8 +432,6 @@ static int mib_download(req_buf_t *req_buf, const char *filename)
 
     return 0;
 }
-
-#define RET_BUF_MAX (512 * 1024)
 
 static int parse_request(req_buf_t *req_buf)
 {
@@ -459,24 +481,20 @@ int main(void)
     if (ret == 0) {
         cJSON *root = cJSON_Parse(request.buf);
         request.fb_buf = NULL;
-        int msg_type = cJSON_GetObjectItem(root, "msg_type")->valueint;
-        switch (msg_type) {
-        case 0:
-            ret = parse_get_param(root, &request, ini);
-            break;
-        case 1:
-            ret = parse_set_param(root, &request, ini);
-            break;
-        case 2:
-            ret = parse_query_data(root, &request);
-            break;
-        case 3: //重启及恢复出厂设置、固件更新等
-            ret = system_setting(root, &request, ini);
-            break;
-        case 4: //报警设置相关操作
-            break;
-        default:
-            break;
+        int i = 0;
+        int j = 0;
+        char *msg_type = cJSON_GetObjectItem(root, "msg_type")->valuestring;
+        char *cmd_type = cJSON_GetObjectItem(root, "cmd_type")->valuestring;
+        int type_num = sizeof(msg_flow) / sizeof(msg_fun_t);
+        for (i = 0; i < type_num; i++) {
+            if (0 == strcmp(msg_flow[i].msg_type, msg_type)) {
+                cmd_fun_t *cmd_fun = msg_flow[i].cmd_fun_array;
+                for (j = 0; j < msg_flow[i].cmd_num; j++) {
+                    if (0 == strcmp(cmd_fun[j].cmd_type, cmd_type)) {
+                            cmd_fun[j].action(root, &request, ini);
+                    }
+                }
+            }
         }
 
         if (request.fb_buf) {

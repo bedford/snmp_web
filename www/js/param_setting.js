@@ -10,8 +10,8 @@ function display_network_param(network_param) {
 
 function init_network_param() {
     var json = new Object();
-    json.msg_type = 0;
-    json.cmd_type = 0;
+    json.msg_type = "get_param";
+    json.cmd_type = "network";
     var data = $.toJSON(json);
     $.ajax({
                 url     : "/cgi-bin/common.cgi",
@@ -26,8 +26,8 @@ function init_network_param() {
 
 function set_network_param() {
 	var json = new Object();
-	json.msg_type = 1;
-	json.cmd_type = 0;
+	json.msg_type = "set_param";
+	json.cmd_type = "network";
 
 	var cfg = new Object();
 	cfg.ip_addr = $("#ip_addr").val();
@@ -82,8 +82,8 @@ function display_ntp_param(ntp_info)
 
 function init_timestamp() {
     var json = new Object();
-    json.msg_type = 0;
-    json.cmd_type = 3;
+    json.msg_type = "get_param";
+    json.cmd_type = "ntp";
     var data = $.toJSON(json);
     $.ajax({
                 url     : "/cgi-bin/common.cgi",
@@ -102,8 +102,8 @@ function checkLeave() {
 
 function set_ntp_param() {
 	var json = new Object();
-	json.msg_type = 1;
-	json.cmd_type = 3;
+	json.msg_type = "set_param";
+	json.cmd_type = "ntp";
 
 	var cfg = new Object();
 	cfg.ntp_server_ip = $("#ntp_server_ip").val();
@@ -130,8 +130,8 @@ function set_ntp_param() {
 
 function calibration_with_pc() {
 	var json = new Object();
-	json.msg_type = 1;
-	json.cmd_type = 4;
+	json.msg_type = "set_param";
+	json.cmd_type = "calibration";
 
 	var cfg = new Object();
 	cfg.calibration_pc_time = $("#pc_time").val();
@@ -163,8 +163,8 @@ function down_mib() {
 
 function set_snmp_param() {
 	var json = new Object();
-	json.msg_type = 1;
-	json.cmd_type = 1;
+	json.msg_type = "set_param";
+	json.cmd_type = "snmp";
 
 	var cfg = new Object();
 	var newArray = new Array();
@@ -222,8 +222,8 @@ function display_snmp_param(snmp_param) {
 
 function load_snmp_param() {
     var json = new Object();
-    json.msg_type = 0;
-    json.cmd_type = 1;
+    json.msg_type = "get_param";
+    json.cmd_type = "snmp";
     var data = $.toJSON(json);
     $.ajax({
                 url     : "/cgi-bin/common.cgi",
@@ -289,8 +289,8 @@ function display_io_param(io_param) {
 
 function load_io_param() {
     var json = new Object();
-    json.msg_type = 0;
-    json.cmd_type = 2;
+    json.msg_type = "get_param";
+    json.cmd_type = "io";
     var data = $.toJSON(json);
     $.ajax({
                 url     : "/cgi-bin/common.cgi",

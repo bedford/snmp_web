@@ -1,8 +1,8 @@
 /* 加载系统参数 */
 function load_system_param() {
     var json = new Object();
-    json.msg_type = 3;
-    json.cmd_type = 0;
+    json.msg_type = "system_setting";
+    json.cmd_type = "get_system_param";
     var data = $.toJSON(json);
     $.ajax({
                 url     : "/cgi-bin/common.cgi",
@@ -18,8 +18,8 @@ function load_system_param() {
 
 function set_system_param() {
 	var json = new Object();
-	json.msg_type = 3;
-	json.cmd_type = 1;
+	json.msg_type = "system_setting";
+	json.cmd_type = "set_system_param";
 
 	var cfg = new Object();
 	cfg.site = $("#site").val();
@@ -154,47 +154,4 @@ function update_firmware() {
                     alert(msg);
                 },
             });
-}
-
-function load_user() {
-	var user_list = [
-	{
-		"id":"100",
-		"user":"admin",
-		"password":"*****",
-		"authority":"管理员"
-	},
-	{
-		"id":"101",
-		"user":"monitor",
-		"password":"*****",
-		"authority":"监查员"
-	},
-	{
-		"id":"102",
-		"user":"operator",
-		"password":"*****",
-		"authority":"操作员"
-	},
-	{
-		"id":"103",
-		"user":"guest",
-		"password":"*****",
-		"authority":"访客"
-	}
-	];
-	show_user_list(user_list);
-}
-
-function show_user_list(user_list) {
-	var html="";
-	$.each(user_list, function(i, item) {
-		html+="<tr onclick='onClick(this)' id='"+item.id+"'>";
-		html+="<td>"+(i+1)+"</td>"+"<td>"+item.user+"</div></td>";
-		html+="<td>"+item.password+"</td>";
-		html+="<td>"+item.authority+"</td>";
-		html+='<td><a href="#" onclick="edit_item(\''+item.id+'\')">编辑</a> <a href="#" onclick="delete_item(\''+item.id+'\')">删除</a></td>';
-		html+="</tr>"
-	});
-	$("#user_table").append(html);
 }
