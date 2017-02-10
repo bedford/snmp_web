@@ -5,11 +5,11 @@
     <title>status monitor</title>
 	<style>
 	#table-box {
-    width: 100%;
-    height: 80%;
-    position: relative;
-    box-sizing: border-box;
-    padding-bottom: 34px;
+        width: 100%;
+        height: 80%;
+        position: relative;
+        box-sizing: border-box;
+        padding-bottom: 34px;
 	}
 	.table-title {
 		height: 34px;
@@ -114,6 +114,7 @@
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery-ui.min.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
 </head>
 <body>
 	<div class="operation_box">
@@ -149,7 +150,7 @@
 		<form>
 			<fieldset>
 				<label for="name">名字</label>
-				<input type="text" name="modify_name" id="modify_name">
+				<input type="text" name="modify_name" id="modify_name" disabled="true">
 				<label for="name">E-Mail</label>
 				<input type="text" name="modify_email" id="modify_email">
 			</fieldset>
@@ -157,17 +158,74 @@
 	</div>
 
 	<div class="jq-dialog" id="confirm_dialog" title="删除邮件联系人">
-		<label>确认要删除该邮件联系人吗？</label>
+		<label id="delete_detail"></label>
 	</div>
 
 	<script>
+        function show_email_user_list(email_user_list) {
+            $('#email_table tr:not(:first)').remove();
+			if (email_user_list.count > 0) {
+				var html="";
+				$.each(email_user_list.email_user, function(i, item) {
+					html+='<tr><td>'+item.id+'</td><td>'+item.name+'</div></td><td>'+item.email+'</td>';
+					html+='<td><a href="javascript:edit_item('+i+')">编辑</a> <a href="javascript:delete_item('+i+')">删除</a></td></tr>';
+				});
+				$('#email_table').append(html);
+			}
+        }
+
+		function load_email_user() {
+            var json = new Object();
+		    json.msg_type = "alarm_setting";
+		    json.cmd_type = "get_email_user";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+							show_email_user_list(msg);
+		                },
+		            });
+		}
+
+        $(document).ready(function () {
+			load_email_user();
+        })
+
+        function delete_email_user(index) {
+		    var json = new Object();
+		    json.msg_type = "alarm_setting";
+		    json.cmd_type = "delete_email_user";
+			json.id = $('#email_table').find('tr').eq(index + 1).find('td').eq(0).html();
+			json.name = $('#modify_name').val();
+			json.email = $('#modify_email').val();
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function() {
+							var tr = $('#email_table').find('tr').eq(index + 1);
+							tr.remove();
+		                },
+		            });
+		}
+
 		function delete_item(index) {
+			var name = $('#email_table').find('tr').eq(index + 1).find('td').eq(1).html();
+			var email = $('#email_table').find('tr').eq(index + 1).find('td').eq(2).html();
+			var html = '确认要删除联系人：  '+name+'  吗？';
+			$('#delete_detail').html(html);
 			$('#confirm_dialog').dialog({
 				resizable: false,
-				height: 150,
+				height: 160,
 				modal: true,
 				buttons: {
 					"确定": function() {
+						delete_email_user(index);
 						$(this).dialog("close");
 					},
 					取消: function() {
@@ -175,6 +233,27 @@
 					}
 				}
 			});
+		}
+
+        function edit_email_user(index, valuestring) {
+		    var json = new Object();
+		    json.msg_type = "alarm_setting";
+		    json.cmd_type = "modify_email_user";
+			json.id = $('#email_table').find('tr').eq(index + 1).find('td').eq(0).html();
+			json.name = $('#modify_name').val();
+			json.email = $('#modify_email').val();
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function() {
+							var td =  $('#email_table').find('tr').eq(index + 1).find('td').eq(2);
+							td.empty();
+							td.html(valuestring);
+		                },
+		            });
 		}
 
         function edit_item(index) {
@@ -188,6 +267,7 @@
 				modal: true,
 				buttons: {
 					"确定": function() {
+						edit_email_user(index, $('#modify_email').val());
 						$(this).dialog("close");
 					},
 					取消: function() {
@@ -195,6 +275,24 @@
 					}
 				}
 			});
+		}
+
+        function add_email_user() {
+		    var json = new Object();
+		    json.msg_type = "alarm_setting";
+		    json.cmd_type = "add_email_user";
+			json.name = $('#new_name').val();
+			json.email = $('#new_email').val();
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+							show_email_user_list(msg);
+		                },
+		            });
 		}
 
 		function add_email_contact() {
@@ -204,6 +302,7 @@
 				modal: true,
 				buttons: {
 					"确定": function() {
+						add_email_user();
 						$(this).dialog("close");
 					},
 					取消: function() {
@@ -212,38 +311,6 @@
 				}
 			});
 		}
-
-		function load_email_param() {
-			var param_list = [
-			{
-				"id":"100",
-				"name":"张三",
-				"email":"13828891024@qq.com"
-			},
-			{
-				"id":"101",
-				"name":"李四",
-				"email":"13828891024@139.com"
-			}
-			];
-			show_email_list(param_list);
-		}
-
-		function show_email_list(email_param_list) {
-			var html="";
-			$.each(email_param_list, function(i, item) {
-				html += "<tr>";
-				html+="<td>"+item.id+"</td>"+"<td>"+item.name+"</div></td>";
-				html+="<td>"+item.email+"</td>";
-				html+='<td><a href="javascript:edit_item('+i+')">编辑</a> <a href="javascript:delete_item('+i+')">删除</a></td>';
-				html+="</tr>"
-			});
-			$("#email_table").append(html);
-		}
-
-        $(document).ready(function () {
-			load_email_param();
-        })
     </script>
 </body>
 </html>
