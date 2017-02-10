@@ -12,7 +12,7 @@ INC_FLAGS += -I.
 LD_FLAGS += -L/usr/local/lib
 LD_FLAGS += -lm
 #LD_FLAGS += -lpthread
-#LD_FLAGS += -L./ -lsqlite3
+LD_FLAGS += -L./ -lsqlite3
 
 %.o : %.c
 	$(CC) $(CFLAGS) $(INC_FLAGS) -c $< -o $@

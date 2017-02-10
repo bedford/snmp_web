@@ -5,6 +5,7 @@
 
 #include "cJSON.h"
 #include "iniparser.h"
+#include "db_access.h"
 
 #define INI_FILE_NAME	"param.ini"
 
@@ -16,6 +17,12 @@ typedef struct {
     char    *fb_buf;    /* 返回值内存指针 */
     int     fb_len;     /* 返回值长度 */
 } req_buf_t;
+
+typedef struct {
+	req_buf_t	request;
+	db_access_t *sys_db_handle;
+	dictionary	*dic;
+} priv_info_t;
 
 typedef struct {
     int     value;
@@ -38,8 +45,10 @@ map_t protocol_param[] = {
     {200,   "UPS200"}
 };
 
-static int get_network_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int get_network_param(cJSON *root, priv_info_t *priv)
 {
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "mac_addr", "F0:FF:04:00:5D:F4");
     cJSON_AddStringToObject(response, "ip_addr",
@@ -58,10 +67,13 @@ static int get_network_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int get_snmp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int get_snmp_param(cJSON *root, priv_info_t *priv)
 {
-    cJSON *sub_dir;
-    cJSON *child;
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *sub_dir = NULL;
+    cJSON *child = NULL;
 
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "snmp_union",
@@ -90,10 +102,13 @@ static int get_snmp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int get_io_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int get_io_param(cJSON *root, priv_info_t *priv)
 {
-    cJSON *sub_dir;
-    cJSON *child;
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *sub_dir = NULL;
+    cJSON *child = NULL;
 
     cJSON *response = cJSON_CreateObject();
 	int i = 0;
@@ -144,8 +159,11 @@ static int get_io_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int get_ntp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int get_ntp_param(cJSON *root, priv_info_t *priv)
 {
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
     cJSON *response = cJSON_CreateObject();
     cJSON_AddStringToObject(response, "ntp_server_ip",
             iniparser_getstring(dic, "NTP:ntp_server_ip", "192.168.0.201"));
@@ -183,8 +201,11 @@ static void dump_profile(dictionary *dic, char *filename)
     }
 }
 
-static int set_network_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int set_network_param(cJSON *root, priv_info_t *priv)
 {
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
     write_profile(dic, "NETWORK", "ip_addr",
             cJSON_GetObjectItem(cfg, "ip_addr")->valuestring);
@@ -207,8 +228,11 @@ static int set_network_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int set_snmp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int set_snmp_param(cJSON *root, priv_info_t *priv)
 {
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
     write_profile(dic, "SNMP", "snmp_union",
             cJSON_GetObjectItem(cfg, "snmp_union")->valuestring);
@@ -247,13 +271,16 @@ static int set_snmp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int set_io_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int set_io_param(cJSON *root, priv_info_t *priv)
 {
     return 0;
 }
 
-static int set_ntp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int set_ntp_param(cJSON *root, priv_info_t *priv)
 {
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
     write_profile(dic, "NTP", "ntp_server_ip",
             cJSON_GetObjectItem(cfg, "ntp_server_ip")->valuestring);
@@ -270,8 +297,11 @@ static int set_ntp_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int set_device_time(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int set_device_time(cJSON *root, priv_info_t *priv)
 {
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
     char cmd[128] = {0};
     sprintf(cmd, "date -s \"%s\"",
@@ -287,8 +317,11 @@ static int set_device_time(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int get_system_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int get_system_param(cJSON *root, priv_info_t *priv)
 {
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
     cJSON *response = cJSON_CreateObject();
 
@@ -302,8 +335,11 @@ static int get_system_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-static int set_system_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
+static int set_system_param(cJSON *root, priv_info_t *priv)
 {
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
     cJSON *response = cJSON_CreateObject();
     write_profile(dic, "SYSTEM", "site",
@@ -320,7 +356,251 @@ static int set_system_param(cJSON *root, req_buf_t *req_buf, dictionary *dic)
     return 0;
 }
 
-typedef int (*msg_fun)(cJSON *root, req_buf_t *req_buf, dictionary *dic);
+static int get_phone_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY id", "phone_user");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "phone_user", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
+    		cJSON_AddStringToObject(child, "name", query_result.result[i * query_result.column + 1]);
+    		cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 2]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int add_phone_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "INSERT INTO %s (name, phone) VALUES ('%s', '%s')",
+		"phone_user", cJSON_GetObjectItem(root, "name")->valuestring,
+		cJSON_GetObjectItem(root, "phone")->valuestring);
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s ORDER BY id", "phone_user");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "phone_user", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
+    		cJSON_AddStringToObject(child, "name", query_result.result[i * query_result.column + 1]);
+    		cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 2]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int modify_phone_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "UPDATE %s SET phone='%s' WHERE id='%d'",
+		"phone_user", cJSON_GetObjectItem(root, "phone")->valuestring,
+		atoi(cJSON_GetObjectItem(root, "id")->valuestring));
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int delete_phone_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "DELETE FROM %s WHERE id='%d'",
+		"phone_user", atoi(cJSON_GetObjectItem(root, "id")->valuestring));
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int get_email_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY id", "email_user");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "email_user", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
+    		cJSON_AddStringToObject(child, "name", query_result.result[i * query_result.column + 1]);
+    		cJSON_AddStringToObject(child, "email", query_result.result[i * query_result.column + 2]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int add_email_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "INSERT INTO %s (name, email) VALUES ('%s', '%s')",
+		"email_user", cJSON_GetObjectItem(root, "name")->valuestring,
+		cJSON_GetObjectItem(root, "email")->valuestring);
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s ORDER BY id", "email_user");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "email_user", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
+    		cJSON_AddStringToObject(child, "name", query_result.result[i * query_result.column + 1]);
+    		cJSON_AddStringToObject(child, "email", query_result.result[i * query_result.column + 2]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int modify_email_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "UPDATE %s SET email='%s' WHERE id='%d'",
+		"email_user", cJSON_GetObjectItem(root, "email")->valuestring,
+		atoi(cJSON_GetObjectItem(root, "id")->valuestring));
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int delete_email_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "DELETE FROM %s WHERE id='%d'",
+		"email_user", atoi(cJSON_GetObjectItem(root, "id")->valuestring));
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+typedef int (*msg_fun)(cJSON *root, priv_info_t *priv);
 
 typedef struct {
     const char  *cmd_type;
@@ -366,7 +646,7 @@ cmd_fun_t cmd_set_param[] = {
     {
         "io",
         set_io_param
-    },
+	},
     {
         "ntp",
         set_ntp_param
@@ -389,6 +669,41 @@ cmd_fun_t cmd_system_setting[] = {
     }
 };
 
+cmd_fun_t cmd_alarm_setting[] = {
+	{
+		"get_phone_user",
+		get_phone_user
+	},
+	{
+		"add_phone_user",
+		add_phone_user
+	},
+	{
+		"modify_phone_user",
+		modify_phone_user
+	},
+	{
+		"delete_phone_user",
+		delete_phone_user
+	},
+	{
+		"get_email_user",
+		get_email_user
+	},
+	{
+		"add_email_user",
+		add_email_user
+	},
+	{
+		"modify_email_user",
+		modify_email_user
+	},
+	{
+		"delete_email_user",
+		delete_email_user
+	}
+};
+
 /* 消息类型及其对应的 命令:操作函数 数组 */
 msg_fun_t msg_flow[] = {
     {
@@ -405,7 +720,12 @@ msg_fun_t msg_flow[] = {
         "system_setting",
         cmd_system_setting,
         sizeof(cmd_system_setting) / sizeof(cmd_fun_t)
-    }
+    },
+	{
+		"alarm_setting",
+		cmd_alarm_setting,
+		sizeof(cmd_alarm_setting) / sizeof(cmd_fun_t)
+	}
 };
 
 static int parse_query_data(cJSON *root, req_buf_t *req_buf)
@@ -471,16 +791,31 @@ static int parse_request(req_buf_t *req_buf)
 int main(void)
 {
     int ret = -1;
-	dictionary *ini = iniparser_load(INI_FILE_NAME);
+	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
+	priv->dic = iniparser_load(INI_FILE_NAME);
+	priv->sys_db_handle = db_access_create("sys.db");
 
-    req_buf_t request;
-    memset(&request, 0, sizeof(req_buf_t));
-    request.max_len = 512 * 1024;
-    request.buf     = (char *)calloc(1, request.max_len);
-    ret = parse_request(&request);
+	char error_msg[256] = {0};
+	char sql[256] = {0};
+	sprintf(sql, "create table if not exists %s \
+					(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+					name VARCHAR(32), \
+					phone VARCHAR(32))", "phone_user");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "create table if not exists %s \
+					(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+					name VARCHAR(32), \
+					email VARCHAR(32))", "email_user");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+	priv->request.max_len = 512 * 1024;
+    priv->request.buf     = (char *)calloc(1, priv->request.max_len);
+    ret = parse_request(&(priv->request));
     if (ret == 0) {
-        cJSON *root = cJSON_Parse(request.buf);
-        request.fb_buf = NULL;
+        cJSON *root = cJSON_Parse(priv->request.buf);
+        priv->request.fb_buf = NULL;
         int i = 0;
         int j = 0;
         char *msg_type = cJSON_GetObjectItem(root, "msg_type")->valuestring;
@@ -491,30 +826,36 @@ int main(void)
                 cmd_fun_t *cmd_fun = msg_flow[i].cmd_fun_array;
                 for (j = 0; j < msg_flow[i].cmd_num; j++) {
                     if (0 == strcmp(cmd_fun[j].cmd_type, cmd_type)) {
-                            cmd_fun[j].action(root, &request, ini);
+                            cmd_fun[j].action(root, priv);
                     }
                 }
             }
         }
 
-        if (request.fb_buf) {
+        if (priv->request.fb_buf) {
             fprintf(stdout, "Content-type: text/html\n\n");
-            fprintf(stdout, "%s", request.fb_buf);
-            free(request.fb_buf);
-            request.fb_buf = NULL;
+            fprintf(stdout, "%s", priv->request.fb_buf);
+            free(priv->request.fb_buf);
+            priv->request.fb_buf = NULL;
         }
         cJSON_Delete(root);
     } else if (ret == 1) {
         //下载MIB
-        if (strstr(request.buf, "mib") != NULL) {
-            ret = mib_download(&request, "param.ini");
+        if (strstr(priv->request.buf, "mib") != NULL) {
+            ret = mib_download(&(priv->request), "param.ini");
         }
     }
-    free(request.buf);
-    request.buf = NULL;
+    free(priv->request.buf);
+    priv->request.buf = NULL;
 
-	iniparser_freedict(ini);
-	ini = NULL;
+	iniparser_freedict(priv->dic);
+	priv->dic = NULL;
+
+	priv->sys_db_handle->destroy(priv->sys_db_handle);
+	priv->sys_db_handle = NULL;
+
+	free(priv);
+	priv = NULL;
 
     return ret;
 }
