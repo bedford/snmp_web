@@ -600,6 +600,62 @@ static int delete_email_user(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int get_user_list(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY id", "user_manager");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "user_list", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
+    		cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 1]);
+    		cJSON_AddStringToObject(child, "description", query_result.result[i * query_result.column + 4]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int update_password(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "UPDATE %s SET password='%s' WHERE id='%d'",
+		"user_manager", cJSON_GetObjectItem(root, "password")->valuestring,
+		atoi(cJSON_GetObjectItem(root, "id")->valuestring));
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 typedef int (*msg_fun)(cJSON *root, priv_info_t *priv);
 
 typedef struct {
@@ -666,7 +722,19 @@ cmd_fun_t cmd_system_setting[] = {
     {
         "set_system_param",
         set_system_param
-    }
+    },
+	{
+		"get_user_list",
+		get_user_list
+	},
+	{
+		"update_password",
+		update_password
+	}/*,
+	{
+		"login"
+		login
+	}*/
 };
 
 cmd_fun_t cmd_alarm_setting[] = {

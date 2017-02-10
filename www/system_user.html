@@ -4,16 +4,26 @@
     <title>用户管理</title>
     <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
     <link rel="stylesheet" href="css/cssReset.css">
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
     <script src="js/system_setting.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
 <style>
 	#table-box {
 		width: 100%;
-		height: 100%;
+		height: 80%;
 		position: relative;
 		box-sizing: border-box;
 		padding-bottom: 34px;
 		padding-top: 20px;
+	}
+
+	#foot-hint {
+		width: 100%;
+		height: 30px;
+		padding-bottom: 20px;
+		position: relative;
 	}
 
 	.table-content {
@@ -44,6 +54,22 @@
 		text-align: center;
 		color: #393c3d;
 	}
+
+	.jq-dialog form fieldset {
+		padding: 0;
+		border: 0;
+		margin-top: 25px;
+	}
+
+	.jq-dialog form fieldset > label {
+		display: block;
+	}
+
+	.jq-dialog form fieldset > input[type="text"] {
+		margin-bottom: 12px;
+		width: 95%;
+		padding: .4em;
+	}
 </style>
 </head>
 
@@ -54,15 +80,96 @@
 				<tr id="head">
 					<th>序号</th>
 					<th>用户名</th>
-					<th>密码</th>
 					<th>权限</th>
 					<th>操作</th>
 				</tr>
 			</table>
 		</div>
 	</div>
+	<div id="foot-hint">
+		<label id="hint"></label>
+	</div>
+
+	<div class="jq-dialog" id="user_dialog" title="修改用户密码">
+		<form>
+			<fieldset>
+				<label for="name">用户名称</label>
+				<input type="text" name="name" id="modify_user" disabled="true">
+				<label for="name">密码</label>
+				<input type="text" name="password" id="modify_password">
+			</fieldset>
+		</form>
+	</div>
 
 	<script>
+        function edit_password(index, password) {
+		    var json = new Object();
+		    json.msg_type = "system_setting";
+		    json.cmd_type = "update_password";
+			json.id = $('#user_table').find('tr').eq(index + 1).find('td').eq(0).html();
+			json.user = $('#user_table').find('tr').eq(index + 1).find('td').eq(1).html();
+			json.password = $('#modify_password').val();
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function() {
+							var html='修改用户: '+json.user+' 密码 -- 成功';
+							$('#hint').html(html);
+		                },
+		            });
+		}
+
+        function edit_item(index) {
+			var name = $('#user_table').find('tr').eq(index + 1).find('td').eq(1).html();
+			$('#modify_user').val(name);
+			$('#modify_password').val("");
+			$('#user_dialog').dialog({
+				width: 300,
+				height: 300,
+				modal: true,
+				buttons: {
+					"确定": function() {
+						edit_password(index, $('#modify_password').val());
+						$(this).dialog("close");
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
+			});
+		}
+
+		function show_user_list(response) {
+            $('#user_table tr:not(:first)').remove();
+			if (response.count > 0) {
+				var html="";
+				$.each(response.user_list, function(i, item) {
+					html+='<tr><td>'+item.id+'</td><td>'+item.user+'</div></td><td>'+item.description+'</td>';
+					html+='<td><a href="javascript:edit_item('+i+')">编辑</a></td></tr>';
+				});
+				$('#user_table').append(html);
+			}
+		}
+
+		function load_user() {
+	        var json = new Object();
+		    json.msg_type = "system_setting";
+		    json.cmd_type = "get_user_list";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+							show_user_list(msg);
+		                },
+		            });
+		}
+
         $(document).ready(function () {
 			load_user();
         })
