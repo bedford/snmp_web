@@ -29,16 +29,6 @@ typedef struct {
     char    *text;
 } map_t;
 
-map_t uart_param[] = {
-    {0,     "2400"},
-    {1,     "4800"},
-    {2,     "9600"},
-    {3,     "19200"},
-    {4,     "38400"},
-    {5,     "57600"},
-    {6,     "115200"}
-};
-
 map_t protocol_param[] = {
     {100,   "UPS100"},
     {101,   "UPS101"},
@@ -113,15 +103,6 @@ static int get_io_param(cJSON *root, priv_info_t *priv)
     cJSON *response = cJSON_CreateObject();
 	int i = 0;
     sub_dir = cJSON_CreateArray();
-    cJSON_AddItemToObject(response, "uart_param", sub_dir);
-	for (i = 0; i < 7; i++) {
-    	child = cJSON_CreateObject();
-    	cJSON_AddNumberToObject(child, "value", uart_param[i].value);
-    	cJSON_AddStringToObject(child, "text", uart_param[i].text);
-    	cJSON_AddItemToArray(sub_dir, child);
-	}
-
-    sub_dir = cJSON_CreateArray();
     cJSON_AddItemToObject(response, "protocol_param", sub_dir);
     for (i = 0; i < 3; i++) {
         child = cJSON_CreateObject();
@@ -143,6 +124,12 @@ static int get_io_param(cJSON *root, priv_info_t *priv)
             iniparser_getint(dic, "PROTOCOL:rs232_protocol", 101));
     cJSON_AddNumberToObject(response, "rs232_baudrate",
             iniparser_getint(dic, "PROTOCOL:rs232_baudrate", 1));
+    cJSON_AddNumberToObject(response, "rs232_databits",
+            iniparser_getint(dic, "PROTOCOL:rs232_databits", 3));
+    cJSON_AddNumberToObject(response, "rs232_stopbits",
+            iniparser_getint(dic, "PROTOCOL:rs232_stopbits", 0));
+    cJSON_AddNumberToObject(response, "rs232_parity",
+            iniparser_getint(dic, "PROTOCOL:rs232_parity", 0));
     cJSON_AddNumberToObject(response, "rs232_flag",
             iniparser_getint(dic, "PROTOCOL:rs232_flag", 1));
 
@@ -150,6 +137,12 @@ static int get_io_param(cJSON *root, priv_info_t *priv)
             iniparser_getint(dic, "PROTOCOL:rs485_protocol", 101));
     cJSON_AddNumberToObject(response, "rs485_baudrate",
             iniparser_getint(dic, "PROTOCOL:rs485_baudrate", 1));
+    cJSON_AddNumberToObject(response, "rs485_databits",
+            iniparser_getint(dic, "PROTOCOL:rs485_databits", 3));
+    cJSON_AddNumberToObject(response, "rs485_stopbits",
+            iniparser_getint(dic, "PROTOCOL:rs485_stopbits", 0));
+    cJSON_AddNumberToObject(response, "rs485_parity",
+            iniparser_getint(dic, "PROTOCOL:rs485_parity", 0));
     cJSON_AddNumberToObject(response, "rs485_flag",
             iniparser_getint(dic, "PROTOCOL:rs485_flag", 0));
 
@@ -273,6 +266,49 @@ static int set_snmp_param(cJSON *root, priv_info_t *priv)
 
 static int set_io_param(cJSON *root, priv_info_t *priv)
 {
+	return 0;
+}
+
+static int set_uart_param(cJSON *root, priv_info_t *priv)
+{
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    write_profile(dic, "PROTOCOL", "rs232_protocol",
+            cJSON_GetObjectItem(cfg, "rs232_protocol")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs232_baudrate",
+	        cJSON_GetObjectItem(cfg, "rs232_baudrate")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs232_databits",
+	        cJSON_GetObjectItem(cfg, "rs232_databits")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs232_stopbits",
+	        cJSON_GetObjectItem(cfg, "rs232_stopbits")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs232_parity",
+	        cJSON_GetObjectItem(cfg, "rs232_parity")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs232_flag",
+	        cJSON_GetObjectItem(cfg, "rs232_flag")->valuestring);
+
+    write_profile(dic, "PROTOCOL", "rs485_protocol",
+            cJSON_GetObjectItem(cfg, "rs485_protocol")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs485_baudrate",
+	        cJSON_GetObjectItem(cfg, "rs485_baudrate")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs485_databits",
+	        cJSON_GetObjectItem(cfg, "rs485_databits")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs485_stopbits",
+	        cJSON_GetObjectItem(cfg, "rs485_stopbits")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs485_parity",
+	        cJSON_GetObjectItem(cfg, "rs485_parity")->valuestring);
+	write_profile(dic, "PROTOCOL", "rs485_flag",
+	        cJSON_GetObjectItem(cfg, "rs485_flag")->valuestring);
+
+    dump_profile(dic, INI_FILE_NAME);
+
+    cJSON *response;
+    response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
     return 0;
 }
 
@@ -700,8 +736,12 @@ cmd_fun_t cmd_set_param[] = {
         set_snmp_param
     },
     {
-        "io",
-        set_io_param
+        "uart",
+        set_uart_param
+	},
+	{
+		"io",
+		set_io_param
 	},
     {
         "ntp",

@@ -251,13 +251,6 @@ $(function() {
 });
 
 function display_io_param(io_param) {
-    for (var i in io_param.uart_param) {
-    	$('#rs232_baudrate_select').append('<option value="'+ io_param.uart_param[i].value
-			+ '">' + io_param.uart_param[i].text + '</option>');
-		$('#rs485_baudrate_select').append('<option value="'+ io_param.uart_param[i].value
-			+ '">' + io_param.uart_param[i].text + '</option>');
-	}
-
 	for (var i in io_param.protocol_param) {
 	    $('#rs232_protocol_select').append('<option value="'+ io_param.protocol_param[i].value
 			+ '">' + io_param.protocol_param[i].text + '</option>');
@@ -267,9 +260,15 @@ function display_io_param(io_param) {
 
 	$('#rs232_protocol_select').val(io_param.rs232_protocol);
 	$('#rs232_baudrate_select').val(io_param.rs232_baudrate);
+	$('#rs232_databits').val(io_param.rs232_databits);
+	$('#rs232_stopbits').val(io_param.rs232_stopbits);
+	$('#rs232_parity').val(io_param.rs232_parity);
 
 	$('#rs485_protocol_select').val(io_param.rs485_protocol);
 	$('#rs485_baudrate_select').val(io_param.rs485_baudrate);
+	$('#rs485_databits').val(io_param.rs485_databits);
+	$('#rs485_stopbits').val(io_param.rs485_stopbits);
+	$('#rs485_parity').val(io_param.rs485_parity);
 
 	if (io_param.rs232_flag) {
 		$('#rs232_checkbox').attr("checked", true);
@@ -301,4 +300,51 @@ function load_io_param() {
                     display_io_param(msg);
                 },
             });
+}
+
+function set_uart_param() {
+	var json = new Object();
+	json.msg_type = "set_param";
+	json.cmd_type = "uart";
+
+	var cfg = new Object();
+	cfg.rs232_protocol = $('#rs232_protocol_select').val();
+	cfg.rs232_baudrate = $('#rs232_baudrate_select').val();
+	cfg.rs232_databits = $('#rs232_databits').val();
+	cfg.rs232_stopbits = $('#rs232_stopbits').val();
+	cfg.rs232_parity = $('#rs232_parity').val();
+	if ($('#rs232_checkbox').is(':checked')) {
+		cfg.rs232_flag = '1';
+	} else {
+		cfg.rs232_flag = '0';
+	}
+
+	cfg.rs485_protocol = $('#rs485_protocol_select').val();
+	cfg.rs485_baudrate = $('#rs485_baudrate_select').val();
+	cfg.rs485_databits = $('#rs485_databits').val();
+	cfg.rs485_stopbits = $('#rs485_stopbits').val();
+	cfg.rs485_parity = $('#rs485_parity').val();
+	if ($('#rs485_checkbox').is(':checked')) {
+		cfg.rs485_flag = '1';
+	} else {
+		cfg.rs485_flag = '0';
+	}
+
+	json.cfg = cfg;
+	$('#confirm_btn').attr("disabled", "disabled");
+	var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+                    $('#confirm_btn').removeAttr("disabled");
+					if (msg.status == 1) {
+						alert("设置成功");
+					} else {
+						alert("设置失败");
+					}
+                },
+			});
 }

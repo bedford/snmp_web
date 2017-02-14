@@ -26,7 +26,14 @@
 }
 
 .uart_content_box > select {
-	width: 160px;
+	width: 80px;
+	height: 30px;
+	margin-left: 5px;
+	margin-right: 10px;
+}
+
+.uart_content_box .short_select {
+	width: 40px;
 	height: 30px;
 	margin-left: 5px;
 	margin-right: 10px;
@@ -47,7 +54,7 @@
 		font-size: 14px;
 		font-weight:bold;
 		border: none;
-		margin-left:80px;
+		margin-left:30px;
 	}
 
 .do-status-box {

@@ -17,9 +17,35 @@
 			<label>协议类型</label>
 			<select id="rs232_protocol_select"></select>
 			<label>波特率</label>
-            <select id="rs232_baudrate_select"></select>
+            <select id="rs232_baudrate_select">
+				<option value="0">2400</option>
+				<option value="1">4800</option>
+				<option value="2">9600</option>
+				<option value="3">19200</option>
+				<option value="4">38400</option>
+				<option value="5">57600</option>
+				<option value="6">115200</option>
+			</select>
+			<label>数据位</label>
+			<select id="rs232_databits" class="short_select">
+				<option value="0">5</option>
+				<option value="1">6</option>
+				<option value="2">7</option>
+				<option value="3">8</option>
+			</select>
+			<label>停止位</label>
+			<select id="rs232_stopbits" class="short_select">
+				<option value="0">1</option>
+				<option value="1">2</option>
+			</select>
+			<label>校验方式</label>
+			<select id="rs232_parity" class="short_select">
+				<option value="0">无</option>
+				<option value="1">奇</option>
+				<option value="2">偶</option>
+			</select>
 			<input id="rs232_checkbox" type="checkbox"><label>是否启用</label>
-            <input type="button" class="confirm_btn" id="rs232_confirm_btn" value="确定" onclick="add_sms_contact()">
+            <input type="button" class="confirm_btn" id="confirm_btn" value="确定" onclick="set_uart_param()">
 		</div>
 	</div>
 		<div class="uart_box">
@@ -29,9 +55,34 @@
 			<label>协议类型</label>
 			<select id="rs485_protocol_select"></select>
 			<label>波特率</label>
-            <select id="rs485_baudrate_select"></select>
+            <select id="rs485_baudrate_select">
+				<option value="0">2400</option>
+				<option value="1">4800</option>
+				<option value="2">9600</option>
+				<option value="3">19200</option>
+				<option value="4">38400</option>
+				<option value="5">57600</option>
+				<option value="6">115200</option>
+			</select>
+			<label>数据位</label>
+			<select id="rs485_databits" class="short_select">
+				<option value="0">5</option>
+				<option value="1">6</option>
+				<option value="2">7</option>
+				<option value="3">8</option>
+			</select>
+			<label>停止位</label>
+			<select id="rs485_stopbits" class="short_select">
+				<option value="0">1</option>
+				<option value="1">2</option>
+			</select>
+			<label>校验方式</label>
+			<select id="rs485_parity" class="short_select">
+				<option value="0">无</option>
+				<option value="1">奇</option>
+				<option value="2">偶</option>
+			</select>
 			<input id="rs485_checkbox" type="checkbox"><label>是否启用</label>
-            <input type="button" class="confirm_btn" id="rs485_confirm_btn" value="确定" onclick="add_sms_contact()">
 		</div>
 	</div>
 	<div class="do-status-box">
