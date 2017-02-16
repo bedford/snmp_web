@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>串口参数报警设置</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="css/cssReset.css">
+	<script src="js/jquery-1.12.0.js"></script>
+	<style>
+	#table-box {
+		width: 90%;
+		height: 80%;
+		position: relative;
+		box-sizing: border-box;
+		padding: 20px;
+	}
+
+	.table-content {
+		height: 100%;
+		width: 100%;
+		overflow-y: auto;
+	}
+	.table-content > table {
+		table-layout: fixed;
+		width: 100%;
+		border-collapse: collapse;
+	}
+	.table-content tr {
+		height: 40px;
+		background-color: #e4eff5;
+	}
+
+	.table-content tr td {
+		width: 25%;
+		text-align: center;
+		color: #393c3d;
+		border: 1px solid #a2a1a1;
+	}
+
+	.table-content tr th {
+		width: 25%;
+		border: 1px solid #a2a1a1;
+	}
+
+	.table-content tr td+td {
+		width: 25%;
+		text-align: center;
+		color: #393c3d;
+	}
+
+	.table-content tr:nth-child(odd) {
+		background-color: #dde6ea;
+	}
+
+	.table-content tr:nth-child(even) {
+		background-color: #fff;
+	}
+
+	.table-content tr td > select {
+		height: 25px;
+	}
+
+	#other_content_box {
+		height: 10%;
+		width: 90%;
+	}
+
+	.confirm_btn {
+		background-color: #117daf;
+		color: #fff;
+		width: 100px;
+		height: 30px;
+		font-size: 14px;
+		font-weight:bold;
+		border: none;
+		float: right;
+	}
+	</style>
+</head>
+
+<body>
+	<div id="table-box">
+		<div class="table-content">
+			<table id="system_info_table">
+				<tr id="head">
+					<th>设备名称</th>
+					<th>参数名称</th>
+					<th>上限值</th>
+					<th>上限解除值</th>
+					<th>下限值</th>
+					<th>下限解除值</th>
+				</tr>
+				<tr>
+					<td>1号机柜UPS电源</td>
+					<td>输入交流电压</td>
+					<td contenteditable="true">235.0</td>
+					<td contenteditable="true">230.0</td>
+					<td contenteditable="true">180.0</td>
+					<td contenteditable="true">200.0</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+	<div id="other_content_box">
+        <input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_di_alarm()">
+	</div>
+
+    <script>
+        $(document).ready(function () {
+
+        })
+    </script>
+</body>
+</html>

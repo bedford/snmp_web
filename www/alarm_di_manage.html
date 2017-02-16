@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>DI报警设置</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="css/cssReset.css">
+	<script src="js/jquery-1.12.0.js"></script>
+	<style>
+	#table-box {
+		width: 90%;
+		height: 45%;
+		position: relative;
+		box-sizing: border-box;
+		padding: 20px;
+	}
+
+	.table-content {
+		height: 100%;
+		width: 100%;
+		overflow-y: auto;
+	}
+	.table-content > table {
+		table-layout: fixed;
+		width: 100%;
+		border-collapse: collapse;
+	}
+	.table-content tr {
+		height: 40px;
+		background-color: #e4eff5;
+	}
+
+	.table-content tr td {
+		width: 25%;
+		text-align: center;
+		color: #393c3d;
+		border: 1px solid #a2a1a1;
+	}
+
+	.table-content tr th {
+		width: 25%;
+		border: 1px solid #a2a1a1;
+	}
+
+	.table-content tr td+td {
+		width: 25%;
+		text-align: center;
+		color: #393c3d;
+	}
+
+	.table-content tr:nth-child(odd) {
+		background-color: #dde6ea;
+	}
+
+	.table-content tr:nth-child(even) {
+		background-color: #fff;
+	}
+
+	.table-content tr td > select {
+		height: 25px;
+	}
+
+	#other_content_box {
+		height: 10%;
+		width: 90%;
+	}
+
+	.confirm_btn {
+		background-color: #117daf;
+		color: #fff;
+		width: 100px;
+		height: 30px;
+		font-size: 14px;
+		font-weight:bold;
+		border: none;
+		float: right;
+	}
+	</style>
+</head>
+
+<body>
+	<div id="table-box">
+		<div class="table-content">
+			<table id="system_info_table">
+				<tr id="head">
+					<th>输入端口</th>
+					<th>是否使用</th>
+					<th>输入设备名称</th>
+					<th>告警状态</th>
+					<th>告警方式</th>
+				</tr>
+				<tr>
+					<td>DI-1</td>
+					<td>
+						<select>
+							<option value="0">否</option>
+							<option value="1">是</option>
+						</select>
+					</td>
+					<td contenteditable="true">机柜1门禁</td>
+					<td>
+						<select>
+							<option value="0">关</option>
+							<option value="1">开</option>
+						</select>
+					</td>
+					<td>
+						<select>
+							<option value="0">无</option>
+							<option value="1">短信告警</option>
+							<option value="2">邮件告警</option>
+							<option value="3">短信+邮件告警</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>DI-2</td>
+					<td>
+						<select>
+							<option value="0">否</option>
+							<option value="1">是</option>
+						</select>
+					</td>
+					<td contenteditable="true"></td>
+					<td>
+						<select>
+							<option value="0">关</option>
+							<option value="1">开</option>
+						</select>
+					</td>
+					<td>
+						<select>
+							<option value="0">无</option>
+							<option value="1">短信告警</option>
+							<option value="2">邮件告警</option>
+							<option value="3">短信+邮件告警</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>DI-3</td>
+					<td>
+						<select>
+							<option value="0">否</option>
+							<option value="1">是</option>
+						</select>
+					</td>
+					<td contenteditable="true"></td>
+					<td>
+						<select>
+							<option value="0">关</option>
+							<option value="1">开</option>
+						</select>
+					</td>
+					<td>
+						<select>
+							<option value="0">无</option>
+							<option value="1">短信告警</option>
+							<option value="2">邮件告警</option>
+							<option value="3">短信+邮件告警</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>DI-4</td>
+					<td>
+						<select>
+							<option value="0">否</option>
+							<option value="1">是</option>
+						</select>
+					</td>
+					<td contenteditable="true"></td>
+					<td>
+						<select>
+							<option value="0">关</option>
+							<option value="1">开</option>
+						</select>
+					</td>
+					<td>
+						<select>
+							<option value="0">无</option>
+							<option value="1">短信告警</option>
+							<option value="2">邮件告警</option>
+							<option value="3">短信+邮件告警</option>
+						</select>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+	<div id="other_content_box">
+        <input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_di_alarm()">
+	</div>
+
+    <script>
+        $(document).ready(function () {
+
+        })
+    </script>
+</body>
+</html>
