@@ -251,7 +251,7 @@
 		}
 
 		function show_phone_user_list(phone_user_list) {
-			$('#phone_table tr:not(:first)').remove();
+			$('#phone_table tr:gt(0)').remove();
 			if (phone_user_list.count > 0) {
 				var html="";
 				$.each(phone_user_list.phone_user, function(i, item) {

@@ -163,7 +163,7 @@
 
 	<script>
         function show_email_user_list(email_user_list) {
-            $('#email_table tr:not(:first)').remove();
+            $('#email_table tr:gt(0)').remove();
 			if (email_user_list.count > 0) {
 				var html="";
 				$.each(email_user_list.email_user, function(i, item) {
