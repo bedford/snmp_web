@@ -21,6 +21,7 @@ typedef struct {
 typedef struct {
 	req_buf_t	request;
 	db_access_t *sys_db_handle;
+	db_access_t *data_db_handle;
 	dictionary	*dic;
 } priv_info_t;
 
@@ -636,6 +637,43 @@ static int delete_email_user(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int get_sms_rule(cJSON *root, priv_info_t *priv)
+{
+    dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "send_times",
+            iniparser_getint(dic, "SMS:send_times", 3));
+    cJSON_AddNumberToObject(response, "send_interval",
+            iniparser_getint(dic, "SMS:send_interval", 1));
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int set_sms_rule(cJSON *root, priv_info_t *priv)
+{
+    dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    write_profile(dic, "SMS", "send_times",
+            cJSON_GetObjectItem(cfg, "send_times")->valuestring);
+	write_profile(dic, "SMS", "send_interval",
+	        cJSON_GetObjectItem(cfg, "send_interval")->valuestring);
+
+    dump_profile(dic, INI_FILE_NAME);
+
+    cJSON *response;
+    response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 static int get_user_list(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
@@ -809,7 +847,15 @@ cmd_fun_t cmd_alarm_setting[] = {
 	{
 		"delete_email_user",
 		delete_email_user
-	}
+	},
+    {
+        "get_sms_rule",
+        get_sms_rule
+    },
+    {
+        "set_sms_rule",
+        set_sms_rule
+    }
 };
 
 /* 消息类型及其对应的 命令:操作函数 数组 */
@@ -902,6 +948,7 @@ int main(void)
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
 	priv->dic = iniparser_load(INI_FILE_NAME);
 	priv->sys_db_handle = db_access_create("sys.db");
+    priv->data_db_handle = db_access_create("data.db");
 
 	char error_msg[256] = {0};
 	char sql[256] = {0};
@@ -917,6 +964,57 @@ int main(void)
 					name VARCHAR(32), \
 					email VARCHAR(32))", "email_user");
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
+             device_id INTEGER, \
+             device_name VARCHAR(32), \
+             param_name VARCHAR(32), \
+             param_type INTEGER, \
+             analog_value DOUBLE, \
+             enum_value INTEGER, \
+             enum_desc VARCHAR(32))", "data_record");
+    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
+             device_id INTEGER, \
+             device_name VARCHAR(32), \
+             param_name VARCHAR(32), \
+             param_type INTEGER, \
+             analog_value DOUBLE, \
+             enum_value INTEGER, \
+             enum_desc VARCHAR(32), \
+             alarm_desc VARCHAR(32))", "alarm_record");
+    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             send_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
+             device_name VARCHAR(32), \
+             param_name VARCHAR(32), \
+             alarm_desc VARCHAR(32), \
+             phone VARCHAR(32), \
+             send_status INTEGER, \
+             sms_content VARCHAR(128))", "sms_record");
+    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             send_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
+             device_name VARCHAR(32), \
+             param_name VARCHAR(32), \
+             alarm_desc VARCHAR(32), \
+             email VARCHAR(32), \
+             send_status INTEGER, \
+             email_content VARCHAR(128))", "email_record");
+    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
 	priv->request.max_len = 512 * 1024;
     priv->request.buf     = (char *)calloc(1, priv->request.max_len);
@@ -961,6 +1059,9 @@ int main(void)
 
 	priv->sys_db_handle->destroy(priv->sys_db_handle);
 	priv->sys_db_handle = NULL;
+
+    priv->data_db_handle->destroy(priv->data_db_handle);
+	priv->data_db_handle = NULL;
 
 	free(priv);
 	priv = NULL;

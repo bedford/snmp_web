@@ -72,16 +72,29 @@
 		padding-top: 0px;
 		padding-bottom: 0px;
 	}
-	#add_user_box {
-		width: 100%;
+
+	#sms_rule_box {
+		width: 50%;
 		height: 100%;
-		position: relative;
-		box-sizing: border-box;
-		padding-top: 34px;
-		text-align: right;
-		padding-right: 20px;
+		float: left;
 	}
+
+	#sms_rule_set {
+		margin-top: 34px;
+		margin-left: 20px;
+		font-size: 14px;
+	}
+
+	#add_user_box {
+		width: 50%;
+		height: 100%;
+		display: block;
+		float:right;
+	}
+
 	#add_btn {
+		margin-top: 34px;
+		margin-right: 20px;
 		background-color: #117daf;
 		color: #fff;
 		width: 150px;
@@ -91,6 +104,16 @@
 		border-radius:5px;
 		border: none;
 		letter-spacing: 5px;
+		float: right;
+	}
+
+	#set_btn {
+		background-color: #e0e0e0;
+		color: #000000;
+		width: 80px;
+		height: 30px;
+		font-size: 12px;
+		font-weight:bold;
 	}
 
 	.jq-dialog form fieldset {
@@ -118,6 +141,26 @@
 </head>
 <body>
 	<div class="operation_box">
+		<div id="sms_rule_box">
+			<div id="sms_rule_set">
+			<span>告警短信发送次数</span>
+			<select id="send_times" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+			</select>
+			<span>发送时间间隔（分钟）</span>
+			<select id="send_interval" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
+				<option value="1">5</option>
+				<option value="2">10</option>
+				<option value="3">15</option>
+				<option value="4">20</option>
+				<option value="5">25</option>
+				<option value="6">30</option>
+			</select>
+			<input type="button" id="set_btn" value="设置" onclick="set_sms_rule()">
+			</div>
+		</div>
 		<div id="add_user_box">
 			<input type="button" id="add_btn" value="新增" onclick="add_sms_contact()">
 		</div>
@@ -162,6 +205,51 @@
 	</div>
 
 	<script>
+		function load_sms_rule() {
+		    var json = new Object();
+		    json.msg_type = "alarm_setting";
+		    json.cmd_type = "get_sms_rule";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+							$("#send_times").val(msg.send_times);
+							$("#send_interval").val(msg.send_interval);
+		                },
+		            });
+		}
+
+		function set_sms_rule() {
+			var json = new Object();
+			json.msg_type = "alarm_setting";
+			json.cmd_type = "set_sms_rule";
+
+			var cfg = new Object();
+			cfg.send_times = $("#send_times").val();
+			cfg.send_interval = $("#send_interval").val();
+			json.cfg = cfg;
+
+			$('#set_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#set_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
 		function show_phone_user_list(phone_user_list) {
 			$('#phone_table tr:not(:first)').remove();
 			if (phone_user_list.count > 0) {
@@ -192,6 +280,7 @@
 
         $(document).ready(function () {
 			load_phone_user();
+			load_sms_rule();
         })
 
 		function delete_phone_user(index) {
