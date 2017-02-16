@@ -65,7 +65,7 @@ typedef struct _uart uart_t;
 
 typedef int (*_uart_open)(uart_t *thiz);
 typedef int (*_uart_read)(uart_t *thiz, char *buf, int len, int timeout);
-typedef int (*_uart_write)(uart_t *thiz, const char *buf, int len);
+typedef int (*_uart_write)(uart_t *thiz, const char *buf, int len, int timeout);
 typedef void (*_uart_destroy)(uart_t *thiz);
 
 /**

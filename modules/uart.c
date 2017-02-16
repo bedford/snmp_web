@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
+#include <errno.h>
 
 #include "uart.h"
 
@@ -29,15 +30,12 @@ typedef struct {
 static void set_uart_param(priv_info_t *priv)
 {
     struct termios options;
-    tcgetattr(priv->fd, &options);
+    bzero(&options, sizeof(options));
 
-    options.c_cflag     = (CLOCAL | CREAD);
-    options.c_cflag     &= ~CSIZE;
+    options.c_cflag     |= (CLOCAL | CREAD);
     options.c_lflag     = 0;    /* 非标准模式 */
     options.c_oflag     = 0;
-    options.c_iflag     = IGNPAR;
-    options.c_cc[VMIN]  = 1;
-    options.c_cc[VTIME] = 0;
+    options.c_iflag     |= IGNPAR;
 
     /* 设置波特率 */
     speed_t speed;
@@ -128,9 +126,9 @@ static int uart_open(uart_t *thiz)
 {
     priv_info_t *priv = (priv_info_t *)thiz->priv;
     char *device = device_name[priv->param.device_index];
-    //priv->fd = open(device, O_RDWR | O_NOCTTY | O_NONBLOCK);
     priv->fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
     if (priv->fd < 0) {
+        printf("open device %s failed\n", device);
         return -1;
     }
 
@@ -139,27 +137,6 @@ static int uart_open(uart_t *thiz)
     set_uart_param(priv);
 
     return 0;
-}
-
-static int safe_read(int fd, char *buf, int len)
-{
-    int left = len;
-    int read_num = 0;
-    char *ptr = buf;
-
-    while (left > 0) {
-        read_num = read(fd, ptr, left);
-        if (read_num < 0) {
-            return -1;
-        } else if (read_num == 0) {
-            break;
-        }
-
-        left    -= read_num;
-        ptr     += read_num;
-    }
-
-    return (len - left);
 }
 
 /**
@@ -178,29 +155,23 @@ static int uart_read(uart_t *thiz, char *buf, int len, int timeout)
 
     priv_info_t *priv = (priv_info_t *)thiz->priv;
 
-    fd_set read_fds;
-    struct timeval time;
+    unsigned int processed = 0;
+    time_t start = time(NULL);
+    while (processed < len) {
+        if (difftime(time(NULL), start) > timeout) {
+            break;
+        }
 
-    FD_ZERO(&read_fds);
-    FD_SET(priv->fd, &read_fds);
-
-    time.tv_sec     = timeout;
-    time.tv_usec    = 0;
-
-    int ret = select(priv->fd + 1, &read_fds, NULL, NULL, &time);
-    switch(ret) {
-    case -1:
-        printf("select error\n");
-        break;
-    case 0:
-        printf("timeout\n");
-        break;
-    default:
-        ret = safe_read(priv->fd, buf, len);
-        break;
+        int num = read(priv->fd, (buf + processed), (len - processed));
+        if (num == -1) {
+            fprintf(stderr, "Error while reading: %s\n", strerror(errno));
+            break;
+        } else {
+            processed += num;
+        }
     }
 
-    return ret;
+    return processed;
 }
 
 /**
@@ -210,14 +181,31 @@ static int uart_read(uart_t *thiz, char *buf, int len, int timeout)
  * @param  len  [数据长度]
  * @return      [是否写入成功]
  */
-static int uart_write(uart_t *thiz, const char *buf, int len)
+static int uart_write(uart_t *thiz, const char *buf, int len, int timeout)
 {
-    int bytes = 0;
+    if (thiz == NULL) {
+        return -1;
+    }
+
     priv_info_t *priv = (priv_info_t *)thiz->priv;
 
-    bytes = write(priv->fd, buf, len);
+    unsigned int processed = 0;
+    time_t start = time(NULL);
+    while (processed < len) {
+        if (difftime(time(NULL), start) > timeout) {
+            break;
+        }
 
-    return bytes;
+        int num = write(priv->fd, (buf + processed), (len - processed));
+        if (num == -1) {
+            fprintf(stderr, "Error while writing: %s\n", strerror(errno));
+            break;
+        } else {
+            processed += num;
+        }
+    }
+
+    return processed;
 }
 
 /**

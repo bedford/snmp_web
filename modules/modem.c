@@ -81,13 +81,13 @@ static void utf8_string_convert(char *utf8_string, char *dst)
 static inline void send_tailer(uart_t *uart)
 {
     char tailer[AT_CMD_TAILER_LEN] = {0x0D};
-    uart->write(uart, tailer, AT_CMD_TAILER_LEN);
+    uart->write(uart, tailer, AT_CMD_TAILER_LEN, 1);
 }
 
 static inline void send_ascii(uart_t *uart, const char *buf)
 {
     int len = strlen(buf);
-    uart->write(uart, buf, len);
+    uart->write(uart, buf, len, 3);
 }
 
 static int at_cmd_implement(priv_info_t *priv, const char *cmd, unsigned int cmd_index)
@@ -97,9 +97,12 @@ static int at_cmd_implement(priv_info_t *priv, const char *cmd, unsigned int cmd
     send_tailer(uart);
 
     char tmp[256] = {0};
-    int i = 0;
     int ret = uart->read(uart, tmp, 256, 2);
+    if (ret > 0) {
+        printf("tmp %s\n", tmp);
+    }
 
+    int i = 0;
     ret = -1;
     switch (cmd_index) {
     case AT_CSCA:   /* 查询短信中心号码 */
@@ -195,6 +198,24 @@ static int modem_set_mode(modem_t *thiz, sms_mode_t sms_mode)
     return ret;
 }
 
+static int append_packet(priv_info_t *priv, char *sms_packet)
+{
+    uart_t *uart = priv->uart;
+    send_ascii(uart, sms_packet);
+    send_tailer(uart);
+
+    char tmp[512] = {0};
+    int ret = uart->read(uart, tmp, 512, 5);
+    if (ret > 0) {
+        printf("tmp %s\n", tmp);
+        if (strstr(tmp, "OK") != NULL) {
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 static int send_sms(priv_info_t *priv, char *phone_num, char *content)
 {
     static unsigned char pdu_flag = 0;
@@ -246,11 +267,10 @@ static int send_sms(priv_info_t *priv, char *phone_num, char *content)
         return -1;
     }
 
-    if (at_cmd_implement(priv, sms_packet, AT_CMGS) != 0) {
+    if (append_packet(priv, sms_packet) != 0) {
         pdu_flag = 0;
         return -1;
     }
-    send_tailer(priv->uart);
 
     if (strlen(pdu_string) > 280) {
         send_sms(priv, phone_num, (char *)(content + 280));
@@ -295,7 +315,7 @@ modem_t *modem_create(void)
         priv_info_t *priv = (priv_info_t *)thiz->priv;
 
         uart_param_t uart_param;
-        uart_param.device_index = 0;
+        uart_param.device_index = 1;
         uart_param.baud = UART_BAUD_9600;
         uart_param.bits = UART_BITS_8;
         uart_param.parity = UART_PARITY_NONE;

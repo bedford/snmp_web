@@ -4,8 +4,8 @@ all : $(TARGET)
 
 CFLAGS	:= -g -Wall
 #LD_FLAGS:= -lpthread
-CC	:= gcc
-#CC	:= arm-linux-gcc
+#CC	:= gcc
+CC	:= arm-linux-gcc
 
 OBJS   := $(patsubst %.c,%.o,$(wildcard *.c))
 
