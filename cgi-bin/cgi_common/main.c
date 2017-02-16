@@ -730,6 +730,169 @@ static int update_password(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int query_data_record(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->data_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC limit 10", "data_record");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "data_record", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+    		cJSON_AddStringToObject(child, "created_time", query_result.result[i * query_result.column + 1]);
+    		cJSON_AddStringToObject(child, "device_id", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 4]);
+			if (strcmp(query_result.result[i * query_result.column + 5], "1") == 0) {
+				cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 6]);
+				cJSON_AddStringToObject(child, "digital_value", "-");
+			} else {
+				cJSON_AddStringToObject(child, "analog_value", "-");
+				cJSON_AddStringToObject(child, "digital_value", query_result.result[i * query_result.column + 8]);
+			}
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int query_alarm_record(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->data_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC limit 10", "alarm_record");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "alarm_record", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+    		cJSON_AddStringToObject(child, "created_time", query_result.result[i * query_result.column + 1]);
+    		cJSON_AddStringToObject(child, "device_id", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 4]);
+			if (strcmp(query_result.result[i * query_result.column + 5], "1") == 0) {
+				cJSON_AddStringToObject(child, "param_value", query_result.result[i * query_result.column + 6]);
+			} else {
+				cJSON_AddStringToObject(child, "param_value", query_result.result[i * query_result.column + 8]);
+			}
+			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 9]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int query_sms_record(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->data_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC limit 10", "sms_record");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "sms_record", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+    		cJSON_AddStringToObject(child, "send_time", query_result.result[i * query_result.column + 1]);
+			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 4]);
+			cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 5]);
+			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "sms_content", query_result.result[i * query_result.column + 7]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int query_email_record(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->data_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC limit 10", "email_record");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "email_record", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+    		cJSON_AddStringToObject(child, "send_time", query_result.result[i * query_result.column + 1]);
+			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 4]);
+			cJSON_AddStringToObject(child, "email", query_result.result[i * query_result.column + 5]);
+			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "email_content", query_result.result[i * query_result.column + 7]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 typedef int (*msg_fun)(cJSON *root, priv_info_t *priv);
 
 typedef struct {
@@ -858,6 +1021,25 @@ cmd_fun_t cmd_alarm_setting[] = {
     }
 };
 
+cmd_fun_t cmd_query_data[] = {
+	{
+		"query_data_record",
+		query_data_record
+	},
+	{
+		"query_alarm_record",
+		query_alarm_record
+	},
+	{
+		"query_sms_record",
+		query_sms_record
+	},
+	{
+		"query_email_record",
+		query_email_record
+	}
+};
+
 /* 消息类型及其对应的 命令:操作函数 数组 */
 msg_fun_t msg_flow[] = {
     {
@@ -879,13 +1061,13 @@ msg_fun_t msg_flow[] = {
 		"alarm_setting",
 		cmd_alarm_setting,
 		sizeof(cmd_alarm_setting) / sizeof(cmd_fun_t)
+	},
+	{
+		"query_data",
+		cmd_query_data,
+		sizeof(cmd_query_data) / sizeof(cmd_fun_t)
 	}
 };
-
-static int parse_query_data(cJSON *root, req_buf_t *req_buf)
-{
-    return 0;
-}
 
 static int mib_download(req_buf_t *req_buf, const char *filename)
 {

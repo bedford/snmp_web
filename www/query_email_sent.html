@@ -93,7 +93,7 @@
 		box-sizing: border-box;
 		padding-top: 10px;
 	}
-	
+
 	#end_time {
 		width:170px;
 	}
@@ -114,28 +114,33 @@
 		width: 100px;
 		height: 40px;
 		font-size: 14px;
-		font-weight:bold;  
-		border-radius:5px; 
+		font-weight:bold;
+		border-radius:5px;
 		border: none;
 	}
 
-	#export_btn {
+	.btn_enable {
 		background-color: #117daf;
+	}
+
+	#export_btn {
 		color: #fff;
 		width: 100px;
 		height: 40px;
 		font-size: 14px;
-		font-weight:bold;  
-		border-radius:5px; 
+		font-weight:bold;
+		border-radius:5px;
 		border: none;
 		margin-left: 40px;
 	}
 	</style>
 	<link rel="stylesheet" href="css/cssReset.css">
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/export_excel.js"></script>
 	<script src="js/query_history.js"></script>
 	<script src="js/WdatePicker.js"></script>
-</head> 
+</head>
 <body>
 	<div class="operation_box">
 		<div id="start_time_box">
@@ -160,18 +165,67 @@
 		<div class="table-content">
 			<table id="email_table">
 				<tr id="head">
-					<th>报警时间</th>
-					<th>发送时间</th>
-					<th>联系人</th>
-					<th>E-Mail</th>
-					<th>信息内容</th>
-					<th>是否发送成功</th>
+					<th>时间</th>
+					<th>设备名称</th>
+					<th>参数名称</th>
+					<th>告警类型</th>
+					<th>接收人</th>
+					<th>状态</th>
+					<th>邮件内容</th>
 				</tr>
 			</table>
 		</div>
 	</div>
 
 	<script>
+		function traverse_email_record(data_list) {
+			$("#email_table tr:gt(0)").remove();
+			var html="";
+			$.each(data_list, function(i, item) {
+				html+="<tr>";
+				html+="<td>"+item.send_time+"</td>";
+				html+="<td>"+item.device_name+"</td>";
+				html+="<td>"+item.param_name+"</td>";
+				html+="<td>"+item.alarm_desc+"</td>";
+				html+="<td>"+item.email+"</td>";
+				html+="<td>"+item.send_status+"</td>";
+				html+="<td>"+item.email_content+"</td>";
+				html+="</tr>"
+			});
+			$("#email_table").append(html);
+
+			window.localStorage.removeItem("email_record");
+			window.localStorage.setItem("email_record", JSON.stringify(data_list));
+		}
+
+		function clear_sms_record() {
+			window.localStorage.removeItem("email_record");
+		}
+
+		function export_data() {
+			var collection = window.localStorage.getItem("email_record");
+			var data = JSON.parse(collection);
+			var title = new Array("时间", "设备名称", "参数名称", "报警描述", "E-Mail", "状态", "邮件内容");
+			JSONToExcelConvertor(data, "email_record", title);
+		}
+
+		function email_sent_query() {
+			var json = new Object();
+			json.msg_type = "query_data";
+			json.cmd_type = "query_email_record";
+			var data = $.toJSON(json);
+			$.ajax({
+			            url     : "/cgi-bin/common.cgi",
+			            type    : "POST",
+			            dataType: "json",
+			            data    : data,
+			            success : function(msg) {
+							traverse_email_record(msg.email_record);
+							$('#export_btn').addClass('btn_enable');
+			            },
+			        });
+		}
+
         $(document).ready(function () {
 			load_timepicker_default();
         })
