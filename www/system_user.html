@@ -97,8 +97,14 @@
 				<input type="text" name="name" id="modify_user" disabled="true">
 				<label for="name">密码</label>
 				<input type="text" name="password" id="modify_password">
+				<label for="name">确认密码</label>
+				<input type="text" name="confirm_password" id="confirm_password">
 			</fieldset>
 		</form>
+	</div>
+
+	<div class="jq-dialog" id="warn_dialog" title="密码不匹配">
+		<label>两次输入密码不一致，请重新输入</label>
 	</div>
 
 	<script>
@@ -122,18 +128,41 @@
 		            });
 		}
 
+		function password_unmatch(index) {
+			$('#warn_dialog').dialog({
+				resizable: false,
+				height: 160,
+				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+						edit_item(index);
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
+			});
+		}
+
         function edit_item(index) {
 			var name = $('#user_table').find('tr').eq(index + 1).find('td').eq(1).html();
 			$('#modify_user').val(name);
 			$('#modify_password').val("");
 			$('#user_dialog').dialog({
 				width: 300,
-				height: 300,
+				height: 360,
 				modal: true,
 				buttons: {
 					"确定": function() {
-						edit_password(index, $('#modify_password').val());
-						$(this).dialog("close");
+						var password = $('#modify_password').val();
+						var confirm_password = $('#confirm_password').val();
+						if (password === confirm_password) {
+							edit_password(index, password);
+						} else {
+							$(this).dialog("close");
+							password_unmatch(index);
+						}
 					},
 					取消: function() {
 						$(this).dialog("close");
