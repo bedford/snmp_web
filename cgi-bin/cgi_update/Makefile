@@ -12,6 +12,8 @@ INC_FLAGS += -I.
 LD_FLAGS += -L/usr/local/lib
 LD_FLAGS += -lm
 
+CC = arm-linux-gcc
+
 %.o : %.c
 	$(CC) $(CFLAGS) $(INC_FLAGS) -c $< -o $@
 %.d : %.c

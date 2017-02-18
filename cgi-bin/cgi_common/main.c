@@ -1129,11 +1129,12 @@ int main(void)
     int ret = -1;
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
 	priv->dic = iniparser_load(INI_FILE_NAME);
+
 	priv->sys_db_handle = db_access_create("sys.db");
     priv->data_db_handle = db_access_create("data.db");
 
-	char error_msg[256] = {0};
-	char sql[256] = {0};
+	char error_msg[512] = {0};
+	char sql[512] = {0};
 	sprintf(sql, "create table if not exists %s \
 					(id INTEGER PRIMARY KEY AUTOINCREMENT, \
 					name VARCHAR(32), \
@@ -1236,14 +1237,14 @@ int main(void)
     free(priv->request.buf);
     priv->request.buf = NULL;
 
-	iniparser_freedict(priv->dic);
-	priv->dic = NULL;
-
-	priv->sys_db_handle->destroy(priv->sys_db_handle);
+    priv->sys_db_handle->destroy(priv->sys_db_handle);
 	priv->sys_db_handle = NULL;
 
     priv->data_db_handle->destroy(priv->data_db_handle);
 	priv->data_db_handle = NULL;
+
+	iniparser_freedict(priv->dic);
+	priv->dic = NULL;
 
 	free(priv);
 	priv = NULL;
