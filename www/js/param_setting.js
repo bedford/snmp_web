@@ -251,30 +251,30 @@ $(function() {
 });
 
 function display_io_param(io_param) {
-	for (var i in io_param.protocol_param) {
-	    $('#rs232_protocol_select').append('<option value="'+ io_param.protocol_param[i].value
-			+ '">' + io_param.protocol_param[i].text + '</option>');
-		$('#rs485_protocol_select').append('<option value="'+ io_param.protocol_param[i].value
-			+ '">' + io_param.protocol_param[i].text + '</option>');
+	for (var i in io_param.support_list) {
+	    $('#rs232_protocol_select').append('<option value="'+ io_param.support_list[i].protocol_id
+			+ '">' + io_param.support_list[i].protocol_name + '</option>');
+		$('#rs485_protocol_select').append('<option value="'+ io_param.support_list[i].protocol_id
+			+ '">' + io_param.support_list[i].protocol_name + '</option>');
 	}
 
-	$('#rs232_protocol_select').val(io_param.rs232_protocol);
-	$('#rs232_baudrate_select').val(io_param.rs232_baudrate);
-	$('#rs232_databits').val(io_param.rs232_databits);
-	$('#rs232_stopbits').val(io_param.rs232_stopbits);
-	$('#rs232_parity').val(io_param.rs232_parity);
+	$('#rs232_protocol_select').val(io_param.rs232_cfg.protocol_id);
+	$('#rs232_baudrate_select').val(io_param.rs232_cfg.baud);
+	$('#rs232_databits').val(io_param.rs232_cfg.data_bits);
+	$('#rs232_stopbits').val(io_param.rs232_cfg.stops_bits);
+	$('#rs232_parity').val(io_param.rs232_cfg.parity);
 
-	$('#rs485_protocol_select').val(io_param.rs485_protocol);
-	$('#rs485_baudrate_select').val(io_param.rs485_baudrate);
-	$('#rs485_databits').val(io_param.rs485_databits);
-	$('#rs485_stopbits').val(io_param.rs485_stopbits);
-	$('#rs485_parity').val(io_param.rs485_parity);
+	$('#rs485_protocol_select').val(io_param.rs485_cfg.protocol_id);
+	$('#rs485_baudrate_select').val(io_param.rs485_cfg.baud);
+	$('#rs485_databits').val(io_param.rs485_cfg.data_bits);
+	$('#rs485_stopbits').val(io_param.rs485_cfg.stops_bits);
+	$('#rs485_parity').val(io_param.rs485_cfg.parity);
 
-	if (io_param.rs232_flag) {
+	if (io_param.rs232_cfg.enable == 1) {
 		$('#rs232_checkbox').attr("checked", true);
 	}
 
-	if (io_param.rs485_flag == 1) {
+	if (io_param.rs485_cfg.enable == 1) {
 		$('#rs485_checkbox').attr("checked", true);
 	}
 

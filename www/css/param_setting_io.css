@@ -26,6 +26,13 @@
 }
 
 .uart_content_box > select {
+	width: 150px;
+	height: 30px;
+	margin-left: 5px;
+	margin-right: 10px;
+}
+
+.uart_content_box .mid_select {
 	width: 80px;
 	height: 30px;
 	margin-left: 5px;

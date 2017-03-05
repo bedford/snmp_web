@@ -25,17 +25,6 @@ typedef struct {
 	dictionary	*dic;
 } priv_info_t;
 
-typedef struct {
-    int     value;
-    char    *text;
-} map_t;
-
-map_t protocol_param[] = {
-    {100,   "UPS100"},
-    {101,   "UPS101"},
-    {200,   "UPS200"}
-};
-
 static int get_network_param(cJSON *root, priv_info_t *priv)
 {
 	dictionary *dic		= priv->dic;
@@ -95,22 +84,65 @@ static int get_snmp_param(cJSON *root, priv_info_t *priv)
 
 static int get_io_param(cJSON *root, priv_info_t *priv)
 {
-	dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
 
     cJSON *sub_dir = NULL;
     cJSON *child = NULL;
-
     cJSON *response = cJSON_CreateObject();
+
 	int i = 0;
-    sub_dir = cJSON_CreateArray();
-    cJSON_AddItemToObject(response, "protocol_param", sub_dir);
-    for (i = 0; i < 3; i++) {
-        child = cJSON_CreateObject();
-    	cJSON_AddNumberToObject(child, "value", protocol_param[i].value);
-    	cJSON_AddStringToObject(child, "text", protocol_param[i].text);
-    	cJSON_AddItemToArray(sub_dir, child);
-    }
+	query_result_t query_result;
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY list_index", "support_list");
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+	cJSON_AddNumberToObject(response, "support_list_count", query_result.row);
+	if (query_result.row > 0) {
+    	sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "support_list", sub_dir);
+		for (i = 1; i < (query_result.row + 1); i++) {
+        	child = cJSON_CreateObject();
+    		cJSON_AddStringToObject(child, "list_index", query_result.result[i * query_result.column]);
+			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 1]);
+			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "device_brand", query_result.result[i * query_result.column + 4]);
+    		cJSON_AddItemToArray(sub_dir, child);
+    	}
+	}
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s WHERE port=2", "uart_cfg");
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+	if (query_result.row > 0) {
+		sub_dir = cJSON_CreateObject();
+    	cJSON_AddItemToObject(response, "rs232_cfg", sub_dir);
+    	cJSON_AddNumberToObject(sub_dir, "port", atoi(query_result.result[query_result.column]));
+		cJSON_AddNumberToObject(sub_dir, "protocol_id", atoi(query_result.result[query_result.column + 1]));
+		cJSON_AddNumberToObject(sub_dir, "baud", atoi(query_result.result[query_result.column + 2]));
+		cJSON_AddNumberToObject(sub_dir, "data_bits", atoi(query_result.result[query_result.column + 3]));
+		cJSON_AddNumberToObject(sub_dir, "stops_bits", atoi(query_result.result[query_result.column + 4]));
+		cJSON_AddNumberToObject(sub_dir, "parity", atoi(query_result.result[query_result.column + 5]));
+		cJSON_AddNumberToObject(sub_dir, "enable", atoi(query_result.result[query_result.column + 6]));
+	}
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s WHERE port=3", "uart_cfg");
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+	if (query_result.row > 0) {
+		sub_dir = cJSON_CreateObject();
+    	cJSON_AddItemToObject(response, "rs485_cfg", sub_dir);
+    	cJSON_AddNumberToObject(sub_dir, "port", atoi(query_result.result[query_result.column]));
+		cJSON_AddNumberToObject(sub_dir, "protocol_id", atoi(query_result.result[query_result.column + 1]));
+		cJSON_AddNumberToObject(sub_dir, "baud", atoi(query_result.result[query_result.column + 2]));
+		cJSON_AddNumberToObject(sub_dir, "data_bits", atoi(query_result.result[query_result.column + 3]));
+		cJSON_AddNumberToObject(sub_dir, "stops_bits", atoi(query_result.result[query_result.column + 4]));
+		cJSON_AddNumberToObject(sub_dir, "parity", atoi(query_result.result[query_result.column + 5]));
+		cJSON_AddNumberToObject(sub_dir, "enable", atoi(query_result.result[query_result.column + 6]));
+	}
 
     int io_status[4] = {1, 0, 0, 1};
     sub_dir = cJSON_CreateArray();
@@ -120,32 +152,6 @@ static int get_io_param(cJSON *root, priv_info_t *priv)
     	cJSON_AddNumberToObject(child, "value", io_status[i]);
     	cJSON_AddItemToArray(sub_dir, child);
     }
-
-    cJSON_AddNumberToObject(response, "rs232_protocol",
-            iniparser_getint(dic, "PROTOCOL:rs232_protocol", 101));
-    cJSON_AddNumberToObject(response, "rs232_baudrate",
-            iniparser_getint(dic, "PROTOCOL:rs232_baudrate", 1));
-    cJSON_AddNumberToObject(response, "rs232_databits",
-            iniparser_getint(dic, "PROTOCOL:rs232_databits", 3));
-    cJSON_AddNumberToObject(response, "rs232_stopbits",
-            iniparser_getint(dic, "PROTOCOL:rs232_stopbits", 0));
-    cJSON_AddNumberToObject(response, "rs232_parity",
-            iniparser_getint(dic, "PROTOCOL:rs232_parity", 0));
-    cJSON_AddNumberToObject(response, "rs232_flag",
-            iniparser_getint(dic, "PROTOCOL:rs232_flag", 1));
-
-    cJSON_AddNumberToObject(response, "rs485_protocol",
-            iniparser_getint(dic, "PROTOCOL:rs485_protocol", 101));
-    cJSON_AddNumberToObject(response, "rs485_baudrate",
-            iniparser_getint(dic, "PROTOCOL:rs485_baudrate", 1));
-    cJSON_AddNumberToObject(response, "rs485_databits",
-            iniparser_getint(dic, "PROTOCOL:rs485_databits", 3));
-    cJSON_AddNumberToObject(response, "rs485_stopbits",
-            iniparser_getint(dic, "PROTOCOL:rs485_stopbits", 0));
-    cJSON_AddNumberToObject(response, "rs485_parity",
-            iniparser_getint(dic, "PROTOCOL:rs485_parity", 0));
-    cJSON_AddNumberToObject(response, "rs485_flag",
-            iniparser_getint(dic, "PROTOCOL:rs485_flag", 0));
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
