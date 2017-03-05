@@ -278,37 +278,39 @@ static int set_io_param(cJSON *root, priv_info_t *priv)
 
 static int set_uart_param(cJSON *root, priv_info_t *priv)
 {
-	dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
 
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
-    write_profile(dic, "PROTOCOL", "rs232_protocol",
-            cJSON_GetObjectItem(cfg, "rs232_protocol")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs232_baudrate",
-	        cJSON_GetObjectItem(cfg, "rs232_baudrate")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs232_databits",
-	        cJSON_GetObjectItem(cfg, "rs232_databits")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs232_stopbits",
-	        cJSON_GetObjectItem(cfg, "rs232_stopbits")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs232_parity",
-	        cJSON_GetObjectItem(cfg, "rs232_parity")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs232_flag",
-	        cJSON_GetObjectItem(cfg, "rs232_flag")->valuestring);
+	cJSON *rs232_cfg = cJSON_GetObjectItem(cfg, "rs232_cfg");
 
-    write_profile(dic, "PROTOCOL", "rs485_protocol",
-            cJSON_GetObjectItem(cfg, "rs485_protocol")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs485_baudrate",
-	        cJSON_GetObjectItem(cfg, "rs485_baudrate")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs485_databits",
-	        cJSON_GetObjectItem(cfg, "rs485_databits")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs485_stopbits",
-	        cJSON_GetObjectItem(cfg, "rs485_stopbits")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs485_parity",
-	        cJSON_GetObjectItem(cfg, "rs485_parity")->valuestring);
-	write_profile(dic, "PROTOCOL", "rs485_flag",
-	        cJSON_GetObjectItem(cfg, "rs485_flag")->valuestring);
+	int protocol_id = atoi(cJSON_GetObjectItem(rs232_cfg, "protocol_id")->valuestring);
+	int baud = atoi(cJSON_GetObjectItem(rs232_cfg, "baud")->valuestring);
+	int data_bits = atoi(cJSON_GetObjectItem(rs232_cfg, "data_bits")->valuestring);
+	int stops_bits = atoi(cJSON_GetObjectItem(rs232_cfg, "stops_bits")->valuestring);
+	int parity = atoi(cJSON_GetObjectItem(rs232_cfg, "parity")->valuestring);
+	int enable = atoi(cJSON_GetObjectItem(rs232_cfg, "enable")->valuestring);
 
-    dump_profile(dic, INI_FILE_NAME);
+	char sql[512] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "UPDATE %s SET protocol_id=%d, baud=%d, data_bits=%d, \
+		stops_bits=%d, parity=%d, enable=%d WHERE port=2",
+		"uart_cfg", protocol_id, baud, data_bits, stops_bits, parity, enable);
+	db_handle->action(db_handle, sql, error_msg);
+
+	cJSON *rs485_cfg = cJSON_GetObjectItem(cfg, "rs485_cfg");
+	protocol_id = atoi(cJSON_GetObjectItem(rs485_cfg, "protocol_id")->valuestring);
+	baud = atoi(cJSON_GetObjectItem(rs485_cfg, "baud")->valuestring);
+	data_bits = atoi(cJSON_GetObjectItem(rs485_cfg, "data_bits")->valuestring);
+	stops_bits = atoi(cJSON_GetObjectItem(rs485_cfg, "stops_bits")->valuestring);
+	parity = atoi(cJSON_GetObjectItem(rs485_cfg, "parity")->valuestring);
+	enable = atoi(cJSON_GetObjectItem(rs485_cfg, "enable")->valuestring);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "UPDATE %s SET protocol_id=%d, baud=%d, data_bits=%d, \
+		stops_bits=%d, parity=%d, enable=%d WHERE port=3",
+		"uart_cfg", protocol_id, baud, data_bits, stops_bits, parity, enable);
+	db_handle->action(db_handle, sql, error_msg);
 
     cJSON *response;
     response = cJSON_CreateObject();

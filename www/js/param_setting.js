@@ -307,28 +307,39 @@ function set_uart_param() {
 	json.msg_type = "set_param";
 	json.cmd_type = "uart";
 
-	var cfg = new Object();
-	cfg.rs232_protocol = $('#rs232_protocol_select').val();
-	cfg.rs232_baudrate = $('#rs232_baudrate_select').val();
-	cfg.rs232_databits = $('#rs232_databits').val();
-	cfg.rs232_stopbits = $('#rs232_stopbits').val();
-	cfg.rs232_parity = $('#rs232_parity').val();
+	var rs232_cfg = new Object();
+	rs232_cfg.protocol_id = $('#rs232_protocol_select').val();
+	if (rs232_cfg.protocol_id == null) {
+		rs232_cfg.protocol_id = '0';
+	}
+	rs232_cfg.baud = $('#rs232_baudrate_select').val();
+	rs232_cfg.data_bits = $('#rs232_databits').val();
+	rs232_cfg.stops_bits = $('#rs232_stopbits').val();
+	rs232_cfg.parity = $('#rs232_parity').val();
 	if ($('#rs232_checkbox').is(':checked')) {
-		cfg.rs232_flag = '1';
+		rs232_cfg.enable = '1';
 	} else {
-		cfg.rs232_flag = '0';
+		rs232_cfg.enable = '0';
 	}
 
-	cfg.rs485_protocol = $('#rs485_protocol_select').val();
-	cfg.rs485_baudrate = $('#rs485_baudrate_select').val();
-	cfg.rs485_databits = $('#rs485_databits').val();
-	cfg.rs485_stopbits = $('#rs485_stopbits').val();
-	cfg.rs485_parity = $('#rs485_parity').val();
-	if ($('#rs485_checkbox').is(':checked')) {
-		cfg.rs485_flag = '1';
-	} else {
-		cfg.rs485_flag = '0';
+	var rs485_cfg = new Object();
+	rs485_cfg.protocol_id = $('#rs485_protocol_select').val();
+	if (rs485_cfg.protocol_id == null) {
+		rs485_cfg.protocol_id = '0';
 	}
+	rs485_cfg.baud = $('#rs485_baudrate_select').val();
+	rs485_cfg.data_bits = $('#rs485_databits').val();
+	rs485_cfg.stops_bits = $('#rs485_stopbits').val();
+	rs485_cfg.parity = $('#rs485_parity').val();
+	if ($('#rs485_checkbox').is(':checked')) {
+		rs485_cfg.enable = '1';
+	} else {
+		rs485_cfg.enable = '0';
+	}
+
+	var cfg = new Object();
+	cfg.rs232_cfg = rs232_cfg;
+	cfg.rs485_cfg = rs485_cfg;
 
 	json.cfg = cfg;
 	$('#confirm_btn').attr("disabled", "disabled");
