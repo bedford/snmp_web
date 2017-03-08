@@ -96,7 +96,7 @@ static int calculate_device_status(cmd_t    *cmd,
         return ret;
     }
 
-    unsigned short crc = create_crc16_code(data, cmd->check_len - 2); 
+    unsigned short crc = create_crc16_code(data, cmd->check_len - 2);
     unsigned char crc_low = crc % 256;
     unsigned char crc_high = crc / 256;
     if (((unsigned char)data[data_len - 1] != crc_high)
@@ -125,24 +125,18 @@ static int calculate_device_status(cmd_t    *cmd,
 
     param_value_t tmp_value;
     memset(&tmp_value, 0, sizeof(param_value_t));
-
     tmp_value.param_id = desc->param_id;
-    strcpy(tmp_value.param_name, desc->param_name);
     tmp_value.param_type = PARAM_TYPE_ANALOG;
     tmp_value.param_value =(double)((unsigned char)data[3] * 256 + (unsigned char)data[4]) / 10;
-    tmp_value.param_enum_value.value = 0;
-    memset(tmp_value.param_enum_value.desc, 0, sizeof(tmp_value.param_enum_value.desc));
+    tmp_value.enum_value = 0;
     valid_value->push_back(valid_value, &tmp_value);
 
     desc = (param_desc_t *)param_desc_list->get_index_value(param_desc_list, 1);
     memset(&tmp_value, 0, sizeof(param_value_t));
     tmp_value.param_id = desc->param_id;
-    strcpy(tmp_value.param_name, desc->param_name);
-    tmp_value.param_type = PARAM_TYPE_ANALOG; 
+    tmp_value.param_type = PARAM_TYPE_ANALOG;
     tmp_value.param_value =(double)((unsigned char)data[5] * 256 + (unsigned char)data[6]) / 10;
-
-    tmp_value.param_enum_value.value = 0;
-    memset(tmp_value.param_enum_value.desc, 0, sizeof(tmp_value.param_enum_value.desc));
+    tmp_value.enum_value = 0;
     valid_value->push_back(valid_value, &tmp_value);
 
     ret = 0;

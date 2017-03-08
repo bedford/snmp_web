@@ -110,11 +110,12 @@ typedef struct
 typedef struct
 {
     unsigned int    param_id;
-    unsigned char   param_name[MAX_PARAM_LEN];
-    unsigned char   param_unit[MIN_PARAM_LEN];
+    //unsigned char   param_name[MAX_PARAM_LEN];
+    //unsigned char   param_unit[MIN_PARAM_LEN];
     param_type_t    param_type;
     float           param_value;
-    param_enum_t    param_enum_value;
+    unsigned int    enum_value;
 } param_value_t;
+
 
 #endif

@@ -13,8 +13,9 @@ extern "C" {
 
 typedef struct
 {
-    cmd_t   cmd;            /* 读数据指令 */
-    list_t  *param_desc;    /* 该指令对应的返回参数描述信息列表 */
+    cmd_t   cmd;            	/* 读数据指令 */
+    list_t  *param_desc;		/* 该指令对应的返回参数描述信息列表 */
+	list_t  *last_param_value;	/* 上一次的参数值列表 */
 } property_t;
 
 typedef int (*_get_property)(list_t *property_list);

@@ -230,7 +230,7 @@ static int calculate_device_status(cmd_t    *cmd,
         memset(&tmp_value, 0, sizeof(param_value_t));
         tmp_value.param_id = desc->param_id;
         strcpy(tmp_value.param_name, desc->param_name);
-        tmp_value.param_type = PARAM_TYPE_ANALOG; 
+        tmp_value.param_type = PARAM_TYPE_ANALOG;
         tmp_value.param_value = atof(tmp);
         valid_value->push_back(valid_value, &tmp_value);
         tmp = strtok(NULL, " ");
@@ -240,7 +240,7 @@ static int calculate_device_status(cmd_t    *cmd,
     int i = 0;
     index -= 1;
     unsigned char status[4] = {0};
-    memcpy(status, data + 38, 4); 
+    memcpy(status, data + 38, 4);
     printf("%x, %x, %x, %x\n", status[0], status[1], status[2], status[3]);
     for (i = 0; i < 4; i++) {
         printf("index %d, %d\n", index, param_desc_list->get_list_size(param_desc_list));
@@ -249,7 +249,7 @@ static int calculate_device_status(cmd_t    *cmd,
         memset(&tmp_value, 0, sizeof(param_value_t));
         tmp_value.param_id = desc->param_id;
         strcpy(tmp_value.param_name, desc->param_name);
-        tmp_value.param_type = PARAM_TYPE_ENUM; 
+        tmp_value.param_type = PARAM_TYPE_ENUM;
         tmp_value.param_enum_value = status[i] - 0x30;
         valid_value->push_back(valid_value, &tmp_value);
     }
@@ -265,8 +265,8 @@ static int calculate_device_status(cmd_t    *cmd,
             index++;
             memset(&tmp_value, 0, sizeof(param_value_t));
             tmp_value.param_id = desc->param_id;
-            strcpy(tmp_value.param_name, desc->param_name);
-            tmp_value.param_type = PARAM_TYPE_ANALOG; 
+            //strcpy(tmp_value.param_name, desc->param_name);
+            tmp_value.param_type = PARAM_TYPE_ANALOG;
             tmp_value.param_value = atof(tmp);
             valid_value->push_back(valid_value, &tmp_value);
             j = 0;
@@ -284,9 +284,9 @@ static int calculate_device_status(cmd_t    *cmd,
         index++;
         memset(&tmp_value, 0, sizeof(param_value_t));
         tmp_value.param_id = desc->param_id;
-        strcpy(tmp_value.param_name, desc->param_name);
-        tmp_value.param_type = PARAM_TYPE_ENUM; 
-        tmp_value.param_enum_value.value = status[i] - 0x30;
+        //strcpy(tmp_value.param_name, desc->param_name);
+        tmp_value.param_type = PARAM_TYPE_ENUM;
+        tmp_value.enum_value = status[i] - 0x30;
         valid_value->push_back(valid_value, &tmp_value);
     }
 #endif
