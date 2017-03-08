@@ -22,6 +22,7 @@ static void print_param_value(list_t *param_value_list)
     for (i = 0; i < len; i++) {
         param_value = param_value_list->get_index_value(param_value_list, i);
         printf("param_id %d\n", param_value->param_id);
+        printf("param_value %.1f\n", param_value->param_value);
     }
 }
 
@@ -30,6 +31,7 @@ int main(void)
     list_t *protocol_list = list_create(sizeof(protocol_t));
     init_protocol_lib(protocol_list);
 
+#if 0
     protocol_t *protocol = get_protocol_handle(protocol_list, UPS | C_KS);
     print_snmp_protocol(protocol);
 
@@ -42,7 +44,21 @@ int main(void)
     strcpy(data, "(222.4 222.4 221.0 019 50.0 2.27 54.0 00000000");
     data[46] = 0x0d;
     list_t *value_list = list_create(sizeof(param_value_t));
-    protocol->calculate_data(property, data, value_list);
+    protocol->calculate_data(property, data, sizeof(data), value_list);
+#else
+
+    protocol_t *protocol = get_protocol_handle(protocol_list, TEMP_HUM_DEVICE | OAO_210);
+    print_snmp_protocol(protocol);
+
+    list_t *property_list = list_create(sizeof(property_t));
+    protocol->get_property(property_list);
+
+    property_t *property = property_list->get_index_value(property_list, 0);
+
+    char data[] = {0x01, 0x04, 0x04, 0x00, 0x9C, 0x02, 0x72, 0xBA, 0xEF};
+    list_t *value_list = list_create(sizeof(param_value_t));
+    protocol->calculate_data(property, data, sizeof(data), value_list);
+#endif
 
     print_param_value(value_list);
     property = NULL;

@@ -18,7 +18,7 @@ typedef struct
 } property_t;
 
 typedef int (*_get_property)(list_t *property_list);
-typedef int (*_calculate_data)(property_t *property, char *data, list_t *valid_value);
+typedef int (*_calculate_data)(property_t *property, char *data, int len, list_t *valid_value);
 typedef void (*_release_property)(list_t *property_list);
 
 /**

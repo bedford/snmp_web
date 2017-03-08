@@ -21,9 +21,9 @@ static cmd_t ups_status_cmd(void)
     tmp_cmd.cmd_id  = READ_UPS_STATUS_CMD;
     sprintf(tmp_cmd.cmd_name, "%s", "读UPS状态");
 
-    tmp_cmd.cmd[0]  = 0x51;
-    tmp_cmd.cmd[1]  = 0x31;
-    tmp_cmd.cmd[2]  = 0x0d;
+    tmp_cmd.cmd_code[0]  = 0x51;
+    tmp_cmd.cmd_code[1]  = 0x31;
+    tmp_cmd.cmd_code[2]  = 0x0d;
     tmp_cmd.cmd_len = 3;
     tmp_cmd.end_len = 0;
 
@@ -35,31 +35,32 @@ static cmd_t ups_status_cmd(void)
     return tmp_cmd;
 }
 
-static void ups_status_param_desc(list_t *desc_list)
+static list_t *ups_status_param_desc(void)
 {
+    list_t *desc_list = list_create(sizeof(param_desc_t));
     param_desc_t param;
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "当前市电电压");
     sprintf(param.param_unit, "%s", "V");
-    param.param_id  = 100;
+    param.param_id  = 0;
     param.up_limit  = 250.0;
     param.up_free   = 235.0;
     param.low_limit = 170.0;
     param.low_free  = 190.0;
-    param.update_interval   = 30;
-    param.update_threshold  = 230.0;
+    //param.update_interval   = 30;
+    param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ANALOG;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "市电电压最低值");
     sprintf(param.param_unit, "%s", "V");
-    param.param_id  = 101;
+    param.param_id  = 1;
     param.up_limit  = 240.0;
     param.up_free   = 235.0;
     param.low_limit = 170.0;
     param.low_free  = 190.0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 230.0;
     param.param_type = PARAM_TYPE_ANALOG;
     desc_list->push_back(desc_list, &param);
@@ -67,12 +68,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "输出电压值");
     sprintf(param.param_unit, "%s", "V");
-    param.param_id  = 102;
+    param.param_id  = 2;
     param.up_limit  = 240.0;
     param.up_free   = 235.0;
     param.low_limit = 180.0;
     param.low_free  = 190.0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 230.0;
     param.param_type = PARAM_TYPE_ANALOG;
     desc_list->push_back(desc_list, &param);
@@ -80,12 +81,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "当前负载百分比");
     sprintf(param.param_unit, "%s", "\%");
-    param.param_id  = 103;
+    param.param_id  = 3;
     param.up_limit  = 95.0;
     param.up_free   = 90.0;
     param.low_limit = 20.0;
     param.low_free  = 50.0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 80.0;
     param.param_type = PARAM_TYPE_ANALOG;
     desc_list->push_back(desc_list, &param);
@@ -93,12 +94,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "市电频率");
     sprintf(param.param_unit, "%s", "Hz");
-    param.param_id  = 104;
+    param.param_id  = 4;
     param.up_limit  = 60.0;
     param.up_free   = 53.0;
     param.low_limit = 40.0;
     param.low_free  = 47.0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 55.0;
     param.param_type = PARAM_TYPE_ANALOG;
     desc_list->push_back(desc_list, &param);
@@ -106,12 +107,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "电池电量");
     sprintf(param.param_unit, "%s", "\%");
-    param.param_id  = 105;
+    param.param_id  = 5;
     param.up_limit  = 100.0;
     param.up_free   = 90.0;
     param.low_limit = 10.0;
     param.low_free  = 20.0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 100.0;
     param.param_type = PARAM_TYPE_ANALOG;
     desc_list->push_back(desc_list, &param);
@@ -119,12 +120,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "温度");
     sprintf(param.param_unit, "%s", "℃");
-    param.param_id  = 106;
+    param.param_id  = 6;
     param.up_limit  = 70.0;
     param.up_free   = 65.0;
     param.low_limit = 15.0;
     param.low_free  = 18.0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ANALOG;
     desc_list->push_back(desc_list, &param);
@@ -132,12 +133,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "市电状态");
     sprintf(param.param_unit, "%s", "");
-    param.param_id  = 107;
+    param.param_id  = 7;
     param.up_limit  = 0;
     param.up_free   = 0;
     param.low_limit = 0;
     param.low_free  = 0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -149,12 +150,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "电池状态");
     sprintf(param.param_unit, "%s", "");
-    param.param_id  = 108;
+    param.param_id  = 8;
     param.up_limit  = 0;
     param.up_free   = 0;
     param.low_limit = 0;
     param.low_free  = 0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -166,12 +167,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "输出方式");
     sprintf(param.param_unit, "%s", "");
-    param.param_id  = 109;
+    param.param_id  = 9;
     param.up_limit  = 0;
     param.up_free   = 0;
     param.low_limit = 0;
     param.low_free  = 0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -183,12 +184,12 @@ static void ups_status_param_desc(list_t *desc_list)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "UPS状态");
     sprintf(param.param_unit, "%s", "");
-    param.param_id  = 110;
+    param.param_id  = 10;
     param.up_limit  = 0;
     param.up_free   = 0;
     param.low_limit = 0;
     param.low_free  = 0;
-    param.update_interval   = 30;
+    //param.update_interval   = 30;
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -196,16 +197,18 @@ static void ups_status_param_desc(list_t *desc_list)
     param.param_enum[0].value = 1;
     sprintf(param.param_enum[1].desc, "%s", "异常");
     desc_list->push_back(desc_list, &param);
+
+    return desc_list;
 }
 
 static int calculate_device_status(cmd_t    *cmd,
                                    list_t   *param_desc_list,
                                    char     *data,
+                                   int      data_len,
                                    list_t   *valid_value)
 {
     int ret = -1;
 
-    int data_len = strlen(data);
     if (data_len != cmd->check_len) { //包长度校验
         return ret;
     }
@@ -283,17 +286,16 @@ static int calculate_device_status(cmd_t    *cmd,
         tmp_value.param_id = desc->param_id;
         strcpy(tmp_value.param_name, desc->param_name);
         tmp_value.param_type = PARAM_TYPE_ENUM; 
-        tmp_value.param_enum_value = status[i] - 0x30;
+        tmp_value.param_enum_value.value = status[i] - 0x30;
         valid_value->push_back(valid_value, &tmp_value);
     }
-
 #endif
     ret = 0;
 
     return ret;
 }
 
-static int calculate_device_data(property_t *property, char *data, list_t *valid_value)
+static int calculate_device_data(property_t *property, char *data, int len, list_t *valid_value)
 {
     cmd_t *cmd = &(property->cmd);
     list_t *param_desc_list = property->param_desc;
@@ -301,7 +303,7 @@ static int calculate_device_data(property_t *property, char *data, list_t *valid
     int ret = -1;
     switch (cmd->cmd_id) {
     case READ_UPS_STATUS_CMD:
-        calculate_device_status(cmd, param_desc_list, data, valid_value);
+        calculate_device_status(cmd, param_desc_list, data, len, valid_value);
         ret = 0;
         break;
     default:
@@ -315,8 +317,7 @@ static int get_ups_property(list_t *property_list)
 {
     property_t property;
     property.cmd = ups_status_cmd();
-    property.param_desc = list_create(sizeof(param_desc_t));
-    ups_status_param_desc(property.param_desc);
+    property.param_desc = ups_status_param_desc();
 
     property_list->push_back(property_list, &property);
 
@@ -344,7 +345,7 @@ int ups_register(list_t *protocol_list)
     protocol_t protocol;
 
     protocol.protocol_id = UPS | C_KS;
-    strcpy(protocol.protocol_name, "UPS--C1KS");
+    strcpy(protocol.protocol_name, "UPS-C1KS");
     strcpy(protocol.protocol_desc, "C1KS型号UPS协议,波特率2400");
     strcpy(protocol.device_brand, "C1KS");
 

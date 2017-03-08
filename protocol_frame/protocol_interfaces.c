@@ -2,11 +2,14 @@
 
 #include "protocol_interfaces.h"
 #include "ups.h"
+#include "environment.h"
 
 int init_protocol_lib(list_t *protocol_list)
 {
     /* 设备注册函数调用 */
     ups_register(protocol_list);
+
+    environment_register(protocol_list);
     /* 后面添加类型设备协议注册函数即可 */
 
     return 0;

@@ -1,6 +1,8 @@
 #ifndef _PROTOCOL_TYPES_H_
 #define _PROTOCOL_TYPES_H_
 
+#include <sys/time.h>
+
 /* 命令字符长度 */
 #define MAX_CMD_LEN (128)
 #define MIN_CMD_LEN (8)
@@ -20,7 +22,7 @@ typedef enum
 typedef enum
 {
     VERIFY_TYPE_NONE    = 1,	/* 无数据校验 */
-    VERIFY_TYPE_CRC,			/* CRC校验 */	
+    VERIFY_TYPE_CRC,			/* CRC校验 */
 } verify_type_t;
 
 /**
@@ -39,7 +41,7 @@ typedef struct
 {
     unsigned int    cmd_id;					/* 指令编号 */
     unsigned char   cmd_name[MAX_CMD_LEN];	/* 指令名称及说明 */
-    unsigned char   cmd[MAX_CMD_LEN];		/* 指令对应的数据 */
+    unsigned char   cmd_code[MAX_CMD_LEN];	/* 指令对应的数据 */
     unsigned char   end_code[MIN_CMD_LEN];	/* 指令结束符 */
     unsigned int    cmd_len;                /* 指令数据长度 */
     unsigned int    end_len;                /* 结束符长度 */
@@ -47,6 +49,7 @@ typedef struct
     unsigned int    read_timeout;			/* 读取返回数据超时时间 */
     unsigned int    check_len;				/* 指令返回数据长度 */
     verify_type_t   verify_type;			/* 指令返回数据校验方式 */
+    unsigned int    record_interval;		/* 入库最大时间间隔 */
 } cmd_t;
 
 enum
@@ -68,8 +71,13 @@ enum
     C_KS = 0x0001,
 };
 
+enum
+{
+    OAO_210 = 0x0001,
+};
+
 #define MAX_PARAM_LEN	(128)
-#define MIN_PARAM_LEN	(8)
+#define MIN_PARAM_LEN	(32)
 #define PARAM_ENUM_NUM	(2)
 
 typedef struct
@@ -89,27 +97,24 @@ typedef struct
     float           low_limit;					/* 下限 */
     float           low_free;					/* 下限解除 */
 
-    unsigned int    alarm_delay;				/* 告警延时时间 */
     param_type_t    param_type;					/* 参数类型(模拟量还是数字枚举量?) */
 
-    unsigned int    record_enable;				/* 参数是否入库 */
-    unsigned int    update_interval;			/* 入库最大时间间隔 */
+    //unsigned int    alarm_delay;				/* 告警延时时间 */
+    //unsigned int    record_enable;			/* 参数是否入库 */
+    //unsigned int    update_interval;			/* 入库最大时间间隔 */
     float           update_threshold;           /* 模拟量入库阈值(数字枚举量状态切换时自动入库一次) */
 
     param_enum_t    param_enum[PARAM_ENUM_NUM]; /* 数字枚举量 */
 } param_desc_t;
 
-#define PARAM_TIME_LEN  (16)
-
 typedef struct
 {
-    unsigned char   create_time[PARAM_TIME_LEN];
     unsigned int    param_id;
     unsigned char   param_name[MAX_PARAM_LEN];
     unsigned char   param_unit[MIN_PARAM_LEN];
     param_type_t    param_type;
     float           param_value;
-    unsigned int    param_enum_value;
+    param_enum_t    param_enum_value;
 } param_value_t;
 
 #endif
