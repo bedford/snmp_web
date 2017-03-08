@@ -126,7 +126,7 @@ static int calculate_device_status(cmd_t    *cmd,
     param_value_t tmp_value;
     memset(&tmp_value, 0, sizeof(param_value_t));
     tmp_value.param_id = desc->param_id;
-    tmp_value.param_type = PARAM_TYPE_ANALOG;
+    //tmp_value.param_type = PARAM_TYPE_ANALOG;
     tmp_value.param_value =(double)((unsigned char)data[3] * 256 + (unsigned char)data[4]) / 10;
     tmp_value.enum_value = 0;
     valid_value->push_back(valid_value, &tmp_value);
@@ -134,7 +134,7 @@ static int calculate_device_status(cmd_t    *cmd,
     desc = (param_desc_t *)param_desc_list->get_index_value(param_desc_list, 1);
     memset(&tmp_value, 0, sizeof(param_value_t));
     tmp_value.param_id = desc->param_id;
-    tmp_value.param_type = PARAM_TYPE_ANALOG;
+    //tmp_value.param_type = PARAM_TYPE_ANALOG;
     tmp_value.param_value =(double)((unsigned char)data[5] * 256 + (unsigned char)data[6]) / 10;
     tmp_value.enum_value = 0;
     valid_value->push_back(valid_value, &tmp_value);

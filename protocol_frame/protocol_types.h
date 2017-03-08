@@ -104,17 +104,28 @@ typedef struct
     //unsigned int    update_interval;			/* 入库最大时间间隔 */
     float           update_threshold;           /* 模拟量入库阈值(数字枚举量状态切换时自动入库一次) */
 
+	unsigned int	enum_alarm_value;			/* 枚举量报警值 */
     param_enum_t    param_enum[PARAM_ENUM_NUM]; /* 数字枚举量 */
 } param_desc_t;
+
+enum
+{
+	NORMAL			= 0,	/* 正常 */
+	UP_ALARM 		= 1,	/* 上限报警 */
+	LOW_ALARM		= 2,	/* 下限报警 */
+	THRESHOLD_ALARM	= 4,	/* 超过阈值报警 */
+	ABNORMAL_ALARM	= 8,	/* 枚举量状态异常报警 */
+};
 
 typedef struct
 {
     unsigned int    param_id;
     //unsigned char   param_name[MAX_PARAM_LEN];
     //unsigned char   param_unit[MIN_PARAM_LEN];
-    param_type_t    param_type;
+    //param_type_t    param_type;
     float           param_value;
     unsigned int    enum_value;
+	unsigned int	status;		//0, 正常; 1,上限报警; 2,下限报警; 4,阈值报警
 } param_value_t;
 
 
