@@ -1078,6 +1078,59 @@ static int query_support_param(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int query_alarm_param(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *sys_db_handle = priv->sys_db_handle;
+
+	char sql[256] = {0};
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
+	if (strcmp(device_id_string, "all") == 0) {
+		sprintf(sql, "SELECT * FROM %s ORDER BY id", "parameter");
+	} else {
+		int device_id = atoi(device_id_string);
+		sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d ORDER BY id", "parameter", device_id);
+	}
+
+	device_id_string = NULL;
+	cfg = NULL;
+
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	sys_db_handle->query(sys_db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON *sub_dir = NULL;
+	cJSON *child = NULL;
+	int i = 0;
+	cJSON_AddNumberToObject(response, "support_list_count", query_result.row);
+	if (query_result.row > 0) {
+    	sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "support_list", sub_dir);
+		for (i = 1; i < (query_result.row + 1); i++) {
+        	child = cJSON_CreateObject();
+			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 1]);
+			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
+			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
+			cJSON_AddStringToObject(child, "param_unit", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "up_limit", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "up_free", query_result.result[i * query_result.column + 8]);
+			cJSON_AddStringToObject(child, "low_limit", query_result.result[i * query_result.column + 9]);
+			cJSON_AddStringToObject(child, "low_free", query_result.result[i * query_result.column + 10]);
+			cJSON_AddStringToObject(child, "update_threshold", query_result.result[i * query_result.column + 12]);
+    		cJSON_AddItemToArray(sub_dir, child);
+    	}
+	}
+	sys_db_handle->free_table(sys_db_handle, query_result.result);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 typedef int (*msg_fun)(cJSON *root, priv_info_t *priv);
 
 typedef struct {
@@ -1234,6 +1287,10 @@ cmd_fun_t cmd_query_data[] = {
 	{
 		"query_support_param",
 		query_support_param
+	},
+	{
+		"query_alarm_param",
+		query_alarm_param
 	}
 };
 

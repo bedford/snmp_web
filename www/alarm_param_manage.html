@@ -4,7 +4,6 @@
     <title>串口参数报警设置</title>
     <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
 	<link rel="stylesheet" href="css/cssReset.css">
-	<script src="js/jquery-1.12.0.js"></script>
 	<style>
 	#table-box {
 		width: 90%;
@@ -62,6 +61,7 @@
 	#other_content_box {
 		height: 10%;
 		width: 90%;
+		padding-left: 50px;
 	}
 
 	.confirm_btn {
@@ -72,7 +72,7 @@
 		font-size: 14px;
 		font-weight:bold;
 		border: none;
-		float: right;
+		margin-left: 10px;
 	}
 	</style>
 </head>
@@ -80,7 +80,7 @@
 <body>
 	<div id="table-box">
 		<div class="table-content">
-			<table id="system_info_table">
+			<table id="alarm_param_table">
 				<tr id="head">
 					<th>设备名称</th>
 					<th>参数名称</th>
@@ -88,6 +88,7 @@
 					<th>上限解除值</th>
 					<th>下限值</th>
 					<th>下限解除值</th>
+					<th>幅度</th>
 				</tr>
 				<tr>
 					<td>1号机柜UPS电源</td>
@@ -96,18 +97,86 @@
 					<td contenteditable="true">230.0</td>
 					<td contenteditable="true">180.0</td>
 					<td contenteditable="true">200.0</td>
+					<td contenteditable="true">5.0</td>
 				</tr>
 			</table>
 		</div>
 	</div>
 
 	<div id="other_content_box">
-        <input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_di_alarm()">
+		<label>设备名称</label>
+		<select id="device_name" name="device_name" style="width:130px; height:25px;" onchange="device_type_change()">
+		<option value="全部设备">全部设备</option>
+		</select>
+
+        <input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_alarm_param()">
 	</div>
 
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
-        $(document).ready(function () {
+		function traverse_alarm_param(msg) {
+			$("#alarm_param_table tr:gt(0)").remove();
+			var html="";
+			$.each(msg.support_list, function(i, item) {
+				html+='<tr><td>'+item.protocol_name+'</td><td>'+item.param_name
+				+'</td><td contenteditable="true">'+item.up_limit
+				+'</td><td contenteditable="true">'+item.up_free
+				+'</td><td contenteditable="true">'+item.low_limit
+				+'</td><td contenteditable="true">'+item.low_free
+				+'</td><td contenteditable="true">'+item.update_threshold
+				+'</td></tr>';
+			});
+			$("#alarm_param_table").append(html);
+		}
 
+		function device_type_change() {
+			var json = new Object();
+			json.msg_type = "query_data";
+			json.cmd_type = "query_alarm_param";
+
+			var cfg = new Object();
+			var device_type = $('#device_name').val();
+			if (device_type == '全部设备') {
+				cfg.device_id = "all";
+			} else {
+				cfg.device_id = $('#device_name').val();
+			}
+			json.cfg = cfg;
+			var data = $.toJSON(json);
+			$.ajax({
+			            url     : "/cgi-bin/common.cgi",
+			            type    : "POST",
+			            dataType: "json",
+			            data    : data,
+			            success : function(msg) {
+							traverse_alarm_param(msg);
+			            },
+			        });
+		}
+
+		function load_device_list() {
+			var json = new Object();
+			json.msg_type = "query_data";
+			json.cmd_type = "query_support_device";
+			var data = $.toJSON(json);
+			$.ajax({
+			            url     : "/cgi-bin/common.cgi",
+			            type    : "POST",
+			            dataType: "json",
+			            data    : data,
+			            success : function(msg) {
+							for (var i in msg.support_list) {
+							    $('#device_name').append('<option value="'+ msg.support_list[i].protocol_id
+									+ '">' + msg.support_list[i].protocol_name + '</option>');
+							}
+							device_type_change();
+			            },
+			        });
+		}
+
+        $(document).ready(function () {
+			load_device_list();
         })
     </script>
 </body>
