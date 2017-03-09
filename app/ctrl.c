@@ -11,8 +11,13 @@
 #include "protocol_interfaces.h"
 #include "drv_gpio.h"
 
+#include "types.h"
+#include "mem_pool.h"
+#include "ring_buffer.h"
+
 #include "rs232_thread.h"
 #include "rs485_thread.h"
+#include "data_write_thread.h"
 
 typedef struct {
 	db_access_t		*sys_db_handle;
@@ -82,14 +87,36 @@ void create_data_table(priv_info_t *priv)
 	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "real_data");
+	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
     sprintf(sql, "create table if not exists %s \
             (id INTEGER PRIMARY KEY AUTOINCREMENT, \
              created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
              device_id INTEGER, \
              device_name VARCHAR(32), \
+			 param_id INTEGER, \
              param_name VARCHAR(32), \
              param_type INTEGER, \
              analog_value DOUBLE, \
+			 unit VARCHAR(32), \
+             enum_value INTEGER, \
+             enum_desc VARCHAR(32), \
+             alarm_type INTEGER)", "real_data");
+    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
+             device_id INTEGER, \
+             device_name VARCHAR(32), \
+			 param_id INTEGER, \
+             param_name VARCHAR(32), \
+             param_type INTEGER, \
+             analog_value DOUBLE, \
+			 unit VARCHAR(32), \
              enum_value INTEGER, \
              enum_desc VARCHAR(32), \
              alarm_type INTEGER)", "data_record");
@@ -154,7 +181,8 @@ void update_uart_cfg(priv_info_t *priv)
     sprintf(sql, "INSERT INTO %s \
             (port, protocol_id, baud, data_bits, stops_bits, parity, enable) \
 			VALUES (%d, %d, %d, %d, %d, %d, %d)",
-			"uart_cfg", 2, 0, 3, 8, 1, 0, 0);
+			//"uart_cfg", 2, 0, 3, 8, 1, 0, 0);
+			"uart_cfg", 2, 257, 3, 8, 1, 0, 1);
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
@@ -240,6 +268,24 @@ int main(void)
 		priv->pref_handle->set_init_flag(priv->pref_handle, 0);
 	}
 
+	ring_buffer_t *rb_handle = ring_buffer_create(36);
+	mem_pool_t *mpool_handle = mem_pool_create(sizeof(msg_t), 32);
+	if (mpool_handle == NULL) {
+		printf("failed\n");
+	}
+
+	thread_t *data_write_thread = data_write_thread_create();
+	if (!data_write_thread) {
+		printf("create data write thread failed\n");
+		return -1;
+	}
+	data_write_thread_param_t data_write_param;
+	data_write_param.self			= data_write_thread;
+	data_write_param.data_db_handle	= priv->data_db_handle;
+	data_write_param.rb_handle		= rb_handle;
+	data_write_param.mpool_handle	= mpool_handle;
+	data_write_thread->start(data_write_thread, (void *)&data_write_param);
+
 	thread_t *rs232_thread = rs232_thread_create();
 	if (!rs232_thread) {
 		printf("create rs232 thread failed\n");
@@ -248,6 +294,9 @@ int main(void)
 	rs232_thread_param_t rs232_thread_param;
 	rs232_thread_param.self				= rs232_thread;
 	rs232_thread_param.sys_db_handle	= priv->sys_db_handle;
+	rs232_thread_param.rb_handle 		= rb_handle;
+	rs232_thread_param.mpool_handle		= mpool_handle;
+	rs232_thread_param.init_flag		= init_flag;
 	rs232_thread->start(rs232_thread, (void *)&rs232_thread_param);
 
 	thread_t *rs485_thread = rs485_thread_create();
@@ -276,6 +325,11 @@ int main(void)
 	rs232_thread = NULL;
 	rs485_thread = NULL;
 
+	data_write_thread->terminate(data_write_thread);
+	data_write_thread->join(data_write_thread);
+	data_write_thread->destroy(data_write_thread);
+	data_write_thread = NULL;
+
 	if (priv->sys_db_handle) {
     	priv->sys_db_handle->destroy(priv->sys_db_handle);
 		priv->sys_db_handle = NULL;
@@ -285,6 +339,12 @@ int main(void)
     	priv->data_db_handle->destroy(priv->data_db_handle);
 		priv->data_db_handle = NULL;
 	}
+
+	rb_handle->destroy(rb_handle);
+	rb_handle = NULL;
+
+	mpool_handle->mpool_destroy(mpool_handle);
+	mpool_handle = NULL;
 
 	free(priv);
 	priv = NULL;

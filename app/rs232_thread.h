@@ -11,6 +11,9 @@ typedef struct
 {
 	thread_t	*self;
 	void 		*sys_db_handle;
+	void 		*rb_handle;
+	void 		*mpool_handle;
+	int			init_flag;
 } rs232_thread_param_t;
 
 thread_t *rs232_thread_create(void);
