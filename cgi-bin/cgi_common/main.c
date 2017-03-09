@@ -901,6 +901,83 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int query_real_data(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *data_db_handle = priv->data_db_handle;
+	db_access_t *sys_db_handle = priv->sys_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC", "real_data");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	data_db_handle->query(data_db_handle, sql, &query_result);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON *sub_dir = NULL;
+	cJSON *child = NULL;
+	int i = 0;
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+	if (query_result.row > 0) {
+    	sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "real_data", sub_dir);
+
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+    		cJSON_AddStringToObject(child, "created_time", query_result.result[i * query_result.column + 1]);
+			cJSON_AddStringToObject(child, "device_id", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
+			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
+			cJSON_AddStringToObject(child, "param_type", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 8]);
+			cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 9]);
+			cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 10]);
+			cJSON_AddStringToObject(child, "alarm_type", query_result.result[i * query_result.column + 11]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	data_db_handle->free_table(data_db_handle, query_result.result);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s ORDER BY list_index", "support_list");
+	memset(&query_result, 0, sizeof(query_result_t));
+	sys_db_handle->query(sys_db_handle, sql, &query_result);
+	cJSON_AddNumberToObject(response, "support_list_count", query_result.row);
+	if (query_result.row > 0) {
+    	sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "support_list", sub_dir);
+		for (i = 1; i < (query_result.row + 1); i++) {
+        	child = cJSON_CreateObject();
+    		cJSON_AddStringToObject(child, "list_index", query_result.result[i * query_result.column]);
+			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 1]);
+			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "device_brand", query_result.result[i * query_result.column + 4]);
+    		cJSON_AddItemToArray(sub_dir, child);
+    	}
+	}
+	sys_db_handle->free_table(sys_db_handle, query_result.result);
+
+    sub_dir = cJSON_CreateArray();
+    cJSON_AddItemToObject(response, "io_status", sub_dir);
+    for (i = 0; i < 8; i++) {
+		drv_gpio_open(i);
+        child = cJSON_CreateObject();
+		unsigned char io_value = 0;
+		drv_gpio_read(i, &io_value);
+    	cJSON_AddNumberToObject(child, "value", io_value);
+		drv_gpio_close(i);
+    	cJSON_AddItemToArray(sub_dir, child);
+    }
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 typedef int (*msg_fun)(cJSON *root, priv_info_t *priv);
 
 typedef struct {
@@ -1045,6 +1122,10 @@ cmd_fun_t cmd_query_data[] = {
 	{
 		"query_email_record",
 		query_email_record
+	},
+	{
+		"query_real_data",
+		query_real_data
 	}
 };
 

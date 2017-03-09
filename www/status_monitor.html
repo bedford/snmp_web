@@ -6,90 +6,33 @@
     <link rel="stylesheet" href="css/cssReset.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body onbeforeunload="leave_page()">
     <div class="content-wr">
         <div class="data-status-box">
-            <ol class="breadcrumb">
-                <li>串口数据状态：</li>
-                <li><a href="">全部</a></li>
-                <li><a href="">设备1</a></li>
-                <li class="active">设备2</li>
-            </ol>
+            <div class="breadcrumb">
+                <h3 style="width: 120px; color: #fff; display:inline-block">串口数据状态</h3>
+				<label style="margin-left:20px; color: #cfe5ef;">设备名称：</label>
+				<select style="width:150px; height:25px;" id="device_type" onchange="device_type_change()">
+					<option value="全部">全部</option>
+				</select>
+				<label style="margin-left:20px; color: #cfe5ef;">状态类型：</label>
+				<select style="width:150px; height:25px;" id="status_type" onchange="status_type_change()">
+					<option value="全部">全部</option>
+					<option value="0">正常</option>
+					<option value="1">报警</option>
+				</select>
+            </div>
             <div id="table-box">
                 <ul class="table-title">
-                    <li>设备编号</li>
                     <li>设备名称</li>
                     <li>参数名称</li>
-                    <li>参数值</li>
-                    <li>报警值</li>
+                    <li>模拟量</li>
+                    <li>开关量</li>
+                    <li>开关量说明</li>
                     <li>状态</li>
                 </ul>
                 <div class="table-content">
-                    <table>
-                        <tr>
-                            <td>20160820010001</td>
-                            <td>UPS</td>
-                            <td>输入电压</td>
-                            <td>221.3V</td>
-                            <td>235.0</td>
-                            <td>正常</td>
-                        </tr>
-                        <tr class="warning">
-                            <td>20160820010001</td>
-                            <td>UPS</td>
-                            <td>温度</td>
-                            <td>55℃</td>
-                            <td>50</td>
-                            <td>报警</td>
-                        </tr>
-                        <tr>
-                            <td>20160820010001</td>
-                            <td>UPS</td>
-                            <td>输入电压</td>
-                            <td>221.3V</td>
-                            <td>235.0</td>
-                            <td>正常</td>
-                        </tr>
-                        <tr>
-                            <td>20160820010001</td>
-                            <td>UPS</td>
-                            <td>温度</td>
-                            <td>55℃</td>
-                            <td>50</td>
-                            <td>报警</td>
-                        </tr>
-                        <tr>
-                            <td>20160820010001</td>
-                            <td>UPS</td>
-                            <td>输入电压</td>
-                            <td>221.3V</td>
-                            <td>235.0</td>
-                            <td>正常</td>
-                        </tr>
-                        <tr>
-                            <td>20160820010001</td>
-                            <td>UPS</td>
-                            <td>温度</td>
-                            <td>55℃</td>
-                            <td>50</td>
-                            <td>报警</td>
-                        </tr>
-                        <tr>
-                            <td>20160820010001</td>
-                            <td>UPS</td>
-                            <td>输入电压</td>
-                            <td>221.3V</td>
-                            <td>235.0</td>
-                            <td>正常</td>
-                        </tr>
-                        <tr>
-                            <td>20160820010001</td>
-                            <td>UPS</td>
-                            <td>温度</td>
-                            <td>55℃</td>
-                            <td>50</td>
-                            <td>报警</td>
-                        </tr>
+                    <table id="real_data">
                     </table>
                 </div>
             </div>
@@ -98,30 +41,128 @@
             <div class="do-status">
                 <h3>DO状态</h3>
                 <ul class="clear-fix">
-                    <li class="do-status-on"><span>IO输出1</span></li>
                     <li class="do-status-off"><span>IO输出1</span></li>
-                    <li class="do-status-on"><span>IO输出1</span></li>
-                    <li class="do-status-on"><span>IO输出1</span></li>
+                    <li class="do-status-off"><span>IO输出2</span></li>
+                    <li class="do-status-off"><span>IO输出3</span></li>
+                    <li class="do-status-off"><span>IO输出4</span></li>
                 </ul>
             </div>
             <div class="di-status">
                 <h3>DI状态</h3>
                 <ul class="clear-fix">
-                    <li class="di-status-on"><span>IO输入1</span></li>
                     <li class="di-status-off"><span>IO输入1</span></li>
-                    <li class="di-status-on"><span>IO输入1</span></li>
-                    <li class="di-status-on"><span>IO输入1</span></li>
+                    <li class="di-status-off"><span>IO输入2</span></li>
+                    <li class="di-status-off"><span>IO输入3</span></li>
+                    <li class="di-status-off"><span>IO输入4</span></li>
                 </ul>
             </div>
         </div>
     </div>
     <script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
+		function leave_page() {
+			//clearInterval(interval_handle);
+			window.localStorage.removeItem("real_data");
+		}
+
+		function display_device_type_list(msg) {
+			for (var i in msg.support_list) {
+			    $('#device_type').append('<option value="'+ msg.support_list[i].protocol_id
+					+ '">' + msg.support_list[i].protocol_name + '</option>');
+			}
+		}
+
+		function display_real_data(real_data, device_type, status) {
+			$('#real_data').empty();
+			$.each(real_data, function(i, item) {
+				if ((device_type != '全部') && (device_type != item.device_id)) {
+					return true;
+				}
+
+				if (status != '全部') {
+					if (((status == '0') && (itme.alarm_type != '0'))
+						|| ((status != '0') && (item.alarm_type == '0'))) {
+						return true;
+					}
+				}
+
+				var html="";
+				if (item.alarm_type == '0') {
+					var html = '<tr><td>' + item.device_name + '</td><td>'
+					+ item.param_name + '</td><td>' + item.analog_value + item.unit + '</td><td>'
+					+ item.enum_value + '</td><td>'+ item.enum_desc + '</td><td>正常</td></tr>';
+				} else {
+					var html = '<tr class="warning"><td>' + item.device_name + '</td><td>'
+					+ item.param_name + '</td><td>' + item.analog_value + item.unit + '</td><td>'
+					+ item.enum_value + '</td><td>'+ item.enum_desc + '</td><td>报警</td></tr>';
+				}
+
+				$("#real_data").append(html);
+			});
+		}
+
+		function display_io(msg) {
+			$('.di-status li').each(function(i) {
+				if (msg.io_status[i].value) {
+		            $(this).removeClass('di-status-off');
+					$(this).addClass('di-status-on');
+				}
+			});
+
+			$('.do-status li').each(function(i) {
+				if (msg.io_status[i+4].value) {
+		            $(this).removeClass('do-status-off');
+					$(this).addClass('do-status-on');
+				}
+			});
+		}
+
+		function device_type_change() {
+			var device_type = $('#device_type').val();
+			var status = $('#status_type').val();
+			var collection = window.localStorage.getItem("real_data");
+			var data = JSON.parse(collection);
+			display_real_data(data, device_type, status);
+		}
+
+		function status_type_change() {
+			var device_type = $('#device_type').val();
+			var status = $('#status_type').val();
+			var collection = window.localStorage.getItem("real_data");
+			var data = JSON.parse(collection);
+			display_real_data(data, device_type, status);
+		}
+
+		function load_real_status() {
+			    var json = new Object();
+			    json.msg_type = "query_data";
+			    json.cmd_type = "query_real_data";
+			    var data = $.toJSON(json);
+			    $.ajax({
+			                url     : "/cgi-bin/common.cgi",
+			                type    : "POST",
+			                dataType: "json",
+			                data    : data,
+			                success : function(msg) {
+			                    display_device_type_list(msg);
+								display_real_data(msg.real_data, '全部', '全部');
+								window.localStorage.removeItem("real_data");
+								window.localStorage.setItem("real_data", JSON.stringify(msg.real_data));
+								display_io(msg);
+			                },
+			            });
+		}
+
+		//var interval_handle;
         $(document).ready(function () {
             //当table-content出现滚动条时，设置table-title的padding-right为17px
             if ($(".table-content table").height() > $(".table-content").height()){
                 $(".table-title").css("padding-right", "17px");
             }
+
+			load_real_status();
+			//interval_handle = setInterval("load_real_status()", 30000);
         })
     </script>
 </body>
