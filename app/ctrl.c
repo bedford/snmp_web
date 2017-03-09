@@ -163,6 +163,7 @@ void update_uart_cfg(priv_info_t *priv)
 	sprintf(sql, "create table if not exists %s \
 			(id INTEGER PRIMARY KEY AUTOINCREMENT, \
 			protocol_id INTEGER, \
+			protocol_name VARCHAR(32), \
 			cmd_id INTEGER, \
 			param_id INTEGER, \
 			param_name VARCHAR(128), \
@@ -226,12 +227,13 @@ void update_uart_cfg(priv_info_t *priv)
 			for (index = 0; index < param_list_size; index++) {
 				param_desc_t *param = param_desc_list->get_index_value(param_desc_list, index);
 				memset(sql, 0, sizeof(sql));
-				sprintf(sql, "INSERT INTO %s (protocol_id, cmd_id, param_id, param_name, \
+				sprintf(sql, "INSERT INTO %s (protocol_id, protocol_name, cmd_id, param_id, param_name, \
 						param_unit, up_limit, up_free, low_limit, low_free, \
 						param_type, update_threshold, low_desc, high_desc) \
-						VALUES (%d, %d, %d, '%s', '%s', '%.1f', '%.1f', '%.1f', '%.1f',\
+						VALUES (%d, '%s', %d, %d, '%s', '%s', '%.1f', '%.1f', '%.1f', '%.1f',\
 							%d, '%.1f', '%s', '%s')",
-						"parameter", tmp->protocol_id, cmd->cmd_id, param->param_id, param->param_name,
+						"parameter", tmp->protocol_id, tmp->protocol_name, cmd->cmd_id,
+						param->param_id, param->param_name,
 						param->param_unit, param->up_limit, param->up_free,
 						param->low_limit, param->low_free, param->param_type,
 						param->update_threshold, param->param_enum[0].desc,
