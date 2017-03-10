@@ -7,7 +7,7 @@
 #include "iniparser.h"
 #include "db_access.h"
 
-#define INI_FILE_NAME	"param.ini"
+#define INI_FILE_NAME	"/opt/app/param.ini"
 
 typedef struct {
     int     req_len;
@@ -755,8 +755,8 @@ static int query_data_record(cJSON *root, priv_info_t *priv)
 		int device_id = atoi(device_id_string);
 		int param_id = atoi(cJSON_GetObjectItem(cfg, "param_id")->valuestring);
 		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' \
-				AND protocol_id=%d AND param_id=%d ORDER BY id",
-			"data_record", start_time, end_time, param_id);
+				AND device_id=%d AND param_id=%d ORDER BY id",
+			"data_record", start_time, end_time, device_id, param_id);
 	}
 	cfg = NULL;
 	start_time = NULL;
@@ -812,12 +812,31 @@ static int query_alarm_record(cJSON *root, priv_info_t *priv)
 	db_access_t *db_handle = priv->data_db_handle;
 
 	char sql[256] = {0};
-	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC limit 10", "alarm_record");
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+	char *start_time = cJSON_GetObjectItem(cfg, "start_time")->valuestring;
+	char *end_time = cJSON_GetObjectItem(cfg, "end_time")->valuestring;
+	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
+	if (strcmp(device_id_string, "all") == 0) {
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND alarm_type>0 ORDER BY id",
+			"data_record", start_time, end_time);
+	} else {
+		int device_id = atoi(device_id_string);
+		int param_id = atoi(cJSON_GetObjectItem(cfg, "param_id")->valuestring);
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' \
+				AND device_id=%d AND param_id=%d AND alarm_type>0 ORDER BY id",
+			"data_record", start_time, end_time, device_id, param_id);
+	}
+	cfg = NULL;
+	start_time = NULL;
+	end_time = NULL;
+	device_id_string = NULL;
+
 	query_result_t query_result;
 	memset(&query_result, 0, sizeof(query_result_t));
 	db_handle->query(db_handle, sql, &query_result);
 
     cJSON *response = cJSON_CreateObject();
+	cJSON_AddStringToObject(response, "sql", sql);
 	cJSON_AddNumberToObject(response, "count", query_result.row);
 	if (query_result.row > 0) {
     	cJSON *sub_dir = cJSON_CreateArray();
@@ -830,13 +849,20 @@ static int query_alarm_record(cJSON *root, priv_info_t *priv)
     		cJSON_AddStringToObject(child, "created_time", query_result.result[i * query_result.column + 1]);
     		cJSON_AddStringToObject(child, "device_id", query_result.result[i * query_result.column + 2]);
 			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 3]);
-			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 4]);
-			if (strcmp(query_result.result[i * query_result.column + 5], "1") == 0) {
-				cJSON_AddStringToObject(child, "param_value", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
+			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
+			if (strcmp(query_result.result[i * query_result.column + 6], "1") == 0) {
+				cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 7]);
+				cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 8]);
+				cJSON_AddStringToObject(child, "enum_value", "-");
+				cJSON_AddStringToObject(child, "enum_desc", "-");
 			} else {
-				cJSON_AddStringToObject(child, "param_value", query_result.result[i * query_result.column + 8]);
+				cJSON_AddStringToObject(child, "analog_value", "-");
+				cJSON_AddStringToObject(child, "unit", "");
+				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 9]);
+				cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 10]);
 			}
-			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 9]);
+			cJSON_AddStringToObject(child, "alarm_type", query_result.result[i * query_result.column + 11]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -1384,8 +1410,8 @@ int main(void)
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
 	priv->dic = iniparser_load(INI_FILE_NAME);
 
-	priv->sys_db_handle = db_access_create("sys.db");
-    priv->data_db_handle = db_access_create("data.db");
+	priv->sys_db_handle = db_access_create("/opt/app/sys.db");
+    priv->data_db_handle = db_access_create("/opt/data/data.db");
 
 	char error_msg[512] = {0};
 	char sql[512] = {0};

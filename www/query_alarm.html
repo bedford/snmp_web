@@ -75,7 +75,7 @@
 
 	#start_time_box {
 	    display: inline-block;
-		width: 25%;
+		width: 22%;
 		height: 100%;
 		position: relative;
 		box-sizing: border-box;
@@ -87,7 +87,7 @@
 
 	#end_time_box {
 	    display: inline-block;
-		width: 25%;
+		width: 22%;
 		height: 100%;
 		position: relative;
 		box-sizing: border-box;
@@ -99,19 +99,19 @@
 	}
 
 	#add_user_box {
-		width: 30%;
+		width: 15%;
 		height: 100%;
 		position: relative;
 		box-sizing: border-box;
 		padding-top: 10px;
-		padding-left:30px;
+		padding-left:10px;
 		display: inline-block;
 	}
 
 	#query_btn {
 		background-color: #117daf;
 		color: #fff;
-		width: 100px;
+		width: 70px;
 		height: 40px;
 		font-size: 14px;
 		font-weight:bold;
@@ -125,21 +125,16 @@
 
 	#export_btn {
 		color: #fff;
-		width: 100px;
+		width: 70px;
 		height: 40px;
 		font-size: 14px;
 		font-weight:bold;
 		border-radius:5px;
 		border: none;
-		margin-left: 40px;
+		margin-left: 5px;
 	}
 	</style>
 	<link rel="stylesheet" href="css/cssReset.css">
-	<script src="js/jquery-1.12.0.js"></script>
-	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/export_excel.js"></script>
-	<script src="js/query_history.js"></script>
-	<script src="js/WdatePicker.js"></script>
 </head>
 <body onbeforeunload="clear_alarm_record()">
 	<div class="operation_box">
@@ -151,10 +146,13 @@
 			<span>结束时间</span>
 			<input class="Wdate" type="text" id="end_time" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})">
 		</div>
-		<select id="device_name" name="device_name" style="width:150px">
-		<option>全部</option>
-		<option>设备1</option>
-		<option>设备2</option>
+		<label>设备名称</label>
+		<select id="device_name" name="device_name" style="width:130px; height:25px;" onchange="device_type_change()">
+		<option value="全部设备">全部设备</option>
+		</select>
+
+		<label>参数名称</label>
+		<select id="param_name" name="param_name" style="width:130px; height:25px;">
 		</select>
 		<div id="add_user_box">
 			<input type="button" id="query_btn" value="查询" onclick="alarm_query()">
@@ -166,28 +164,62 @@
 			<table id="alarm_table">
 				<tr id="head">
 					<th>时间</th>
-					<th>设备编号</th>
 					<th>设备名称</th>
 					<th>参数名称</th>
 					<th>参数值</th>
-					<th>报警值</th>
+					<th>开关量</th>
+					<th>开关量描述</th>
 				</tr>
 			</table>
 		</div>
 	</div>
 
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/export_excel.js"></script>
+	<script src="js/query_history.js"></script>
+	<script src="js/WdatePicker.js"></script>
 	<script>
+		function device_type_change() {
+			var device_type = $('#device_name').val();
+			if (device_type == '全部设备') {
+				$('#param_name option').remove();
+			} else {
+				$('#param_name option').remove();
+				var json = new Object();
+				json.msg_type = "query_data";
+				json.cmd_type = "query_support_param";
+
+				var cfg = new Object();
+				cfg.device_id = $('#device_name').val();
+				json.cfg = cfg;
+				var data = $.toJSON(json);
+				$.ajax({
+				            url     : "/cgi-bin/common.cgi",
+				            type    : "POST",
+				            dataType: "json",
+				            data    : data,
+				            success : function(msg) {
+								for (var i in msg.support_list) {
+								    $('#param_name').append('<option value="'+ msg.support_list[i].param_id
+										+ '">' + msg.support_list[i].param_name + '</option>');
+								}
+				            },
+				        });
+			}
+		}
+
 		function traverse_alarm_record(data_list) {
 			$("#alarm_table tr:gt(0)").remove();
 			var html="";
 			$.each(data_list, function(i, item) {
 				html+="<tr>";
 				html+="<td>"+item.created_time+"</td>";
-				html+="<td>"+item.device_id+"</td>";
 				html+="<td>"+item.device_name+"</td>";
 				html+="<td>"+item.param_name+"</td>";
-				html+="<td>"+item.param_value+"</td>";
-				html+="<td>"+item.alarm_desc+"</td>";
+				html+="<td>"+item.analog_value+item.unit+"</td>";
+				html+="<td>"+item.enum_value+"</td>";
+				html+="<td>"+item.enum_desc+"</td>";
 				html+="</tr>"
 			});
 			$("#alarm_table").append(html);
@@ -203,10 +235,26 @@
 			JSONToExcelConvertor(data, "alarm_record", title);
 		}
 
+		function clear_alarm_record() {
+			window.localStorage.removeItem("alarm_record");
+		}
+
 		function alarm_query() {
 			var json = new Object();
 			json.msg_type = "query_data";
 			json.cmd_type = "query_alarm_record";
+
+			var cfg = new Object();
+			cfg.start_time = $('#start_time').val();
+			cfg.end_time = $('#end_time').val();
+			if ($('#device_name').val() == '全部设备') {
+				cfg.device_id = "all";
+			} else {
+				cfg.device_id = $('#device_name').val();
+				cfg.param_id = $('#param_name').val();
+			}
+
+			json.cfg = cfg;
 			var data = $.toJSON(json);
 			$.ajax({
 			            url     : "/cgi-bin/common.cgi",
@@ -220,12 +268,28 @@
 			        });
 		}
 
-		function clear_alarm_record() {
-			window.localStorage.removeItem("alarm_record");
+		function load_device_list() {
+			var json = new Object();
+			json.msg_type = "query_data";
+			json.cmd_type = "query_support_device";
+			var data = $.toJSON(json);
+			$.ajax({
+			            url     : "/cgi-bin/common.cgi",
+			            type    : "POST",
+			            dataType: "json",
+			            data    : data,
+			            success : function(msg) {
+							for (var i in msg.support_list) {
+							    $('#device_name').append('<option value="'+ msg.support_list[i].protocol_id
+									+ '">' + msg.support_list[i].protocol_name + '</option>');
+							}
+			            },
+			        });
 		}
 
         $(document).ready(function () {
 			load_timepicker_default();
+			load_device_list();
         })
     </script>
 </body>
