@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "db_access.h"
 #include "uart.h"
+#include "preference.h"
 
 #include "types.h"
 #include "ring_buffer.h"
@@ -20,6 +21,7 @@ typedef struct {
 	db_access_t		*sys_db_handle;
 	ring_buffer_t	*rb_handle;
 	mem_pool_t		*mpool_handle;
+	preference_t	*pref_handle;
 	protocol_t 		*protocol;
 
 	uart_param_t	uart_param;
@@ -267,6 +269,7 @@ static void *rs232_process(void *arg)
 	priv->sys_db_handle = (db_access_t *)thread_param->sys_db_handle;
 	priv->rb_handle = (ring_buffer_t *)thread_param->rb_handle;
 	priv->mpool_handle = (mem_pool_t *)thread_param->mpool_handle;
+	priv->pref_handle = (preference_t *)thread_param->pref_handle;
     priv->uart_param.device_index = 2;
 
     list_t *protocol_list = list_create(sizeof(protocol_t));
@@ -349,7 +352,12 @@ static void *rs232_process(void *arg)
 	            printf("write cmd failed------------\n");
 	        }
 			sleep(5);
-			update_alarm_param_flag = 0;
+			if (update_alarm_param_flag) {
+				update_alarm_param_flag = 0;
+				priv->pref_handle->set_rs232_alarm_flag(priv->pref_handle, 0);
+			} else {
+				update_alarm_param_flag = priv->pref_handle->get_rs232_alarm_flag(priv->pref_handle);
+			}
 		}
 	}
 

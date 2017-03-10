@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "db_access.h"
 #include "uart.h"
+#include "preference.h"
 
 #include "drv_gpio.h"
 #include "types.h"
@@ -21,6 +22,7 @@ typedef struct {
 	db_access_t		*sys_db_handle;
 	ring_buffer_t	*rb_handle;
 	mem_pool_t		*mpool_handle;
+	preference_t	*pref_handle;
 	protocol_t 		*protocol;
 
 	uart_param_t 	uart_param;
@@ -73,7 +75,6 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		last_value_list->push_back(last_value_list, &last_value);
 
 		unsigned int status = 0;
-		printf("param_desc->uplimt %f\n", param_desc->up_limit);
 		if (param_desc->param_type == PARAM_TYPE_ANALOG) {
 			if (current_value->param_value > param_desc->up_limit) {
 				status = UP_ALARM;
@@ -269,6 +270,7 @@ static void *rs485_process(void *arg)
 	priv->sys_db_handle = (db_access_t *)thread_param->sys_db_handle;
 	priv->rb_handle = (ring_buffer_t *)thread_param->rb_handle;
 	priv->mpool_handle = (mem_pool_t *)thread_param->mpool_handle;
+	priv->pref_handle = (preference_t *)thread_param->pref_handle;
     priv->uart_param.device_index = 3;
 
     list_t *protocol_list = list_create(sizeof(protocol_t));
@@ -356,7 +358,12 @@ static void *rs485_process(void *arg)
 	            printf("write cmd failed------------\n");
 	        }
 			sleep(5);
-			update_alarm_param_flag = 0;
+			if (update_alarm_param_flag) {
+				update_alarm_param_flag = 0;
+				priv->pref_handle->set_rs485_alarm_flag(priv->pref_handle, 0);
+			} else {
+				update_alarm_param_flag = priv->pref_handle->get_rs485_alarm_flag(priv->pref_handle);
+			}
 		}
 	}
 	drv_gpio_close(RS485_ENABLE);

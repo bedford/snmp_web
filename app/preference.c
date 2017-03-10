@@ -15,6 +15,8 @@ typedef struct {
 	time_t			modify_time;
 
 	int				init_flag;
+	int 			rs232_alarm_flag;
+	int				rs485_alarm_flag;
 } priv_info;
 
 static void write_profile(dictionary    *dic,
@@ -46,6 +48,9 @@ static int load_system_param(priv_info *priv)
 {
 	priv->init_flag = iniparser_getint(priv->dic, "SYSTEM:init_flag", 1);
 
+	priv->rs232_alarm_flag = iniparser_getint(priv->dic, "ALARM:rs232_alarm_flag", 1);
+	priv->rs485_alarm_flag = iniparser_getint(priv->dic, "ALARM:rs485_alarm_flag", 1);
+
 	return 0;
 }
 
@@ -62,6 +67,54 @@ static void set_init_flag_preference(preference_t *thiz, int flag)
 }
 
 static int get_init_flag_preference(preference_t *thiz)
+{
+	int init_flag = 0;
+
+	if (thiz != 0) {
+		priv_info *priv =  (priv_info *)thiz->priv;
+		init_flag = priv->init_flag;
+	}
+
+	return init_flag;
+}
+
+static void set_rs232_alarm_flag_preference(preference_t *thiz, int flag)
+{
+    char tmp[32] = {0};
+    priv_info *priv =  (priv_info *)thiz->priv;
+	priv->init_flag = flag;
+    sprintf(tmp, "%d", priv->init_flag);
+    write_profile(priv->dic, "ALARM", "rs232_alarm_flag", tmp);
+    dump_profile(priv->dic, INI_FILE_NAME);
+
+    printf("setting init_flag %d\n", priv->init_flag);
+}
+
+static int get_rs232_alarm_flag_preference(preference_t *thiz)
+{
+	int init_flag = 0;
+
+	if (thiz != 0) {
+		priv_info *priv =  (priv_info *)thiz->priv;
+		init_flag = priv->init_flag;
+	}
+
+	return init_flag;
+}
+
+static void set_rs485_alarm_flag_preference(preference_t *thiz, int flag)
+{
+    char tmp[32] = {0};
+    priv_info *priv =  (priv_info *)thiz->priv;
+	priv->init_flag = flag;
+    sprintf(tmp, "%d", priv->init_flag);
+    write_profile(priv->dic, "ALARM", "rs485_alarm_flag", tmp);
+    dump_profile(priv->dic, INI_FILE_NAME);
+
+    printf("setting init_flag %d\n", priv->init_flag);
+}
+
+static int get_rs485_alarm_flag_preference(preference_t *thiz)
 {
 	int init_flag = 0;
 
@@ -105,6 +158,11 @@ preference_t *preference_create(void)
 
         thiz->get_init_flag	= get_init_flag_preference;
         thiz->set_init_flag	= set_init_flag_preference;
+
+		thiz->get_rs232_alarm_flag = get_rs232_alarm_flag_preference;
+		thiz->get_rs485_alarm_flag = get_rs485_alarm_flag_preference;
+		thiz->set_rs232_alarm_flag = set_rs232_alarm_flag_preference;
+		thiz->set_rs485_alarm_flag = set_rs485_alarm_flag_preference;
 
         priv_info *priv = (priv_info *)thiz->priv;
         priv->dic = iniparser_load(INI_FILE_NAME);

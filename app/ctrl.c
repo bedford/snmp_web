@@ -295,6 +295,7 @@ int main(void)
 	rs232_thread_param.sys_db_handle	= priv->sys_db_handle;
 	rs232_thread_param.rb_handle 		= rb_handle;
 	rs232_thread_param.mpool_handle		= mpool_handle;
+	rs232_thread_param.pref_handle		= priv->pref_handle;
 	rs232_thread_param.init_flag		= init_flag;
 	rs232_thread->start(rs232_thread, (void *)&rs232_thread_param);
 
@@ -308,6 +309,7 @@ int main(void)
 	rs485_thread_param.sys_db_handle	= priv->sys_db_handle;
 	rs485_thread_param.rb_handle 		= rb_handle;
 	rs485_thread_param.mpool_handle		= mpool_handle;
+	rs485_thread_param.pref_handle		= priv->pref_handle;
 	rs485_thread_param.init_flag		= init_flag;
 	rs485_thread->start(rs485_thread, (void *)&rs485_thread_param);
 
