@@ -182,8 +182,8 @@ void update_uart_cfg(priv_info_t *priv)
     sprintf(sql, "INSERT INTO %s \
             (port, protocol_id, baud, data_bits, stops_bits, parity, enable) \
 			VALUES (%d, %d, %d, %d, %d, %d, %d)",
-			//"uart_cfg", 2, 0, 3, 8, 1, 0, 0);
-			"uart_cfg", 2, 257, 3, 8, 1, 0, 1);
+			"uart_cfg", 2, 0, 3, 8, 1, 0, 0);
+			//"uart_cfg", 2, 257, 3, 8, 1, 0, 1);
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
@@ -191,6 +191,7 @@ void update_uart_cfg(priv_info_t *priv)
             (port, protocol_id, baud, data_bits, stops_bits, parity, enable) \
 			VALUES (%d, %d, %d, %d, %d, %d, %d)",
 			"uart_cfg", 3, 0, 3, 8, 1, 0, 0);
+			//"uart_cfg", 3, 257, 3, 8, 1, 0, 1);
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
 	list_t *protocol_list = list_create(sizeof(protocol_t));
@@ -256,13 +257,9 @@ int main(void)
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
 	priv->pref_handle = preference_create();
 	int init_flag = priv->pref_handle->get_init_flag(priv->pref_handle);
-#ifdef ARM_ENV
-	priv->sys_db_handle = db_access_create("/opt/app/web/cgi-bin/sys.db");
-	priv->data_db_handle = db_access_create("/opt/app/web/cgi-bin/data.db");
-#else
-    priv->sys_db_handle = db_access_create("sys.db");
-    priv->data_db_handle = db_access_create("data.db");
-#endif
+
+	priv->sys_db_handle = db_access_create("/opt/app/sys.db");
+	priv->data_db_handle = db_access_create("/opt/data/data.db");
 
 	if (init_flag == 1) {
 		create_data_table(priv);
@@ -309,6 +306,9 @@ int main(void)
 	rs485_thread_param_t rs485_thread_param;
 	rs485_thread_param.self				= rs485_thread;
 	rs485_thread_param.sys_db_handle	= priv->sys_db_handle;
+	rs485_thread_param.rb_handle 		= rb_handle;
+	rs485_thread_param.mpool_handle		= mpool_handle;
+	rs485_thread_param.init_flag		= init_flag;
 	rs485_thread->start(rs485_thread, (void *)&rs485_thread_param);
 
     while (runnable) {

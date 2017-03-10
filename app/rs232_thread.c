@@ -60,7 +60,6 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	param_value_t *current_value = NULL;
 	int list_size = valid_value->get_list_size(valid_value);
 
-
 	int i = 0;
 	msg_t *msg = NULL;
 	for (i = 0; i < list_size; i++) {
@@ -76,7 +75,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		if (param_desc->param_type == PARAM_TYPE_ANALOG) {
 			if (current_value->param_value > param_desc->up_limit) {
 				status = UP_ALARM;
-			} else if (current_value->param_value > param_desc->low_limit) {
+			} else if (current_value->param_value < param_desc->low_limit) {
 				status = LOW_ALARM;
 			}
 		} else {
@@ -230,6 +229,36 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 	}
 }
 
+static void update_alarm_param(priv_info_t *priv, property_t *property)
+{
+	char sql[256] = {0};
+	query_result_t query_result;
+	sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d AND cmd_id=%d order by id",
+			"parameter", priv->protocol->protocol_id, property->cmd.cmd_id);
+	memset(&query_result, 0, sizeof(query_result_t));
+	priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
+
+	list_t *desc_list = property->param_desc;
+	param_desc_t *param_desc = NULL;
+	int list_size = desc_list->get_list_size(desc_list);
+	int i = 0;
+	if (query_result.row > 0) {
+		for (i = 0; i < list_size; i++) {
+			param_desc = desc_list->get_index_value(desc_list, i);
+			param_desc->up_limit = atof(query_result.result[(i + 1) * query_result.column + 7]);
+			param_desc->up_free = atof(query_result.result[(i + 1) * query_result.column + 8]);
+			param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 9]);
+			param_desc->low_free = atof(query_result.result[(i + 1) * query_result.column + 10]);
+			param_desc->update_threshold = atof(query_result.result[(i + 1) * query_result.column + 12]);
+		}
+	}
+
+	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
+
+	desc_list = NULL;
+	param_desc = NULL;
+}
+
 static void *rs232_process(void *arg)
 {
 	rs232_thread_param_t *thread_param = (rs232_thread_param_t *)arg;
@@ -285,6 +314,7 @@ static void *rs232_process(void *arg)
 	int index = 0;
 	char buf[256] = {0};
     property_t *property = NULL;
+	int update_alarm_param_flag = 1;
 	while (thiz->thread_status) {
 		for (index = 0; index < property_list_size; index++) {
 			property = property_list->get_index_value(property_list, index);
@@ -300,6 +330,9 @@ static void *rs232_process(void *arg)
 	                list_t *value_list = list_create(sizeof(param_value_t));
 	                protocol->calculate_data(property, buf, len, value_list);
 	                print_param_value(value_list);
+					if (update_alarm_param_flag) {
+						update_alarm_param(priv, property);
+					}
 					if (property->last_param_value == NULL) {
 						printf("line %d, func %s\n", __LINE__, __func__);
 						create_last_param_value_list(priv, property, value_list,
@@ -317,6 +350,7 @@ static void *rs232_process(void *arg)
 	            printf("write cmd failed------------\n");
 	        }
 			sleep(5);
+			update_alarm_param_flag = 0;
 		}
 	}
 

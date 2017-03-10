@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#define INI_FILE_NAME	"param.ini"
+#define INI_FILE_NAME	"/opt/app/param.ini"
 
 typedef struct _preference preference_t;
 

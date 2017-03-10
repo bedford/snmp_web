@@ -13,8 +13,8 @@
 static char *device_name[] = {
     "/dev/ttySAC0",
     "/dev/ttySAC1",
-    //"/dev/ttySAC2",
-    "/dev/ttyUSB0",
+    "/dev/ttySAC2",
+    //"/dev/ttyUSB0",
     "/dev/ttySAC3",
 };
 
