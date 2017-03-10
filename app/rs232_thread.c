@@ -151,8 +151,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 	int list_size = valid_value->get_list_size(valid_value);
 	int i = 0;
 	int record_flag = 0;
-	//if ((current_time.tv_sec - property->last_record_time.tv_sec) > (60 * 30)) {
-	if ((current_time.tv_sec - property->last_record_time.tv_sec) > (60 * 2)) {
+	if ((current_time.tv_sec - property->last_record_time.tv_sec) > (60 * 30)) {
 		property->last_record_time = current_time;
 		record_flag = 1;
 	}

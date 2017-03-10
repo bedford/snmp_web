@@ -4,6 +4,7 @@
     <title>串口参数报警设置</title>
     <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
 	<link rel="stylesheet" href="css/cssReset.css">
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
 	#table-box {
 		width: 90%;
@@ -74,6 +75,7 @@
 		border: none;
 		margin-left: 10px;
 	}
+
 	</style>
 </head>
 
@@ -112,7 +114,16 @@
         <input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_alarm_param()">
 	</div>
 
+	<div class="jq-dialog" id="update_success_dialog" title="提示信息">
+		<label id="update_detail"></label>
+	</div>
+
+	<div class="jq-dialog" id="no_update_dialog" title="提示信息">
+		<label id="nothing_detail"></label>
+	</div>
+
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
 		window.array_data = null;
@@ -147,6 +158,22 @@
 			});
 
 			if (newArray.length == 0) {
+				var html = '没有需要更新的数据';
+				$('#nothing_detail').html(html);
+				$('#no_update_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						},
+						取消: function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+
 				return false;
 			}
 
@@ -168,6 +195,22 @@
 		                            }
 		                        });
 		                    });
+
+							var html = '更新数据成功';
+							$('#update_detail').html(html);
+							$('#update_success_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									},
+									取消: function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 			            },
 			        });
 		}
