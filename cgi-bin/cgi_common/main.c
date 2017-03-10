@@ -1161,6 +1161,7 @@ static int query_alarm_param(cJSON *root, priv_info_t *priv)
 static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
+	dictionary *dic		= priv->dic;
 	db_access_t *db_handle = priv->sys_db_handle;
 
 	char sql[256] = {0};
@@ -1191,6 +1192,10 @@ static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
         }
         object = NULL;
     }
+
+    write_profile(dic, "ALARM", "rs232_alarm_flag", "0");
+    write_profile(dic, "ALARM", "rs485_alarm_flag", "0");
+    dump_profile(dic, INI_FILE_NAME);
 
     cJSON *response;
     response = cJSON_CreateObject();
