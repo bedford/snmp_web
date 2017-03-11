@@ -62,7 +62,7 @@
 	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
 		function leave_page() {
-			//clearInterval(interval_handle);
+			clearInterval(interval_handle);
 			window.localStorage.removeItem("real_data");
 		}
 
@@ -154,7 +154,7 @@
 			            });
 		}
 
-		//var interval_handle;
+		var interval_handle;
         $(document).ready(function () {
             //当table-content出现滚动条时，设置table-title的padding-right为17px
             if ($(".table-content table").height() > $(".table-content").height()){
@@ -162,7 +162,7 @@
             }
 
 			load_real_status();
-			//interval_handle = setInterval("load_real_status()", 30000);
+			interval_handle = setInterval("load_real_status()", 5000);
         })
     </script>
 </body>
