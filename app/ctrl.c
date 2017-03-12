@@ -252,6 +252,45 @@ void update_uart_cfg(priv_info_t *priv)
     protocol_list = NULL;
 }
 
+void create_di_cfg(priv_info_t *priv)
+{
+	//初始化 di 配置表
+	char error_msg[512] = {0};
+	char sql[256] = {0};
+    sprintf(sql, "create table if not exists %s \
+	    (id INTEGER PRIMARY KEY, \
+	     di_name VARCHAR(32), \
+		 device_name VARCHAR(32), \
+	     low_desc VARCHAR(32), \
+	     high_desc VARCHAR(32), \
+	     alarm_level INTEGER, \
+	     enable INTEGER, \
+	     alarm_method INTEGER)", "di_cfg");
+    priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s", "di_cfg");
+
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
+
+	if (query_result.row == 0) {
+		int i = 0;
+		char di_name[32] = {0};
+		for (i = 0; i < 4; i++) {
+			memset(sql, 0, sizeof(sql));
+			memset(di_name, 0, sizeof(di_name));
+			sprintf(di_name, "干接点输入%d", i+1);
+		    sprintf(sql, "INSERT INTO %s \
+		            (id, di_name, device_name, low_desc, high_desc, alarm_level, enable, alarm_method) \
+					VALUES (%d, '%s', '%s', '%s', '%s', %d, %d, %d)",
+					"di_cfg", i, di_name, "", "", "", 0, 0, 0);
+			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+		}
+	}
+}
+
 int main(void)
 {
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
@@ -260,6 +299,8 @@ int main(void)
 
 	priv->sys_db_handle = db_access_create("/opt/app/sys.db");
 	priv->data_db_handle = db_access_create("/opt/data/data.db");
+
+	create_di_cfg(priv);
 
 	if (init_flag == 1) {
 		create_data_table(priv);

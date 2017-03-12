@@ -176,6 +176,49 @@ static int get_ntp_param(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int get_di_param(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+
+    cJSON *sub_dir = NULL;
+    cJSON *child = NULL;
+    cJSON *response = cJSON_CreateObject();
+
+	int i = 0;
+	query_result_t query_result;
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER by id", "di_cfg");
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+
+	if (query_result.row > 0) {
+    	sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "di_param", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+			cJSON_AddNumberToObject(child, "id", atoi(query_result.result[i * query_result.column]));
+			cJSON_AddStringToObject(child, "di_name", query_result.result[i * query_result.column + 1]);
+			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "low_desc", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "high_desc", query_result.result[i * query_result.column + 4]);
+			cJSON_AddNumberToObject(child, "alarm_level", atoi(query_result.result[i * query_result.column + 5]));
+			cJSON_AddNumberToObject(child, "enable", atoi(query_result.result[i * query_result.column + 6]));
+			cJSON_AddNumberToObject(child, "alarm_method", atoi(query_result.result[i * query_result.column + 7]));
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 static void write_profile(dictionary    *dic,
                           const char    *section,
                           const char    *key,
@@ -314,6 +357,58 @@ static int set_uart_param(cJSON *root, priv_info_t *priv)
 
     cJSON *response;
     response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int set_di_param(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	dictionary *dic		= priv->dic;
+	db_access_t *db_handle = priv->sys_db_handle;
+
+    cJSON *response;
+    response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+    cJSON *array_item = cJSON_GetObjectItem(root, "cfg");
+    if (array_item != NULL) {
+        int size = cJSON_GetArraySize(array_item);
+        int i = 0;
+        cJSON *object = NULL;
+		int enable = 0;
+		int alarm_level = 0;
+		int alarm_method = 0;
+		int id = 0;
+		char *device_name = NULL;
+		char *low_desc = NULL;
+		char *high_desc = NULL;
+        for (i = 0; i < size; i++) {
+            object = cJSON_GetArrayItem(array_item, i);
+			id = atoi(cJSON_GetObjectItem(object, "id")->valuestring);
+			enable = atoi(cJSON_GetObjectItem(object, "enable")->valuestring);
+			alarm_level = atoi(cJSON_GetObjectItem(object, "alarm_level")->valuestring);
+			alarm_method = atoi(cJSON_GetObjectItem(object, "alarm_method")->valuestring);
+			device_name = cJSON_GetObjectItem(object, "device_name")->valuestring;
+			low_desc = cJSON_GetObjectItem(object, "low_desc")->valuestring;
+			high_desc = cJSON_GetObjectItem(object, "high_desc")->valuestring;
+			memset(sql, 0, sizeof(sql));
+			sprintf(sql, "UPDATE %s SET device_name='%s', low_desc='%s', high_desc='%s', \
+			 			alarm_level=%d, enable=%d, alarm_method=%d WHERE id=%d",
+					"di_cfg", device_name, low_desc, high_desc,
+					alarm_level, enable, alarm_method, id);
+			db_handle->action(db_handle, sql, error_msg);
+        }
+        object = NULL;
+    }
+
+    write_profile(dic, "ALARM", "di_cfg_flag", "1");
+    dump_profile(dic, INI_FILE_NAME);
+
     cJSON_AddNumberToObject(response, "status", 1);
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -1185,6 +1280,7 @@ static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 			low_limit = atof(cJSON_GetObjectItem(object, "low_limit")->valuestring);
 			low_free = atof(cJSON_GetObjectItem(object, "low_free")->valuestring);
 			update_threshold = atof(cJSON_GetObjectItem(object, "update_threshold")->valuestring);
+			memset(sql, 0, sizeof(sql));
 			sprintf(sql, "UPDATE %s SET up_limit=%.1f, up_free=%.1f, low_limit=%.1f, \
 					low_free=%.1f, update_threshold=%.1f WHERE id=%d",
 					"parameter", up_limit, up_free, low_limit, low_free, update_threshold, id);
@@ -1193,8 +1289,8 @@ static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
         object = NULL;
     }
 
-    write_profile(dic, "ALARM", "rs232_alarm_flag", "0");
-    write_profile(dic, "ALARM", "rs485_alarm_flag", "0");
+    write_profile(dic, "ALARM", "rs232_alarm_flag", "1");
+    write_profile(dic, "ALARM", "rs485_alarm_flag", "1");
     dump_profile(dic, INI_FILE_NAME);
 
     cJSON *response;
@@ -1236,7 +1332,11 @@ cmd_fun_t cmd_get_param[] = {
     {
         "ntp",
         get_ntp_param
-    }
+    },
+	{
+		"get_di_param",
+		get_di_param
+	}
 };
 
 /* 设置参数相关命令及操作 */
@@ -1264,7 +1364,11 @@ cmd_fun_t cmd_set_param[] = {
     {
         "calibration",
         set_device_time
-    }
+    },
+	{
+		"set_di_param",
+		set_di_param
+	}
 };
 
 /* 系统参数控制 */
