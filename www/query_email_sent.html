@@ -2,72 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>status monitor</title>
+    <title>邮件发送记录查询</title>
+	<link rel="stylesheet" href="css/cssReset.css">
 	<style>
 	#table-box {
-    width: 100%;
-    height: 75%;
-    position: relative;
-    box-sizing: border-box;
-    padding-bottom: 5px;
+		width: 100%;
+		height: 90%;
+		position: relative;
+		box-sizing: border-box;
+		margin-top: 20px;
 	}
-	.table-title {
-		height: 34px;
-		line-height: 34px;
-		background-color: #9dd7f2;
-		font-size: 0;
+
+	.table-head {
+		padding-right: 17px;
+		background-color: #4faeda;
 	}
-	.table-title li {
-		display: inline-block;
-		width: 20%;
-		text-align: center;
-		font-size: 14px;
+
+	.table-body {
+		width: 100%;
+		height: 85%;
+    	overflow-y: auto;
 	}
-	.table-title li+li {
-		display: inline-block;
-		width: 25%;
-		text-align: center;
-	}
-	.table-content {
-		height: 100%;
-		overflow-y: auto;
-	}
-	.table-content > table {
-		table-layout: fixed;
+
+	.table-head table,
+	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
-	.table-content tr {
-		height: 34px;
+
+	.table-head table tr {
+		height: 40px;
+	}
+
+	.table-head table tr th {
+		width: 16%;
+		text-align: center;
+		color: #fff;
+	}
+
+	.table-body table tr {
+		height: 40px;
 		background-color: #e4eff5;
 	}
-	.table-content tr th {
-		text-align: center;
-		color: #335d70;
-		background-color: #9dd7f2;
+
+	.table-body tr:nth-child(odd) {
+		background-color: #dde6ea;
 	}
-	.table-content tr td {
-		width: 20%;
+
+	.table-body tr:nth-child(even) {
+		background-color: #fff;
+	}
+
+	.table-body table tr td {
+		width: 16%;
 		text-align: center;
 		color: #393c3d;
-	}
-	.table-content tr td+td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-	}
-	.table-content tr td a {
-		margin: 20px;
-	}
-	.table-content .warning {
-		background-color: #f01818;
-	}
-	.warning td {
-		color: #fff!important;
+		border: 1px solid #4faeda;
 	}
 
 	.operation_box {
-		height: 15%;
+		height: 50px;
 		box-sizing: border-box;
 		padding-top: 0px;
 		padding-bottom: 0px;
@@ -75,7 +69,7 @@
 
 	#start_time_box {
 	    display: inline-block;
-		width: 25%;
+		width: 22%;
 		height: 100%;
 		position: relative;
 		box-sizing: border-box;
@@ -87,7 +81,7 @@
 
 	#end_time_box {
 	    display: inline-block;
-		width: 25%;
+		width: 22%;
 		height: 100%;
 		position: relative;
 		box-sizing: border-box;
@@ -99,19 +93,17 @@
 	}
 
 	#add_user_box {
-		width: 30%;
-		height: 100%;
 		position: relative;
 		box-sizing: border-box;
 		padding-top: 10px;
-		padding-left:30px;
+		padding-left:10px;
 		display: inline-block;
 	}
 
 	#query_btn {
 		background-color: #117daf;
 		color: #fff;
-		width: 100px;
+		width: 70px;
 		height: 40px;
 		font-size: 14px;
 		font-weight:bold;
@@ -125,21 +117,15 @@
 
 	#export_btn {
 		color: #fff;
-		width: 100px;
+		width: 70px;
 		height: 40px;
 		font-size: 14px;
 		font-weight:bold;
 		border-radius:5px;
 		border: none;
-		margin-left: 40px;
+		margin-left: 5px;
 	}
 	</style>
-	<link rel="stylesheet" href="css/cssReset.css">
-	<script src="js/jquery-1.12.0.js"></script>
-	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/export_excel.js"></script>
-	<script src="js/query_history.js"></script>
-	<script src="js/WdatePicker.js"></script>
 </head>
 <body>
 	<div class="operation_box">
@@ -151,10 +137,16 @@
 			<span>结束时间</span>
 			<input class="Wdate" type="text" id="end_time" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})">
 		</div>
-		<select id="device_name" name="device_name" style="width:150px">
-		<option>全部</option>
-		<option>设备1</option>
-		<option>设备2</option>
+		<label>设备名称</label>
+		<select id="device_name" name="device_name" style="width:130px; height:25px;" onchange="device_type_change()">
+		<option value="全部设备">全部设备</option>
+		</select>
+
+		<label>状态</label>
+		<select id="sent_status" name="sent_status" style="width:130px; height:25px;">
+			<option value="0">全部</option>
+			<option value="1">发送成功</option>
+			<option value="2">发送失败</option>
 		</select>
 		<div id="add_user_box">
 			<input type="button" id="query_btn" value="查询" onclick="email_sent_query()">
@@ -162,24 +154,34 @@
 		</div>
 	</div>
 	<div id="table-box">
-		<div class="table-content">
-			<table id="email_table">
-				<tr id="head">
+		<div class="table-head">
+			<table>
+				<thead>
 					<th>时间</th>
 					<th>设备名称</th>
 					<th>参数名称</th>
-					<th>告警类型</th>
 					<th>接收人</th>
 					<th>状态</th>
 					<th>邮件内容</th>
-				</tr>
+				</thead>
+			</table>
+		</div>
+		<div class="table-body">
+			<table id="email_table">
+				<tbody>
+				</tbody>
 			</table>
 		</div>
 	</div>
 
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/export_excel.js"></script>
+	<script src="js/query_history.js"></script>
+	<script src="js/WdatePicker.js"></script>
 	<script>
 		function traverse_email_record(data_list) {
-			$("#email_table tr:gt(0)").remove();
+			$("#email_table").empty();
 			var html="";
 			$.each(data_list, function(i, item) {
 				html+="<tr>";

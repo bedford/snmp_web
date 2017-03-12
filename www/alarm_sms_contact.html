@@ -2,109 +2,83 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>status monitor</title>
+    <title>报警短信联系人管理</title>
 	<style>
 	#table-box {
-		width: 100%;
-		height: 80%;
+		width: 90%;
+		height: 90%;
 		position: relative;
 		box-sizing: border-box;
-		padding-bottom: 34px;
+		margin-top: 20px;
 	}
-	.table-title {
-		height: 34px;
-		line-height: 34px;
-		background-color: #9dd7f2;
-		font-size: 0;
+
+	.table-head {
+		padding-right: 17px;
+		background-color: #4faeda;
 	}
-	.table-title li {
-		display: inline-block;
-		width: 20%;
-		text-align: center;
-		font-size: 14px;
+
+	.table-body {
+		width: 100%;
+		height: 90%;
+    	overflow-y: auto;
 	}
-	.table-title li+li {
-		display: inline-block;
-		width: 25%;
-		text-align: center;
-	}
-	.table-content {
-		height: 100%;
-		overflow-y: auto;
-	}
-	.table-content > table {
-		table-layout: fixed;
+
+	.table-head table,
+	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
-	.table-content tr {
-		height: 34px;
+
+	.table-head table tr {
+		height: 40px;
+	}
+
+	.table-head table tr th {
+		width: 24%;
+		text-align: center;
+		color: #fff;
+	}
+
+	.table-body table tr {
+		height: 40px;
 		background-color: #e4eff5;
 	}
-	.table-content tr th {
-		text-align: center;
-		color: #335d70;
-		background-color: #9dd7f2;
+
+	.table-body tr:nth-child(odd) {
+		background-color: #dde6ea;
 	}
-	.table-content tr td {
-		width: 20%;
+
+	.table-body tr:nth-child(even) {
+		background-color: #fff;
+	}
+
+	.table-body table tr td {
+		width: 24%;
 		text-align: center;
 		color: #393c3d;
-	}
-	.table-content tr td+td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-	}
-	.table-content tr td a {
-		margin: 20px;
-	}
-	.table-content .warning {
-		background-color: #f01818;
-	}
-	.warning td {
-		color: #fff!important;
+		border: 1px solid #4faeda;
 	}
 
 	.operation_box {
-		height: 20%;
+		height: 50px;
 		box-sizing: border-box;
-		padding-top: 0px;
-		padding-bottom: 0px;
-	}
-
-	#sms_rule_box {
-		width: 50%;
-		height: 100%;
-		float: left;
-	}
-
-	#sms_rule_set {
-		margin-top: 34px;
+		margin-top: 10px;
 		margin-left: 20px;
-		font-size: 14px;
-	}
-
-	#add_user_box {
-		width: 50%;
-		height: 100%;
-		display: block;
-		float:right;
+		padding-top: 5px;
+		padding-left: 5px;
 	}
 
 	#add_btn {
-		margin-top: 34px;
-		margin-right: 20px;
 		background-color: #117daf;
 		color: #fff;
-		width: 150px;
+		width: 100px;
 		height: 40px;
 		font-size: 14px;
 		font-weight:bold;
 		border-radius:5px;
 		border: none;
 		letter-spacing: 5px;
-		float: right;
+		margin-left: 200px;
 	}
 
 	#set_btn {
@@ -141,39 +115,39 @@
 </head>
 <body>
 	<div class="operation_box">
-		<div id="sms_rule_box">
-			<div id="sms_rule_set">
-			<span>告警短信发送次数</span>
-			<select id="send_times" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
-				<option value="1">1</option>
-				<option value="2">2</option>
-				<option value="3">3</option>
-			</select>
-			<span>发送时间间隔（分钟）</span>
-			<select id="send_interval" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
-				<option value="1">5</option>
-				<option value="2">10</option>
-				<option value="3">15</option>
-				<option value="4">20</option>
-				<option value="5">25</option>
-				<option value="6">30</option>
-			</select>
-			<input type="button" id="set_btn" value="设置" onclick="set_sms_rule()">
-			</div>
-		</div>
-		<div id="add_user_box">
-			<input type="button" id="add_btn" value="新增" onclick="add_sms_contact()">
-		</div>
+		<span>告警短信发送次数</span>
+		<select id="send_times" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+		</select>
+		<span>发送时间间隔（分钟）</span>
+		<select id="send_interval" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
+			<option value="1">5</option>
+			<option value="2">10</option>
+			<option value="3">15</option>
+			<option value="4">20</option>
+			<option value="5">25</option>
+			<option value="6">30</option>
+		</select>
+		<input type="button" id="set_btn" value="设置" onclick="set_sms_rule()">
+		<input type="button" id="add_btn" value="新增" onclick="add_sms_contact()">
 	</div>
 	<div id="table-box">
-		<div class="table-content">
-			<table id="phone_table">
-				<tr id="head">
+		<div class="table-head">
+			<table>
+				<thead>
 					<th>编号</th>
 					<th>姓名</th>
 					<th>手机号码</th>
 					<th>操作</th>
-				</tr>
+				</thead>
+			</table>
+		</div>
+		<div class="table-body">
+			<table id="phone_table">
+				<tbody>
+				</tbody>
 			</table>
 		</div>
 	</div>
@@ -251,7 +225,7 @@
 		}
 
 		function show_phone_user_list(phone_user_list) {
-			$('#phone_table tr:gt(0)').remove();
+			$('#phone_table').empty();
 			if (phone_user_list.count > 0) {
 				var html="";
 				$.each(phone_user_list.phone_user, function(i, item) {
@@ -287,7 +261,7 @@
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "delete_phone_user";
-			json.id = $('#phone_table').find('tr').eq(index + 1).find('td').eq(0).html();
+			json.id = $('#phone_table').find('tr').eq(index).find('td').eq(0).html();
 			json.name = $('#modify_name').val();
 			json.phone = $('#modify_phone').val();
 		    var data = $.toJSON(json);
@@ -297,15 +271,15 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function() {
-							var tr = $('#phone_table').find('tr').eq(index + 1);
+							var tr = $('#phone_table').find('tr').eq(index);
 							tr.remove();
 		                },
 		            });
 		}
 
         function delete_item(index) {
-			var name = $('#phone_table').find('tr').eq(index + 1).find('td').eq(1).html();
-			var phone = $('#phone_table').find('tr').eq(index + 1).find('td').eq(2).html();
+			var name = $('#phone_table').find('tr').eq(index).find('td').eq(1).html();
+			var phone = $('#phone_table').find('tr').eq(index).find('td').eq(2).html();
 			var html = '确认要删除联系人：  '+name+'  吗？';
 			$('#delete_detail').html(html);
 			$('#confirm_dialog').dialog({
@@ -328,7 +302,7 @@
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "modify_phone_user";
-			json.id = $('#phone_table').find('tr').eq(index + 1).find('td').eq(0).html();
+			json.id = $('#phone_table').find('tr').eq(index).find('td').eq(0).html();
 			json.name = $('#modify_name').val();
 			json.phone = $('#modify_phone').val();
 		    var data = $.toJSON(json);
@@ -338,7 +312,7 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function() {
-							var td =  $('#phone_table').find('tr').eq(index + 1).find('td').eq(2);
+							var td =  $('#phone_table').find('tr').eq(index).find('td').eq(2);
 							td.empty();
 							td.html(valuestring);
 		                },
@@ -346,8 +320,8 @@
 		}
 
         function edit_item(index) {
-			var name = $('#phone_table').find('tr').eq(index + 1).find('td').eq(1).html();
-			var phone = $('#phone_table').find('tr').eq(index + 1).find('td').eq(2).html();
+			var name = $('#phone_table').find('tr').eq(index).find('td').eq(1).html();
+			var phone = $('#phone_table').find('tr').eq(index).find('td').eq(2).html();
 			$('#modify_name').val(name);
 			$('#modify_phone').val(phone);
 			$('#modify_dialog').dialog({

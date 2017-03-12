@@ -11,52 +11,54 @@
 		height: 80%;
 		position: relative;
 		box-sizing: border-box;
-		padding: 20px;
+		margin-top: 20px;
 	}
 
-	.table-content {
-		height: 100%;
-		width: 100%;
-		overflow-y: auto;
+	.table-head {
+		padding-right: 17px;
+		background-color: #4faeda;
 	}
-	.table-content > table {
-		table-layout: fixed;
+
+	.table-body {
+		width: 100%;
+		height: 85%;
+    	overflow-y: auto;
+	}
+
+	.table-head table,
+	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
-	.table-content tr {
+
+	.table-head table tr {
+		height: 40px;
+	}
+
+	.table-head table tr th {
+		width: 14%;
+		text-align: center;
+		color: #fff;
+	}
+
+	.table-body table tr {
 		height: 40px;
 		background-color: #e4eff5;
 	}
 
-	.table-content tr td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-		border: 1px solid #a2a1a1;
-	}
-
-	.table-content tr th {
-		width: 25%;
-		border: 1px solid #a2a1a1;
-	}
-
-	.table-content tr td+td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-	}
-
-	.table-content tr:nth-child(odd) {
+	.table-body tr:nth-child(odd) {
 		background-color: #dde6ea;
 	}
 
-	.table-content tr:nth-child(even) {
+	.table-body tr:nth-child(even) {
 		background-color: #fff;
 	}
 
-	.table-content tr td > select {
-		height: 25px;
+	.table-body table tr td {
+		width: 14%;
+		text-align: center;
+		color: #393c3d;
+		border: 1px solid #4faeda;
 	}
 
 	#other_content_box {
@@ -81,9 +83,9 @@
 
 <body>
 	<div id="table-box">
-		<div class="table-content">
-			<table id="alarm_param_table">
-				<tr id="head">
+		<div class="table-head">
+			<table>
+				<thead>
 					<th>设备名称</th>
 					<th>参数名称</th>
 					<th>上限值</th>
@@ -91,16 +93,13 @@
 					<th>下限值</th>
 					<th>下限解除值</th>
 					<th>幅度</th>
-				</tr>
-				<tr>
-					<td>1号机柜UPS电源</td>
-					<td>输入交流电压</td>
-					<td contenteditable="true">235.0</td>
-					<td contenteditable="true">230.0</td>
-					<td contenteditable="true">180.0</td>
-					<td contenteditable="true">200.0</td>
-					<td contenteditable="true">5.0</td>
-				</tr>
+				</thead>
+			</table>
+		</div>
+		<div class="table-body">
+			<table id="alarm_param_table">
+				<tbody>
+				</tbody>
 			</table>
 		</div>
 	</div>
@@ -210,7 +209,8 @@
 		function traverse_alarm_param(msg) {
 			window.array_data = msg.support_list;
 
-			$('#alarm_param_table tr:gt(0)').remove();
+			//$('#alarm_param_table tr:gt(0)').remove();
+			$('#alarm_param_table').empty();
 			var html="";
 			$.each(msg.support_list, function(i, item) {
 				html+='<tr id="'+ item.id + '"><td>' + item.protocol_name + '</td><td>'

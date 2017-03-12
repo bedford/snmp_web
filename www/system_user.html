@@ -5,54 +5,60 @@
     <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
     <link rel="stylesheet" href="css/cssReset.css">
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
-	<script src="js/jquery-1.12.0.js"></script>
-	<script src="js/jquery-ui.min.js"></script>
-    <script src="js/system_setting.js"></script>
-	<script src="js/jquery.json-2.3.min.js"></script>
 <style>
 	#table-box {
-		width: 100%;
-		height: 80%;
+		width: 90%;
+		height: 90%;
 		position: relative;
 		box-sizing: border-box;
-		padding-bottom: 34px;
-		padding-top: 20px;
+		margin-top: 20px;
 	}
 
-	#foot-hint {
+	.table-head {
+		padding-right: 17px;
+		background-color: #4faeda;
+	}
+
+	.table-body {
 		width: 100%;
-		height: 30px;
-		padding-bottom: 20px;
-		position: relative;
+		height: 90%;
+    	overflow-y: auto;
 	}
 
-	.table-content {
-		height: 100%;
-		overflow-y: auto;
-	}
-	.table-content > table {
-		table-layout: fixed;
+	.table-head table,
+	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
-	.table-content tr {
-		height: 34px;
+
+	.table-head table tr {
+		height: 40px;
+	}
+
+	.table-head table tr th {
+		width: 24%;
+		text-align: center;
+		color: #fff;
+	}
+
+	.table-body table tr {
+		height: 40px;
 		background-color: #e4eff5;
 	}
-	.table-content tr th {
-		text-align: center;
-		color: #335d70;
-		background-color: #9dd7f2;
+
+	.table-body tr:nth-child(odd) {
+		background-color: #dde6ea;
 	}
-	.table-content tr td {
-		width: 20%;
+
+	.table-body tr:nth-child(even) {
+		background-color: #fff;
+	}
+
+	.table-body table tr td {
+		width: 24%;
 		text-align: center;
 		color: #393c3d;
-	}
-	.table-content tr td+td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
+		border: 1px solid #4faeda;
 	}
 
 	.jq-dialog form fieldset {
@@ -75,19 +81,22 @@
 
 <body>
 	<div id="table-box">
-		<div class="table-content">
-			<table id="user_table">
-				<tr id="head">
+		<div class="table-head">
+			<table>
+				<thead>
 					<th>序号</th>
 					<th>用户名</th>
 					<th>权限</th>
 					<th>操作</th>
-				</tr>
+				</thead>
 			</table>
 		</div>
-	</div>
-	<div id="foot-hint">
-		<label id="hint"></label>
+		<div class="table-body">
+			<table id="user_table">
+				<tbody>
+				</tbody>
+			</table>
+		</div>
 	</div>
 
 	<div class="jq-dialog" id="user_dialog" title="修改用户密码">
@@ -107,13 +116,20 @@
 		<label>两次输入密码不一致，请重新输入</label>
 	</div>
 
+	<div class="jq-dialog" id="success_dialog" title="密码修改成功">
+		<label id="delete_detail"></label>
+	</div>
+
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
 	<script>
         function edit_password(index, password) {
 		    var json = new Object();
 		    json.msg_type = "system_setting";
 		    json.cmd_type = "update_password";
-			json.id = $('#user_table').find('tr').eq(index + 1).find('td').eq(0).html();
-			json.user = $('#user_table').find('tr').eq(index + 1).find('td').eq(1).html();
+			json.id = $('#user_table').find('tr').eq(index).find('td').eq(0).html();
+			json.user = $('#user_table').find('tr').eq(index).find('td').eq(1).html();
 			json.password = $('#modify_password').val();
 		    var data = $.toJSON(json);
 		    $.ajax({
@@ -123,7 +139,22 @@
 		                data    : data,
 		                success : function() {
 							var html='修改用户: '+json.user+' 密码 -- 成功';
-							$('#hint').html(html);
+							$('#delete_detail').html(html);
+							$('#success_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+										$('#user_dialog').dialog("close");
+									},
+									取消: function() {
+										$(this).dialog("close");
+										$('#user_dialog').dialog("close");
+									}
+								}
+							});
 		                },
 		            });
 		}
@@ -146,7 +177,7 @@
 		}
 
         function edit_item(index) {
-			var name = $('#user_table').find('tr').eq(index + 1).find('td').eq(1).html();
+			var name = $('#user_table').find('tr').eq(index).find('td').eq(1).html();
 			$('#modify_user').val(name);
 			$('#modify_password').val("");
 			$('#user_dialog').dialog({
@@ -172,7 +203,7 @@
 		}
 
 		function show_user_list(response) {
-            $('#user_table tr:not(:first)').remove();
+            $('#user_table').empty();
 			if (response.count > 0) {
 				var html="";
 				$.each(response.user_list, function(i, item) {

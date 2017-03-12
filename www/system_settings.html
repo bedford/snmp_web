@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>System settings</title>
+    <title>系统设置</title>
     <link rel="stylesheet" href="css/cssReset.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/tabs.css">
 </head>
 <body>
     <div class="content-wr">
         <div id="tabs">
             <ul class="tabs-items">
-                <li><a href="system_control.html">系统参数设置及控制</a></li>
-                <li><a href="system_user.html">用户管理</a></li>
                 <li><a href="system_info.html">系统信息</a></li>
+                <li><a href="system_params.html">系统参数设置</a></li>
+                <li><a href="system_control.html">系统控制</a></li>
+                <li><a href="system_user.html">用户管理</a></li>
             </ul>
         </div>
 		<div class="page-iframe-box">
@@ -24,7 +25,7 @@
     <script>
         $(document).ready(function () {
             $( '#tabs' ).h_tab({
-                open : 'li:last-child' //如果不配置此项，默认打开第一项；
+                open : 'li:first-child' //如果不配置此项，默认打开第一项；
             });
         })
     </script>

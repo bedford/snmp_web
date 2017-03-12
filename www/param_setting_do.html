@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>干接点输出设置</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="css/cssReset.css" type="text/css">
+	<style>
+		.horizental_split {
+			height: 2px;
+			width: 95%;
+			background: #e5e5e5;
+			overflow: hidden;
+			margin-top: 10px;
+		}
+
+		.do-status-box {
+		    height: 40%;
+			margin-top: 20px;
+		}
+		.do-status {
+		    width: 49%;
+		    height: 100%;
+		    box-sizing: border-box;
+		    padding-bottom: 10px;
+			padding-top: 10px;
+		    float: left;
+		}
+
+		.do-status li {
+		    width: 25%;
+		    height: 100%;
+		    float: left;
+		    box-sizing: border-box;
+		    padding-top: 134px;
+		}
+		.do-status li span {
+		    display: block;
+		    width: 80px;
+		    height: 24px;
+		    margin: 0 auto;
+		    border-radius: 20px;
+		    background-color: #d7d7d7;
+		    text-align: center;
+		    color: #555;
+		}
+
+		.do-status .do-status-off {
+			background: url("../images/do_off.png") center 30px no-repeat;
+		}
+
+		.do-status .do-status-on {
+			background: url("../images/do_on.png") center 30px no-repeat;
+		}
+	</style>
+</head>
+<body>
+	<div class="do-status-box">
+		<span style="width:150px;font-size:16px;">继电器输出</span>
+		<div class="horizental_split"></div>
+		<ul class="do-status">
+			<li class="do-status-off"><span>DO-1</span></li>
+			<li class="do-status-off"><span>DO-2</span></li>
+			<li class="do-status-off"><span>DO-3</span></li>
+			<li class="do-status-off"><span>DO-4</span></li>
+		</ul>
+    </div>
+
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/param_setting.js"></script>
+	<script>
+	$(document).ready(function() {
+		load_io_param();
+	});
+    </script>
+</body>
+</html>

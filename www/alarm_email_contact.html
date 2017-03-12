@@ -2,95 +2,92 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>status monitor</title>
+    <title>报警邮件联系人管理</title>
 	<style>
 	#table-box {
-        width: 100%;
-        height: 80%;
-        position: relative;
-        box-sizing: border-box;
-        padding-bottom: 34px;
+		width: 90%;
+		height: 90%;
+		position: relative;
+		box-sizing: border-box;
+		margin-top: 20px;
 	}
-	.table-title {
-		height: 34px;
-		line-height: 34px;
-		background-color: #9dd7f2;
-		font-size: 0;
+
+	.table-head {
+		padding-right: 17px;
+		background-color: #4faeda;
 	}
-	.table-title li {
-		display: inline-block;
-		width: 20%;
-		text-align: center;
-		font-size: 14px;
+
+	.table-body {
+		width: 100%;
+		height: 90%;
+    	overflow-y: auto;
 	}
-	.table-title li+li {
-		display: inline-block;
-		width: 25%;
-		text-align: center;
-	}
-	.table-content {
-		height: 100%;
-		overflow-y: auto;
-	}
-	.table-content > table {
-		table-layout: fixed;
+
+	.table-head table,
+	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
-	.table-content tr {
-		height: 34px;
+
+	.table-head table tr {
+		height: 40px;
+	}
+
+	.table-head table tr th {
+		width: 24%;
+		text-align: center;
+		color: #fff;
+	}
+
+	.table-body table tr {
+		height: 40px;
 		background-color: #e4eff5;
 	}
-	.table-content tr th {
-		text-align: center;
-		color: #335d70;
-		background-color: #9dd7f2;
+
+	.table-body tr:nth-child(odd) {
+		background-color: #dde6ea;
 	}
-	.table-content tr td {
-		width: 20%;
+
+	.table-body tr:nth-child(even) {
+		background-color: #fff;
+	}
+
+	.table-body table tr td {
+		width: 24%;
 		text-align: center;
 		color: #393c3d;
-	}
-	.table-content tr td+td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-	}
-	.table-content tr td a {
-		margin: 20px;
-	}
-	.table-content .warning {
-		background-color: #f01818;
-	}
-	.warning td {
-		color: #fff!important;
+		border: 1px solid #4faeda;
 	}
 
 	.operation_box {
-		height: 20%;
+		height: 50px;
 		box-sizing: border-box;
-		padding-top: 0px;
-		padding-bottom: 0px;
+		margin-top: 10px;
+		margin-left: 20px;
+		padding-top: 5px;
+		padding-left: 5px;
 	}
-	#add_user_box {
-		width: 100%;
-		height: 100%;
-		position: relative;
-		box-sizing: border-box;
-		padding-top: 34px;
-		text-align: right;
-		padding-right: 20px;
-	}
+
 	#add_btn {
 		background-color: #117daf;
 		color: #fff;
-		width: 150px;
+		width: 100px;
 		height: 40px;
 		font-size: 14px;
 		font-weight:bold;
 		border-radius:5px;
 		border: none;
 		letter-spacing: 5px;
+		margin-left: 200px;
+	}
+
+	#set_btn {
+		background-color: #e0e0e0;
+		color: #000000;
+		width: 80px;
+		height: 30px;
+		font-size: 12px;
+		font-weight:bold;
 	}
 
 	.jq-dialog form fieldset {
@@ -118,19 +115,39 @@
 </head>
 <body>
 	<div class="operation_box">
-		<div id="add_user_box">
-			<input type="button" id="add_btn" value="新增" onclick="add_email_contact()">
-		</div>
+		<span>告警邮件发送次数</span>
+		<select id="send_times" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+		</select>
+		<span>发送时间间隔（分钟）</span>
+		<select id="send_interval" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
+			<option value="1">5</option>
+			<option value="2">10</option>
+			<option value="3">15</option>
+			<option value="4">20</option>
+			<option value="5">25</option>
+			<option value="6">30</option>
+		</select>
+		<input type="button" id="set_btn" value="设置" onclick="set_sms_rule()">
+		<input type="button" id="add_btn" value="新增" onclick="add_email_contact()">
 	</div>
 	<div id="table-box">
-		<div class="table-content">
-			<table id="email_table">
-				<tr id="head">
+		<div class="table-head">
+			<table>
+				<thead>
 					<th>编号</th>
 					<th>姓名</th>
 					<th>E-MAIL</th>
 					<th>操作</th>
-				</tr>
+				</thead>
+			</table>
+		</div>
+		<div class="table-body">
+			<table id="email_table">
+				<tbody>
+				</tbody>
 			</table>
 		</div>
 	</div>
@@ -162,8 +179,53 @@
 	</div>
 
 	<script>
+		function load_email_rule() {
+		    var json = new Object();
+		    json.msg_type = "alarm_setting";
+		    json.cmd_type = "get_email_rule";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+							$("#send_times").val(msg.send_times);
+							$("#send_interval").val(msg.send_interval);
+		                },
+		            });
+		}
+
+		function set_email_rule() {
+			var json = new Object();
+			json.msg_type = "alarm_setting";
+			json.cmd_type = "set_email_rule";
+
+			var cfg = new Object();
+			cfg.send_times = $("#send_times").val();
+			cfg.send_interval = $("#send_interval").val();
+			json.cfg = cfg;
+
+			$('#set_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#set_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
         function show_email_user_list(email_user_list) {
-            $('#email_table tr:gt(0)').remove();
+            $('#email_table').empty();
 			if (email_user_list.count > 0) {
 				var html="";
 				$.each(email_user_list.email_user, function(i, item) {
@@ -192,13 +254,14 @@
 
         $(document).ready(function () {
 			load_email_user();
+			load_email_rule();
         })
 
         function delete_email_user(index) {
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "delete_email_user";
-			json.id = $('#email_table').find('tr').eq(index + 1).find('td').eq(0).html();
+			json.id = $('#email_table').find('tr').eq(index).find('td').eq(0).html();
 			json.name = $('#modify_name').val();
 			json.email = $('#modify_email').val();
 		    var data = $.toJSON(json);
@@ -208,15 +271,15 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function() {
-							var tr = $('#email_table').find('tr').eq(index + 1);
+							var tr = $('#email_table').find('tr').eq(index);
 							tr.remove();
 		                },
 		            });
 		}
 
 		function delete_item(index) {
-			var name = $('#email_table').find('tr').eq(index + 1).find('td').eq(1).html();
-			var email = $('#email_table').find('tr').eq(index + 1).find('td').eq(2).html();
+			var name = $('#email_table').find('tr').eq(index).find('td').eq(1).html();
+			var email = $('#email_table').find('tr').eq(index).find('td').eq(2).html();
 			var html = '确认要删除联系人：  '+name+'  吗？';
 			$('#delete_detail').html(html);
 			$('#confirm_dialog').dialog({
@@ -239,7 +302,7 @@
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "modify_email_user";
-			json.id = $('#email_table').find('tr').eq(index + 1).find('td').eq(0).html();
+			json.id = $('#email_table').find('tr').eq(index).find('td').eq(0).html();
 			json.name = $('#modify_name').val();
 			json.email = $('#modify_email').val();
 		    var data = $.toJSON(json);
@@ -249,7 +312,7 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function() {
-							var td =  $('#email_table').find('tr').eq(index + 1).find('td').eq(2);
+							var td =  $('#email_table').find('tr').eq(index).find('td').eq(2);
 							td.empty();
 							td.html(valuestring);
 		                },
@@ -257,8 +320,8 @@
 		}
 
         function edit_item(index) {
-			var name = $('#email_table').find('tr').eq(index + 1).find('td').eq(1).html();
-			var email = $('#email_table').find('tr').eq(index + 1).find('td').eq(2).html();
+			var name = $('#email_table').find('tr').eq(index).find('td').eq(1).html();
+			var email = $('#email_table').find('tr').eq(index).find('td').eq(2).html();
 			$('#modify_name').val(name);
 			$('#modify_email').val(email);
 			$('#modify_dialog').dialog({

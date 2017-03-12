@@ -2,72 +2,65 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>status monitor</title>
+    <title>历史记录查询</title>
 	<style>
 	#table-box {
-    width: 100%;
-    height: 75%;
-    position: relative;
-    box-sizing: border-box;
-    padding-bottom: 5px;
+		width: 100%;
+		height: 90%;
+		position: relative;
+		box-sizing: border-box;
+		margin-top: 20px;
 	}
-	.table-title {
-		height: 34px;
-		line-height: 34px;
-		background-color: #9dd7f2;
-		font-size: 0;
+
+	.table-head {
+		padding-right: 17px;
+		background-color: #4faeda;
 	}
-	.table-title li {
-		display: inline-block;
-		width: 20%;
-		text-align: center;
-		font-size: 14px;
+
+	.table-body {
+		width: 100%;
+		height: 85%;
+    	overflow-y: auto;
 	}
-	.table-title li+li {
-		display: inline-block;
-		width: 25%;
-		text-align: center;
-	}
-	.table-content {
-		height: 100%;
-		overflow-y: auto;
-	}
-	.table-content > table {
-		table-layout: fixed;
+
+	.table-head table,
+	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
-	.table-content tr {
-		height: 34px;
+
+	.table-head table tr {
+		height: 40px;
+	}
+
+	.table-head table tr th {
+		width: 16%;
+		text-align: center;
+		color: #fff;
+	}
+
+	.table-body table tr {
+		height: 40px;
 		background-color: #e4eff5;
 	}
-	.table-content tr th {
-		text-align: center;
-		color: #335d70;
-		background-color: #9dd7f2;
+
+	.table-body tr:nth-child(odd) {
+		background-color: #dde6ea;
 	}
-	.table-content tr td {
-		width: 20%;
+
+	.table-body tr:nth-child(even) {
+		background-color: #fff;
+	}
+
+	.table-body table tr td {
+		width: 16%;
 		text-align: center;
 		color: #393c3d;
-	}
-	.table-content tr td+td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-	}
-	.table-content tr td a {
-		margin: 20px;
-	}
-	.table-content .warning {
-		background-color: #f01818;
-	}
-	.warning td {
-		color: #fff!important;
+		border: 1px solid #4faeda;
 	}
 
 	.operation_box {
-		height: 15%;
+		height: 50px;
 		box-sizing: border-box;
 		padding-top: 0px;
 		padding-bottom: 0px;
@@ -160,16 +153,22 @@
 		</div>
 	</div>
 	<div id="table-box">
-		<div class="table-content">
-			<table id="data_table">
-				<tr id="head">
+		<div class="table-head">
+			<table>
+				<thead>
 					<th>时间</th>
 					<th>设备名称</th>
 					<th>参数名称</th>
 					<th>模拟量</th>
 					<th>开关量</th>
 					<th>开关量描述</th>
-				</tr>
+				</thead>
+			</table>
+		</div>
+		<div class="table-body">
+			<table id="data_table">
+				<tbody>
+				</tbody>
 			</table>
 		</div>
 	</div>
@@ -211,7 +210,7 @@
 		}
 
 		function traverse_data_record(data_list) {
-			$("#data_table tr:gt(0)").remove();
+			$("#data_table").empty();
 			var html="";
 			$.each(data_list, function(i, item) {
 				html+="<tr>";

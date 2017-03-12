@@ -55,106 +55,6 @@ function set_network_param() {
 			});
 }
 
-/* 系统时间设置相关js */
-function addzero(v) {
-	if (v < 10) return '0' + v;
-	return v.toString();
-}
-
-function update_pc_time() {
-	var date = new Date();
-	var current_time = date.getFullYear().toString() + '-' + addzero(date.getMonth() + 1) + '-'
-			+ addzero(date.getDate()) + ' ' + addzero(date.getHours()) + ':'
-			+ addzero(date.getMinutes()) + ':' + addzero(date.getSeconds());
-	$('#pc_time').val(current_time);
-}
-
-var interval_handle;
-
-function display_ntp_param(ntp_info)
-{
-	$('#ntp_server_ip').val(ntp_info.ntp_server_ip);
-	$('#ntp_interval').val(ntp_info.ntp_interval);
-	update_pc_time();
-
-	interval_handle = setInterval("update_pc_time()", 1000);
-}
-
-function init_timestamp() {
-    var json = new Object();
-    json.msg_type = "get_param";
-    json.cmd_type = "ntp";
-    var data = $.toJSON(json);
-    $.ajax({
-                url     : "/cgi-bin/common.cgi",
-                type    : "POST",
-                dataType: "json",
-                data    : data,
-                success : function(msg) {
-                    display_ntp_param(msg);
-                },
-            });
-}
-
-function checkLeave() {
-	clearInterval(interval_handle);
-}
-
-function set_ntp_param() {
-	var json = new Object();
-	json.msg_type = "set_param";
-	json.cmd_type = "ntp";
-
-	var cfg = new Object();
-	cfg.ntp_server_ip = $("#ntp_server_ip").val();
-	cfg.ntp_interval = $("#ntp_interval").val();
-	json.cfg = cfg;
-
-	$('#set_ntp_btn').attr("disabled", "disabled");
-	var data = $.toJSON(json);
-    $.ajax({
-                url     : "/cgi-bin/common.cgi",
-                type    : "POST",
-                dataType: "json",
-                data    : data,
-                success : function(msg) {
-                    $('#set_ntp_btn').removeAttr("disabled");
-					if (msg.status == 1) {
-						alert("设置成功");
-					} else {
-						alert("设置失败");
-					}
-                },
-			});
-}
-
-function calibration_with_pc() {
-	var json = new Object();
-	json.msg_type = "set_param";
-	json.cmd_type = "calibration";
-
-	var cfg = new Object();
-	cfg.calibration_pc_time = $("#pc_time").val();
-	json.cfg = cfg;
-
-	$('#calibration_btn').attr("disabled", "disabled");
-	var data = $.toJSON(json);
-    $.ajax({
-                url     : "/cgi-bin/common.cgi",
-                type    : "POST",
-                dataType: "json",
-                data    : data,
-                success : function(msg) {
-                    $('#calibration_btn').removeAttr("disabled");
-					if (msg.status == 1) {
-						alert("设置成功");
-					} else {
-						alert("设置失败");
-					}
-                },
-			});
-}
-
 /* SNMP设置相关js */
 function down_mib() {
 	var download_window = window.open("/cgi-bin/common.cgi?file_type=mib");
@@ -213,7 +113,8 @@ function display_snmp_param(snmp_param) {
 		}
 		html += '<input type="text" id="authority_ip_'+i+'" value="'+snmp_param.authority_ip[i].ip+'"></li>';
 	}
-	html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_union"></li>';
+	html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_union">';
+	html += '<input type="button" class="confirm_btn" id="set_snmp_btn" value="确定" onclick="set_snmp_param()"></li>';
 	$('#right_side').append(html);
 
 	$('#trap_server_ip').val(snmp_param.trap_server_ip);

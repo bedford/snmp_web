@@ -4,9 +4,6 @@
     <title>系统参数设置</title>
     <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
 	<link rel="stylesheet" href="css/cssReset.css">
-	<script src="js/jquery-1.12.0.js"></script>
-	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/system_setting.js"></script>
 	<style>
 	.system_param_box {
 		margin-top: 20px;
@@ -54,21 +51,30 @@
 		font-size: 14px;
 		margin-left:30px;
 	}
+
+	.system_repair_box {
+		width: 100%;
+		height: 10%;
+		margin-top: 20px;
+		/*text-align: right;*/
+	}
+
+	#update_form {
+		margin-top: 20px;
+	}
+
+	#update_btn {
+		background-color: #e0e0e0;
+		color: #000000;
+		width: 120px;
+		height: 30px;
+		font-size: 12px;
+		margin-left:30px;
+	}
 	</style>
 </head>
 
 <body>
-	<div class="system_param_box">
-		<span style="width:150px;font-size:16px;">系统参数设置</span>
-		<div class="horizental_split"></div>
-		<div class="item">
-			<span class="fix_span">安装地点</span><input type="text" id="site">
-		</div>
-		<div class="item">
-			<span class="fix_span">设备编号</span><input type="text" id="device_number">
-			<input type="button" class="confirm_btn" id="set_system_btn" value="确定" onclick="set_system_param()">
-		</div>
-	</div>
 	<div class="system_param_box">
 		<span style="width:150px;font-size:16px;">系统控制</span>
 		<div class="horizental_split"></div>
@@ -78,9 +84,83 @@
 		</div>
 	</div>
 
+	<div class="system_repair_box">
+		<span style="width:150px;font-size:16px;">系统升级</span>
+		<div class="horizental_split"></div>
+		<form id="update_form" enctype="multipart/form-data">
+			<input id="update_file" type="file" name="update_file">
+			<input type="button" id="update_btn" value="更新固件" onclick="update_firmware()">
+		</form>
+    </div>
+
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
+		function reboot() {
+			var json = new Object();
+			json.msg_type = 3;
+			json.cmd_type = 2;
+
+			$('#reboot_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#reboot_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
+		function recovery() {
+			var json = new Object();
+			json.msg_type = 3;
+			json.cmd_type = 3;
+
+			$('#recovery_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#recovery_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
+		function update_firmware() {
+			var filename = $('#update_file').val();
+			var form_data = new FormData($('#update_form')[0]);
+
+		    $.ajax({
+		                url     : "/cgi-bin/update.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : form_data,
+						cache	: false,
+						contentType: false,
+						processData: false,
+		                success : function(msg) {
+		                    alert(msg);
+		                },
+		            });
+		}
+
         $(document).ready(function () {
-			load_system_param();
         })
     </script>
 </body>

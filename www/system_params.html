@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>系统参数设置</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="css/cssReset.css">
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/system_setting.js"></script>
+	<style>
+	.system_param_box {
+		margin-top: 20px;
+	}
+
+	.system_param_box .item {
+		margin-top: 20px;
+	}
+
+	.system_param_box .item > input[type="text"] {
+		height:30px;
+		width:200px;
+	}
+
+	.horizental_split {
+		height: 2px;
+		width: 95%;
+		background: #e5e5e5;
+		overflow: hidden;
+		margin-top: 10px;
+	}
+
+	.fix_span {
+		display:inline-block;
+		width:100px;
+		margin-left: 30px;
+	}
+
+	.confirm_btn {
+		background-color: #117daf;
+		color: #fff;
+		width: 100px;
+		height: 30px;
+		font-size: 14px;
+		font-weight:bold;
+		border: none;
+		margin-left:50px;
+	}
+
+	.repair_btn {
+		background-color: #e0e0e0;
+		color: #000000;
+		width: 130px;
+		height: 30px;
+		font-size: 14px;
+		margin-left:30px;
+	}
+
+	.ntp_time_box {
+		margin-top: 20px;
+	}
+
+	.ntp_time_box .item {
+		margin-top: 15px;
+	}
+
+	.ntp_time_box .item > input[type="text"] {
+		height:30px;
+		width:200px;
+	}
+	</style>
+</head>
+
+<body onbeforeunload="checkLeave()">
+	<div class="system_param_box">
+		<span style="width:150px;font-size:16px;">系统参数设置</span>
+		<div class="horizental_split"></div>
+		<div class="item">
+			<span class="fix_span">安装地点</span><input type="text" id="site">
+		</div>
+		<div class="item">
+			<span class="fix_span">设备编号</span><input type="text" id="device_number">
+			<input type="button" class="confirm_btn" id="set_system_btn" value="确定" onclick="set_system_param()">
+		</div>
+	</div>
+
+	<div class="ntp_time_box">
+		<span style="width:150px;font-size:16px;">NTP校时</span>
+		<div class="horizental_split"></div>
+		<div class="item">
+			<span class="fix_span">NTP服务器</span><input type="text" id="ntp_server_ip">
+		</div>
+		<div class="item">
+			<span class="fix_span">校时间隔(分钟)</span><input type="text" id="ntp_interval">
+			<input type="button" class="confirm_btn" id="set_ntp_btn" value="确定" onclick="set_ntp_param()">
+		</div>
+	</div>
+	<div class="ntp_time_box">
+		<span style="width:150px;font-size:16px;">PC校时</span>
+		<div class="horizental_split"></div>
+		<div class="item">
+			<span class="fix_span">PC当前时间</span>
+			<input class="Wdate" type="text" id="pc_time" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})">
+			<input type="button" class="confirm_btn" id="calibration_btn" value="确定" onclick="calibration_with_pc()">
+		</div>
+	</div>
+	<script>
+		/* 系统时间设置相关js */
+		function addzero(v) {
+			if (v < 10) return '0' + v;
+			return v.toString();
+		}
+
+		function update_pc_time() {
+			var date = new Date();
+			var current_time = date.getFullYear().toString() + '-' + addzero(date.getMonth() + 1) + '-'
+					+ addzero(date.getDate()) + ' ' + addzero(date.getHours()) + ':'
+					+ addzero(date.getMinutes()) + ':' + addzero(date.getSeconds());
+			$('#pc_time').val(current_time);
+		}
+
+		var interval_handle;
+
+		function display_ntp_param(ntp_info)
+		{
+			$('#ntp_server_ip').val(ntp_info.ntp_server_ip);
+			$('#ntp_interval').val(ntp_info.ntp_interval);
+			update_pc_time();
+
+			interval_handle = setInterval("update_pc_time()", 1000);
+		}
+
+		function init_timestamp() {
+		    var json = new Object();
+		    json.msg_type = "get_param";
+		    json.cmd_type = "ntp";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    display_ntp_param(msg);
+		                },
+		            });
+		}
+
+		function checkLeave() {
+			clearInterval(interval_handle);
+		}
+
+		function set_ntp_param() {
+			var json = new Object();
+			json.msg_type = "set_param";
+			json.cmd_type = "ntp";
+
+			var cfg = new Object();
+			cfg.ntp_server_ip = $("#ntp_server_ip").val();
+			cfg.ntp_interval = $("#ntp_interval").val();
+			json.cfg = cfg;
+
+			$('#set_ntp_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#set_ntp_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
+		function calibration_with_pc() {
+			var json = new Object();
+			json.msg_type = "set_param";
+			json.cmd_type = "calibration";
+
+			var cfg = new Object();
+			cfg.calibration_pc_time = $("#pc_time").val();
+			json.cfg = cfg;
+
+			$('#calibration_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#calibration_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
+		/* 加载系统参数 */
+		function load_system_param() {
+		    var json = new Object();
+		    json.msg_type = "system_setting";
+		    json.cmd_type = "get_system_param";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                	$("#site").val(msg.site);
+							$("#device_number").val(msg.device_number);
+		                },
+		            });
+		}
+
+		function set_system_param() {
+			var json = new Object();
+			json.msg_type = "system_setting";
+			json.cmd_type = "set_system_param";
+
+			var cfg = new Object();
+			cfg.site = $("#site").val();
+			cfg.device_number = $("#device_number").val();
+			json.cfg = cfg;
+
+			$('#set_system_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#set_system_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
+		$(document).ready(function() {
+			load_system_param();
+			init_timestamp();
+		});
+    </script>
+</body>
+</html>

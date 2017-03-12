@@ -8,54 +8,59 @@
 	<style>
 	#table-box {
 		width: 90%;
-		height: 55%;
+		height: 45%;
 		position: relative;
 		box-sizing: border-box;
-		padding: 20px;
+		margin-top: 20px;
 	}
 
-	.table-content {
-		height: 100%;
-		width: 100%;
-		overflow-y: auto;
+	.table-head {
+		padding-right: 17px;
+		background-color: #4faeda;
 	}
-	.table-content > table {
-		table-layout: fixed;
+
+	.table-body {
+		width: 100%;
+    	overflow-y: auto;
+	}
+
+	.table-head table,
+	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
-	.table-content tr {
+
+	.table-head table tr {
+		height: 40px;
+	}
+
+	.table-head table tr th {
+		width: 14%;
+		text-align: center;
+		color: #fff;
+	}
+
+	.table-body table tr {
 		height: 40px;
 		background-color: #e4eff5;
 	}
 
-	.table-content tr td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-		border: 1px solid #a2a1a1;
-	}
-
-	.table-content tr th {
-		width: 25%;
-		border: 1px solid #a2a1a1;
-	}
-
-	.table-content tr td+td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-	}
-
-	.table-content tr:nth-child(odd) {
+	.table-body tr:nth-child(odd) {
 		background-color: #dde6ea;
 	}
 
-	.table-content tr:nth-child(even) {
+	.table-body tr:nth-child(even) {
 		background-color: #fff;
 	}
 
-	.table-content tr td > select {
+	.table-body table tr td {
+		width: 14%;
+		text-align: center;
+		color: #393c3d;
+		border: 1px solid #4faeda;
+	}
+
+	.table-body table tr td > select {
 		height: 25px;
 	}
 
@@ -79,9 +84,9 @@
 
 <body>
 	<div id="table-box">
-		<div class="table-content">
-			<table id="di_cfg_table">
-				<tr id="head">
+		<div class="table-head">
+			<table>
+				<thead>
 					<th>端口名称</th>
 					<th>设备名称</th>
 					<th>低电平描述</th>
@@ -89,7 +94,13 @@
 					<th>告警状态</th>
 					<th>告警方式</th>
 					<th>是否使用</th>
-				</tr>
+				</thead>
+			</table>
+		</div>
+		<div class="table-body">
+			<table id="di_cfg_table">
+				<tbody>
+				</tbody>
 			</table>
 		</div>
 	</div>
@@ -195,7 +206,7 @@
 		function traverse_di_param(msg) {
 			window.array_data = msg.di_param;
 
-			$('#di_cfg_table tr:gt(0)').remove();
+			$('#di_cfg_tabl').empty();
 			var html="";
 			var i =  0;
 			$.each(msg.di_param, function(i, item) {

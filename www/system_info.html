@@ -4,8 +4,6 @@
     <title>设备状态信息</title>
     <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
 	<link rel="stylesheet" href="css/cssReset.css">
-	<script src="js/system_setting.js"></script>
-	<script src="js/jquery-1.12.0.js"></script>
 	<style>
 	#table-box {
 		width: 80%;
@@ -51,21 +49,6 @@
 	.table-content tr:nth-child(even) {
 		background-color: #fff;
 	}
-
-	.system_repair_box {
-		width: 80%;
-		height: 10%;
-		text-align: right;
-	}
-
-	#update_btn {
-		background-color: #e0e0e0;
-		color: #000000;
-		width: 120px;
-		height: 30px;
-		font-size: 12px;
-		margin-left:30px;
-	}
 	</style>
 </head>
 
@@ -77,14 +60,56 @@
 		</div>
 	</div>
 
-	<div class="system_repair_box">
-		<form id="update_form" enctype="multipart/form-data">
-			<input id="update_file" type="file" name="update_file">
-			<input type="button" id="update_btn" value="更新固件" onclick="update_firmware()">
-		</form>
-    </div>
-
+	<script src="js/jquery-1.12.0.js"></script>
     <script>
+		function load_system_info() {
+			var param_list = [
+			{
+				"name":"设备编号",
+				"value":"20160820010001"
+			},
+			{
+				"name":"设备安装地点",
+				"value":"广东省深圳市大数据机房"
+			},
+			{
+				"name":"设备当前时间",
+				"value":"2016-12-24 17:00:00"
+			},
+			{
+				"name":"设备运行时长",
+				"value":"300分钟"
+			},
+			{
+				"name":"硬件版本",
+				"value":"V1.2"
+			},
+			{
+				"name":"BSP版本",
+				"value":"Kernel-2.6.31-20160110"
+			},
+			{
+				"name":"软件版本",
+				"value":"V0.3"
+			},
+			{
+				"name":"设备序列号",
+				"value":"20160820010001"
+			}
+			];
+			show_system_info(param_list);
+		}
+
+		function show_system_info(system_param_list) {
+			var html="";
+			$.each(system_param_list, function(i, item) {
+				html+="<tr><td>"+item.name+"</td>";
+				html+="<td>"+item.value+"</td>";
+				html+="</tr>"
+			});
+			$("#system_info_table").append(html);
+		}
+
         $(document).ready(function () {
 			load_system_info();
         })

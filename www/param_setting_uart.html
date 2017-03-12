@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>协议及串口设置</title>
+    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="css/cssReset.css" type="text/css">
+	<style>
+		.uart_box {
+			margin-top: 20px;
+			width: 100%;
+			height: 15%;
+		}
+
+		.horizental_split {
+			height: 2px;
+			width: 95%;
+			background: #e5e5e5;
+			overflow: hidden;
+			margin-top: 10px;
+		}
+
+		.uart_content_box {
+			height: 40px;
+			margin-top: 15px;
+			margin-left: 30px;
+		}
+
+		.uart_content_box > label {
+			width: 80px;
+			height: 30px;
+			margin-left: 5px;
+			vertical-align: middle;
+		}
+
+		.uart_content_box > select {
+			width: 150px;
+			height: 30px;
+			margin-left: 5px;
+			margin-right: 10px;
+		}
+
+		.uart_content_box .mid_select {
+			width: 80px;
+			height: 30px;
+			margin-left: 5px;
+			margin-right: 10px;
+		}
+
+		.uart_content_box .short_select {
+			width: 40px;
+			height: 30px;
+			margin-left: 5px;
+			margin-right: 10px;
+		}
+
+		.uart_content_box > input[type="checkbox"] {
+			width: 25px;
+			height: 25px;
+			vertical-align: middle;
+			margin-left: 40px;
+		}
+
+		.confirm_btn {
+				background-color: #117daf;
+				color: #fff;
+				width: 100px;
+				height: 30px;
+				font-size: 14px;
+				font-weight:bold;
+				border: none;
+				margin-left:30px;
+		}
+	</style>
+</head>
+<body>
+	<div class="uart_box">
+		<span style="width:150px;font-size:16px;">RS232串口设置</span>
+		<div class="horizental_split"></div>
+		<div class="uart_content_box">
+			<label>协议类型</label>
+			<select id="rs232_protocol_select"></select>
+			<label>波特率</label>
+            <select id="rs232_baudrate_select" class="mid_select">
+				<option value="1">2400</option>
+				<option value="2">4800</option>
+				<option value="3">9600</option>
+				<option value="4">19200</option>
+				<option value="5">38400</option>
+				<option value="6">57600</option>
+				<option value="7">115200</option>
+			</select>
+			<label>数据位</label>
+			<select id="rs232_databits" class="short_select">
+				<option value="5">5</option>
+				<option value="6">6</option>
+				<option value="7">7</option>
+				<option value="8">8</option>
+			</select>
+			<label>停止位</label>
+			<select id="rs232_stopbits" class="short_select">
+				<option value="1">1</option>
+				<option value="2">2</option>
+			</select>
+			<label>校验方式</label>
+			<select id="rs232_parity" class="short_select">
+				<option value="0">无</option>
+				<option value="1">奇</option>
+				<option value="2">偶</option>
+			</select>
+			<input id="rs232_checkbox" type="checkbox"><label>是否启用</label>
+            <input type="button" class="confirm_btn" id="confirm_btn" value="确定" onclick="set_uart_param()">
+		</div>
+	</div>
+		<div class="uart_box">
+		<span style="width:150px;font-size:16px;">RS485串口设置</span>
+		<div class="horizental_split"></div>
+		<div class="uart_content_box">
+			<label>协议类型</label>
+			<select id="rs485_protocol_select"></select>
+			<label>波特率</label>
+            <select id="rs485_baudrate_select" class="mid_select">
+				<option value="1">2400</option>
+				<option value="2">4800</option>
+				<option value="3">9600</option>
+				<option value="4">19200</option>
+				<option value="5">38400</option>
+				<option value="6">57600</option>
+				<option value="7">115200</option>
+			</select>
+			<label>数据位</label>
+			<select id="rs485_databits" class="short_select">
+				<option value="5">5</option>
+				<option value="6">6</option>
+				<option value="7">7</option>
+				<option value="8">8</option>
+			</select>
+			<label>停止位</label>
+			<select id="rs485_stopbits" class="short_select">
+				<option value="1">1</option>
+				<option value="2">2</option>
+			</select>
+			<label>校验方式</label>
+			<select id="rs485_parity" class="short_select">
+				<option value="0">无</option>
+				<option value="1">奇</option>
+				<option value="2">偶</option>
+			</select>
+			<input id="rs485_checkbox" type="checkbox"><label>是否启用</label>
+		</div>
+	</div>
+
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/param_setting.js"></script>
+	<script>
+	$(document).ready(function() {
+		load_io_param();
+	});
+    </script>
+</body>
+</html>
