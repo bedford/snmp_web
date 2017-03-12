@@ -9,6 +9,7 @@
 			margin-top: 20px;
 			width: 100%;
 			height: 15%;
+			margin-bottom: 40px;
 		}
 
 		.horizental_split {
@@ -108,7 +109,6 @@
 				<option value="2">偶</option>
 			</select>
 			<input id="rs232_checkbox" type="checkbox"><label>是否启用</label>
-            <input type="button" class="confirm_btn" id="confirm_btn" value="确定" onclick="set_uart_param()">
 		</div>
 	</div>
 		<div class="uart_box">
@@ -147,6 +147,9 @@
 			</select>
 			<input id="rs485_checkbox" type="checkbox"><label>是否启用</label>
 		</div>
+	</div>
+	<div>
+    	<input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_uart_param()">
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>

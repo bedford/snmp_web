@@ -81,6 +81,7 @@
 		<div class="item">
 			<input type="button" class="repair_btn" id="reboot_btn" value="重启设备" onclick="reboot()">
 			<input type="button" class="repair_btn" id="recovery_btn" value="恢复出厂设置" onclick="recovery()">
+			<input type="button" class="repair_btn" id="download_btn" value="下载MIB文件" onclick="down_mib()">
 		</div>
 	</div>
 
@@ -96,6 +97,11 @@
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
+		function down_mib() {
+			var download_window = window.open("/cgi-bin/common.cgi?file_type=mib");
+			download_window.focus();
+		}
+
 		function reboot() {
 			var json = new Object();
 			json.msg_type = 3;

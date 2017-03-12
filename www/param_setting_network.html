@@ -4,9 +4,6 @@
     <title>网络参数设置</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 	<link rel="stylesheet" href="css/cssReset.css">
-	<script src="js/jquery-1.12.0.js"></script>
-	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/param_setting.js"></script>
 	<style>
 	.network_box {
 		margin-top: 30px;
@@ -43,7 +40,8 @@
 		font-size: 14px;
 		font-weight:bold;
 		border: none;
-		margin-left:50px;
+		margin-left: 50px;
+		margin-top: 30px;
 	}
 	</style>
 </head>
@@ -68,10 +66,15 @@
 		</div>
 		<div class="item">
 			<span class="fix_span">备用DNS</span><input type="text" id="slave_dns">
-			<input class="confirm_btn" type="button" id="set_network_btn" value="确定" onclick="set_network_param()">
 		</div>
 	</div>
+	<div>
+		<input class="confirm_btn" type="button" id="set_network_btn" value="应用" onclick="set_network_param()">
+	</div>
 
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/param_setting.js"></script>
 	<script>
 	$(document).ready(function() {
 		init_network_param();
