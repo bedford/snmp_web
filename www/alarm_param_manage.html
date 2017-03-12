@@ -188,14 +188,6 @@
 			            dataType: "json",
 			            data    : data,
 			            success : function(msg) {
-		                    $.each(newArray, function(i, item){
-		                        $.each(window.array_data, function(i, temp){
-		                            if (item.id == temp.id) {
-		                                temp.stat = item.stat;
-		                            }
-		                        });
-		                    });
-
 							var html = '更新数据成功';
 							$('#update_detail').html(html);
 							$('#update_success_dialog').dialog({
