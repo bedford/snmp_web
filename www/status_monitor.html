@@ -73,6 +73,22 @@
 			}
 		}
 
+		function load_device_type_list() {
+		    var json = new Object();
+		    json.msg_type = "query_data";
+		    json.cmd_type = "query_support_device";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+							display_device_type_list(msg);
+		                },
+		            });
+		}
+
 		function display_real_data(real_data, device_type, status) {
 			$('#real_data').empty();
 			$.each(real_data, function(i, item) {
@@ -145,7 +161,6 @@
 			                dataType: "json",
 			                data    : data,
 			                success : function(msg) {
-			                    display_device_type_list(msg);
 								display_real_data(msg.real_data, '全部', '全部');
 								window.localStorage.removeItem("real_data");
 								window.localStorage.setItem("real_data", JSON.stringify(msg.real_data));
@@ -161,6 +176,7 @@
                 $(".table-title").css("padding-right", "17px");
             }
 
+			load_device_type_list();
 			load_real_status();
 			interval_handle = setInterval("load_real_status()", 5000);
         })

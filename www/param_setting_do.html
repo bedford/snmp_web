@@ -67,11 +67,24 @@
 
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/param_setting.js"></script>
 	<script>
-	$(document).ready(function() {
-		load_io_param();
-	});
+		/* 串口及IO口状态及设置相关 */
+		$(function() {
+			$('.do-status li').click(function() {
+		        var is_on = $(this).hasClass('do-status-on');
+		        if (is_on) {
+		            $(this).removeClass('do-status-on');
+		            $(this).addClass('do-status-off');
+		        } else {
+		            $(this).removeClass('do-status-off');
+		            $(this).addClass('do-status-on');
+		        }
+		    });
+		});
+
+		$(document).ready(function() {
+			//load_io_param();
+		});
     </script>
 </body>
 </html>

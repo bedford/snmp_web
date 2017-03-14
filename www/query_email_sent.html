@@ -7,7 +7,7 @@
 	<style>
 	#table-box {
 		width: 100%;
-		height: 90%;
+		height: 80%;
 		position: relative;
 		box-sizing: border-box;
 		margin-top: 20px;
@@ -228,8 +228,16 @@
 			        });
 		}
 
+		function display_device_list(msg) {
+			for (var i in msg.support_list) {
+			    $('#device_name').append('<option value="'+ msg.support_list[i].protocol_id
+					+ '">' + msg.support_list[i].protocol_name + '</option>');
+			}
+		}
+
         $(document).ready(function () {
 			load_timepicker_default();
+			load_device_list(display_device_list);
         })
     </script>
 </body>

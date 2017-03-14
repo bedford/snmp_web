@@ -82,7 +82,7 @@ static int get_snmp_param(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
-static int get_io_param(cJSON *root, priv_info_t *priv)
+static int get_uart_param(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->sys_db_handle;
@@ -143,15 +143,6 @@ static int get_io_param(cJSON *root, priv_info_t *priv)
 		cJSON_AddNumberToObject(sub_dir, "parity", atoi(query_result.result[query_result.column + 5]));
 		cJSON_AddNumberToObject(sub_dir, "enable", atoi(query_result.result[query_result.column + 6]));
 	}
-
-    int io_status[4] = {1, 0, 0, 1};
-    sub_dir = cJSON_CreateArray();
-    cJSON_AddItemToObject(response, "io_status", sub_dir);
-    for (i = 0; i < 4; i++) {
-        child = cJSON_CreateObject();
-    	cJSON_AddNumberToObject(child, "value", io_status[i]);
-    	cJSON_AddItemToArray(sub_dir, child);
-    }
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -312,11 +303,6 @@ static int set_snmp_param(cJSON *root, priv_info_t *priv)
     cJSON_Delete(response);
 
     return 0;
-}
-
-static int set_io_param(cJSON *root, priv_info_t *priv)
-{
-	return 0;
 }
 
 static int set_uart_param(cJSON *root, priv_info_t *priv)
@@ -843,12 +829,18 @@ static int query_data_record(cJSON *root, priv_info_t *priv)
 	char *start_time = cJSON_GetObjectItem(cfg, "start_time")->valuestring;
 	char *end_time = cJSON_GetObjectItem(cfg, "end_time")->valuestring;
 	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
+	char *param_id_string = cJSON_GetObjectItem(cfg, "param_id")->valuestring;
 	if (strcmp(device_id_string, "all") == 0) {
 		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' ORDER BY id",
 			"data_record", start_time, end_time);
+	} else if (strcmp(param_id_string, "all") == 0) {
+		int device_id = atoi(device_id_string);
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' \
+				AND device_id=%d ORDER BY id",
+			"data_record", start_time, end_time, device_id);
 	} else {
 		int device_id = atoi(device_id_string);
-		int param_id = atoi(cJSON_GetObjectItem(cfg, "param_id")->valuestring);
+		int param_id = atoi(param_id_string);
 		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' \
 				AND device_id=%d AND param_id=%d ORDER BY id",
 			"data_record", start_time, end_time, device_id, param_id);
@@ -911,16 +903,23 @@ static int query_alarm_record(cJSON *root, priv_info_t *priv)
 	char *start_time = cJSON_GetObjectItem(cfg, "start_time")->valuestring;
 	char *end_time = cJSON_GetObjectItem(cfg, "end_time")->valuestring;
 	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
+	char *param_id_string = cJSON_GetObjectItem(cfg, "param_id")->valuestring;
 	if (strcmp(device_id_string, "all") == 0) {
 		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND alarm_type>0 ORDER BY id",
 			"data_record", start_time, end_time);
+	} else if (strcmp(param_id_string, "all") == 0) {
+		int device_id = atoi(device_id_string);
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' \
+				AND device_id=%d AND alarm_type>0 ORDER BY id",
+			"data_record", start_time, end_time, device_id);
 	} else {
 		int device_id = atoi(device_id_string);
-		int param_id = atoi(cJSON_GetObjectItem(cfg, "param_id")->valuestring);
+		int param_id = atoi(param_id_string);
 		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' \
 				AND device_id=%d AND param_id=%d AND alarm_type>0 ORDER BY id",
 			"data_record", start_time, end_time, device_id, param_id);
 	}
+
 	cfg = NULL;
 	start_time = NULL;
 	end_time = NULL;
@@ -1051,7 +1050,6 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *data_db_handle = priv->data_db_handle;
-	db_access_t *sys_db_handle = priv->sys_db_handle;
 
 	char sql[256] = {0};
 	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC", "real_data");
@@ -1085,26 +1083,6 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
 		}
 	}
 	data_db_handle->free_table(data_db_handle, query_result.result);
-
-	memset(sql, 0, sizeof(sql));
-	sprintf(sql, "SELECT * FROM %s ORDER BY list_index", "support_list");
-	memset(&query_result, 0, sizeof(query_result_t));
-	sys_db_handle->query(sys_db_handle, sql, &query_result);
-	cJSON_AddNumberToObject(response, "support_list_count", query_result.row);
-	if (query_result.row > 0) {
-    	sub_dir = cJSON_CreateArray();
-    	cJSON_AddItemToObject(response, "support_list", sub_dir);
-		for (i = 1; i < (query_result.row + 1); i++) {
-        	child = cJSON_CreateObject();
-    		cJSON_AddStringToObject(child, "list_index", query_result.result[i * query_result.column]);
-			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 1]);
-			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 3]);
-			cJSON_AddStringToObject(child, "device_brand", query_result.result[i * query_result.column + 4]);
-    		cJSON_AddItemToArray(sub_dir, child);
-    	}
-	}
-	sys_db_handle->free_table(sys_db_handle, query_result.result);
 
     sub_dir = cJSON_CreateArray();
     cJSON_AddItemToObject(response, "io_status", sub_dir);
@@ -1199,7 +1177,7 @@ static int query_support_param(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
-static int query_alarm_param(cJSON *root, priv_info_t *priv)
+static int get_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *sys_db_handle = priv->sys_db_handle;
@@ -1315,59 +1293,39 @@ typedef struct {
     int         cmd_num;
 } msg_fun_t;
 
-/* 获取参数相关命令及操作 */
-cmd_fun_t cmd_get_param[] = {
+/* 获取和设置参数相关命令及操作 */
+cmd_fun_t cmd_param_setting[] = {
+	{
+		"get_network_param",
+		get_network_param
+	},
+	{
+		"set_network_param",
+		set_network_param
+	},
     {
-        "network",
-        get_network_param
-    },
-    {
-        "snmp",
+        "get_snmp_param",
         get_snmp_param
     },
     {
-        "io",
-        get_io_param
-    },
-    {
-        "ntp",
-        get_ntp_param
-    },
-	{
-		"get_di_param",
-		get_di_param
-	}
-};
-
-/* 设置参数相关命令及操作 */
-cmd_fun_t cmd_set_param[] = {
-    {
-        "network",
-        set_network_param
-    },
-    {
-        "snmp",
+        "set_snmp_param",
         set_snmp_param
     },
     {
-        "uart",
+        "get_uart_param",
+        get_uart_param
+	},
+    {
+        "set_uart_param",
         set_uart_param
-	},
-	{
-		"io",
-		set_io_param
+	/*},
+    {
+        "get_do_param",
+        get_do_param
 	},
     {
-        "ntp",
-        set_ntp_param
-    },
-    {
-        "calibration",
-        set_device_time
-    },
-	{
-		"set_di_param",
-		set_di_param
+        "set_do_param",
+        set_do_param*/
 	}
 };
 
@@ -1388,11 +1346,23 @@ cmd_fun_t cmd_system_setting[] = {
 	{
 		"update_password",
 		update_password
-	}/*,
+	},
+    {
+        "get_ntp_param",
+        get_ntp_param
+    },
+    {
+        "set_ntp_param",
+        set_ntp_param
+    },
+    {
+        "calibration",
+        set_device_time
+    /*},
 	{
 		"login"
 		login
-	}*/
+	*/}
 };
 
 cmd_fun_t cmd_alarm_setting[] = {
@@ -1437,8 +1407,20 @@ cmd_fun_t cmd_alarm_setting[] = {
         set_sms_rule
     },
 	{
+		"get_protocol_alarm_param",
+		get_protocol_alarm_param
+	},
+	{
 		"set_protocol_alarm_param",
 		set_protocol_alarm_param
+	},
+	{
+		"get_di_param",
+		get_di_param
+	},
+	{
+		"set_di_param",
+		set_di_param
 	}
 };
 
@@ -1470,24 +1452,15 @@ cmd_fun_t cmd_query_data[] = {
 	{
 		"query_support_param",
 		query_support_param
-	},
-	{
-		"query_alarm_param",
-		query_alarm_param
 	}
 };
 
 /* 消息类型及其对应的 命令:操作函数 数组 */
 msg_fun_t msg_flow[] = {
     {
-        "get_param",
-        cmd_get_param,
-        sizeof(cmd_get_param) / sizeof(cmd_fun_t)
-    },
-    {
-        "set_param",
-        cmd_set_param,
-        sizeof(cmd_set_param) / sizeof(cmd_fun_t)
+        "param_setting",
+        cmd_param_setting,
+        sizeof(cmd_param_setting) / sizeof(cmd_fun_t)
     },
     {
         "system_setting",

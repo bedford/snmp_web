@@ -4,9 +4,6 @@
     <title>系统参数设置</title>
     <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
 	<link rel="stylesheet" href="css/cssReset.css">
-	<script src="js/jquery-1.12.0.js"></script>
-	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/system_setting.js"></script>
 	<style>
 	.system_param_box {
 		margin-top: 20px;
@@ -103,6 +100,10 @@
 			<input type="button" class="confirm_btn" id="calibration_btn" value="确定" onclick="calibration_with_pc()">
 		</div>
 	</div>
+
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/system_setting.js"></script>
 	<script>
 		/* 系统时间设置相关js */
 		function addzero(v) {
@@ -131,8 +132,8 @@
 
 		function init_timestamp() {
 		    var json = new Object();
-		    json.msg_type = "get_param";
-		    json.cmd_type = "ntp";
+		    json.msg_type = "system_setting";
+		    json.cmd_type = "get_ntp_param";
 		    var data = $.toJSON(json);
 		    $.ajax({
 		                url     : "/cgi-bin/common.cgi",
@@ -151,8 +152,8 @@
 
 		function set_ntp_param() {
 			var json = new Object();
-			json.msg_type = "set_param";
-			json.cmd_type = "ntp";
+			json.msg_type = "system_setting";
+			json.cmd_type = "set_ntp_param";
 
 			var cfg = new Object();
 			cfg.ntp_server_ip = $("#ntp_server_ip").val();
@@ -179,7 +180,7 @@
 
 		function calibration_with_pc() {
 			var json = new Object();
-			json.msg_type = "set_param";
+			json.msg_type = "system_setting";
 			json.cmd_type = "calibration";
 
 			var cfg = new Object();

@@ -14,3 +14,19 @@ function load_timepicker_default() {
 			+ addzero(date.getMinutes()) + ':' + addzero(date.getSeconds());
 	$('#start_time').val(start_time);
 }
+
+function load_device_list(callback) {
+	var json = new Object();
+	json.msg_type = "query_data";
+	json.cmd_type = "query_support_device";
+	var data = $.toJSON(json);
+	$.ajax({
+	            url     : "/cgi-bin/common.cgi",
+	            type    : "POST",
+	            dataType: "json",
+	            data    : data,
+	            success : function(msg) {
+					callback(msg);
+	            },
+	        });
+}

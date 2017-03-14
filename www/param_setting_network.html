@@ -74,11 +74,67 @@
 
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/param_setting.js"></script>
 	<script>
-	$(document).ready(function() {
-		init_network_param();
-	});
+		/* 网络参数设置相关js */
+		function display_network_param(network_param) {
+			$("#mac_addr").val(network_param.mac_addr);
+			$("#ip_addr").val(network_param.ip_addr);
+			$("#gateway").val(network_param.gateway);
+			$("#netmask").val(network_param.netmask);
+			$("#master_dns").val(network_param.master_dns);
+			$("#slave_dns").val(network_param.slave_dns);
+		}
+
+		function init_network_param() {
+		    var json = new Object();
+		    json.msg_type = "param_setting";
+		    json.cmd_type = "get_network_param";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    display_network_param(msg);
+		                },
+		            });
+		}
+
+		function set_network_param() {
+			var json = new Object();
+			json.msg_type = "param_setting";
+			json.cmd_type = "set_network_param";
+
+			var cfg = new Object();
+			cfg.ip_addr = $("#ip_addr").val();
+			cfg.gateway = $("#gateway").val();
+			cfg.netmask = $("#netmask").val();
+			cfg.master_dns = $("#master_dns").val();
+			cfg.slave_dns = $("#slave_dns").val();
+			json.cfg = cfg;
+
+			$('#set_network_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#set_network_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
+		$(document).ready(function() {
+			init_network_param();
+		});
 	</script>
 </body>
 </html>

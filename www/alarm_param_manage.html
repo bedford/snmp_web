@@ -226,8 +226,8 @@
 
 		function device_type_change() {
 			var json = new Object();
-			json.msg_type = "query_data";
-			json.cmd_type = "query_alarm_param";
+			json.msg_type = "alarm_setting";
+			json.cmd_type = "get_protocol_alarm_param";
 
 			var cfg = new Object();
 			var device_type = $('#device_name').val();

@@ -6,7 +6,7 @@
 	<style>
 	#table-box {
 		width: 100%;
-		height: 90%;
+		height: 80%;
 		position: relative;
 		box-sizing: border-box;
 		margin-top: 20px;
@@ -199,6 +199,7 @@
 				            dataType: "json",
 				            data    : data,
 				            success : function(msg) {
+								$('#param_name').append('<option value="全部参数">全部参数</option>');
 								for (var i in msg.support_list) {
 								    $('#param_name').append('<option value="'+ msg.support_list[i].param_id
 										+ '">' + msg.support_list[i].param_name + '</option>');
@@ -248,6 +249,10 @@
 			cfg.end_time = $('#end_time').val();
 			if ($('#device_name').val() == '全部设备') {
 				cfg.device_id = "all";
+				cfg.param_id = "all";
+			} else if ($('#param_name').val() == '全部参数') {
+				cfg.device_id = $('#device_name').val();
+				cfg.param_id = "all";
 			} else {
 				cfg.device_id = $('#device_name').val();
 				cfg.param_id = $('#param_name').val();
@@ -267,28 +272,16 @@
 			        });
 		}
 
-		function load_device_list() {
-			var json = new Object();
-			json.msg_type = "query_data";
-			json.cmd_type = "query_support_device";
-			var data = $.toJSON(json);
-			$.ajax({
-			            url     : "/cgi-bin/common.cgi",
-			            type    : "POST",
-			            dataType: "json",
-			            data    : data,
-			            success : function(msg) {
-							for (var i in msg.support_list) {
-							    $('#device_name').append('<option value="'+ msg.support_list[i].protocol_id
-									+ '">' + msg.support_list[i].protocol_name + '</option>');
-							}
-			            },
-			        });
+		function display_device_list(msg) {
+			for (var i in msg.support_list) {
+			    $('#device_name').append('<option value="'+ msg.support_list[i].protocol_id
+					+ '">' + msg.support_list[i].protocol_name + '</option>');
+			}
 		}
 
         $(document).ready(function () {
 			load_timepicker_default();
-			load_device_list();
+			load_device_list(display_device_list);
         })
     </script>
 </body>

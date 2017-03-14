@@ -174,7 +174,7 @@
 			}
 
 			var json = new Object();
-			json.msg_type = "set_param";
+			json.msg_type = "alarm_setting";
 			json.cmd_type = "set_di_param";
 			json.cfg = newArray;
 			var data = $.toJSON(json);
@@ -263,7 +263,7 @@
 
 		function load_di_cfg() {
 		    var json = new Object();
-		    json.msg_type = "get_param";
+		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "get_di_param";
 		    var data = $.toJSON(json);
 		    $.ajax({

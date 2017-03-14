@@ -79,7 +79,9 @@
 		<div class="horizental_split"></div>
 		<div class="uart_content_box">
 			<label>协议类型</label>
-			<select id="rs232_protocol_select"></select>
+			<select id="rs232_protocol_select">
+				<option value="0"></option>
+			</select>
 			<label>波特率</label>
             <select id="rs232_baudrate_select" class="mid_select">
 				<option value="1">2400</option>
@@ -116,7 +118,9 @@
 		<div class="horizental_split"></div>
 		<div class="uart_content_box">
 			<label>协议类型</label>
-			<select id="rs485_protocol_select"></select>
+			<select id="rs485_protocol_select">
+				<option value="0"></option>
+			</select>
 			<label>波特率</label>
             <select id="rs485_baudrate_select" class="mid_select">
 				<option value="1">2400</option>
@@ -154,10 +158,113 @@
 
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/param_setting.js"></script>
 	<script>
+		/* 串口及设置相关 */
+		function display_uart_param(io_param) {
+			for (var i in io_param.support_list) {
+			    $('#rs232_protocol_select').append('<option value="'+ io_param.support_list[i].protocol_id
+					+ '">' + io_param.support_list[i].protocol_name + '</option>');
+				$('#rs485_protocol_select').append('<option value="'+ io_param.support_list[i].protocol_id
+					+ '">' + io_param.support_list[i].protocol_name + '</option>');
+			}
+
+			$('#rs232_protocol_select').val(io_param.rs232_cfg.protocol_id);
+			$('#rs232_baudrate_select').val(io_param.rs232_cfg.baud);
+			$('#rs232_databits').val(io_param.rs232_cfg.data_bits);
+			$('#rs232_stopbits').val(io_param.rs232_cfg.stops_bits);
+			$('#rs232_parity').val(io_param.rs232_cfg.parity);
+
+			$('#rs485_protocol_select').val(io_param.rs485_cfg.protocol_id);
+			$('#rs485_baudrate_select').val(io_param.rs485_cfg.baud);
+			$('#rs485_databits').val(io_param.rs485_cfg.data_bits);
+			$('#rs485_stopbits').val(io_param.rs485_cfg.stops_bits);
+			$('#rs485_parity').val(io_param.rs485_cfg.parity);
+
+			if (io_param.rs232_cfg.enable == 1) {
+				$('#rs232_checkbox').attr("checked", true);
+			}
+
+			if (io_param.rs485_cfg.enable == 1) {
+				$('#rs485_checkbox').attr("checked", true);
+			}
+		}
+
+		function load_uart_param() {
+		    var json = new Object();
+		    json.msg_type = "param_setting";
+		    json.cmd_type = "get_uart_param";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    display_uart_param(msg);
+		                },
+		            });
+		}
+
+		function set_uart_param() {
+			var json = new Object();
+			json.msg_type = "param_setting";
+			json.cmd_type = "set_uart_param";
+
+			var rs232_cfg = new Object();
+			rs232_cfg.protocol_id = $('#rs232_protocol_select').val();
+			if (rs232_cfg.protocol_id == null) {
+				rs232_cfg.protocol_id = '0';
+			}
+			rs232_cfg.baud = $('#rs232_baudrate_select').val();
+			rs232_cfg.data_bits = $('#rs232_databits').val();
+			rs232_cfg.stops_bits = $('#rs232_stopbits').val();
+			rs232_cfg.parity = $('#rs232_parity').val();
+			if ($('#rs232_checkbox').is(':checked')) {
+				rs232_cfg.enable = '1';
+			} else {
+				rs232_cfg.enable = '0';
+			}
+
+			var rs485_cfg = new Object();
+			rs485_cfg.protocol_id = $('#rs485_protocol_select').val();
+			if (rs485_cfg.protocol_id == null) {
+				rs485_cfg.protocol_id = '0';
+			}
+			rs485_cfg.baud = $('#rs485_baudrate_select').val();
+			rs485_cfg.data_bits = $('#rs485_databits').val();
+			rs485_cfg.stops_bits = $('#rs485_stopbits').val();
+			rs485_cfg.parity = $('#rs485_parity').val();
+			if ($('#rs485_checkbox').is(':checked')) {
+				rs485_cfg.enable = '1';
+			} else {
+				rs485_cfg.enable = '0';
+			}
+
+			var cfg = new Object();
+			cfg.rs232_cfg = rs232_cfg;
+			cfg.rs485_cfg = rs485_cfg;
+
+			json.cfg = cfg;
+			$('#confirm_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#confirm_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
 	$(document).ready(function() {
-		load_io_param();
+		load_uart_param();
 	});
     </script>
 </body>
