@@ -130,7 +130,7 @@
 		function set_alarm_param(msg) {
 			var cnt = 0;
 			var newArray = new Array();
-			$('#alarm_param_table tr:gt(0)').each(function() {
+			$('#alarm_param_table tr').each(function() {
 				var obj = new Object();
 				obj.id = $(this).attr("id");
 				var device_name = $(this).children('td').eq(0).text();

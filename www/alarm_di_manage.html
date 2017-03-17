@@ -126,7 +126,7 @@
 		function set_di_alarm() {
 			var cnt = 0;
 			var newArray = new Array();
-			$('#di_cfg_table tr:gt(0)').each(function() {
+			$('#di_cfg_table tr').each(function() {
 				var obj = new Object();
 				obj.id = $(this).attr("id");
 				var di_name = $(this).children('td').eq(0).text();
@@ -206,7 +206,7 @@
 		function traverse_di_param(msg) {
 			window.array_data = msg.di_param;
 
-			$('#di_cfg_tabl').empty();
+			$('#di_cfg_table').empty();
 			var html="";
 			var i =  0;
 			$.each(msg.di_param, function(i, item) {
