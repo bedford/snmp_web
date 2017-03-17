@@ -881,7 +881,6 @@ static int query_data_record(cJSON *root, priv_info_t *priv)
 				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 9]);
 				cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 10]);
 			}
-			cJSON_AddStringToObject(child, "alarm_type", query_result.result[i * query_result.column + 11]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -905,19 +904,19 @@ static int query_alarm_record(cJSON *root, priv_info_t *priv)
 	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
 	char *param_id_string = cJSON_GetObjectItem(cfg, "param_id")->valuestring;
 	if (strcmp(device_id_string, "all") == 0) {
-		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND alarm_type>0 ORDER BY id",
-			"data_record", start_time, end_time);
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' ORDER BY id",
+			"alarm_record", start_time, end_time);
 	} else if (strcmp(param_id_string, "all") == 0) {
 		int device_id = atoi(device_id_string);
 		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' \
-				AND device_id=%d AND alarm_type>0 ORDER BY id",
-			"data_record", start_time, end_time, device_id);
+				AND device_id=%d ORDER BY id",
+			"alarm_record", start_time, end_time, device_id);
 	} else {
 		int device_id = atoi(device_id_string);
 		int param_id = atoi(param_id_string);
 		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' \
-				AND device_id=%d AND param_id=%d AND alarm_type>0 ORDER BY id",
-			"data_record", start_time, end_time, device_id, param_id);
+				AND device_id=%d AND param_id=%d ORDER BY id",
+			"alarm_record", start_time, end_time, device_id, param_id);
 	}
 
 	cfg = NULL;
@@ -956,7 +955,7 @@ static int query_alarm_record(cJSON *root, priv_info_t *priv)
 				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 9]);
 				cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 10]);
 			}
-			cJSON_AddStringToObject(child, "alarm_type", query_result.result[i * query_result.column + 11]);
+			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 11]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -1092,7 +1091,7 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
 		unsigned char io_value = 0;
 		drv_gpio_read(i, &io_value);
     	cJSON_AddNumberToObject(child, "value", io_value);
-		drv_gpio_close(i);
+		//drv_gpio_close(i);  /* 因为di_thread已经打开，如果关闭会导致di_thread异常 */
     	cJSON_AddItemToArray(sub_dir, child);
     }
 

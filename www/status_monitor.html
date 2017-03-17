@@ -123,6 +123,9 @@
 				if (msg.io_status[i].value) {
 		            $(this).removeClass('di-status-off');
 					$(this).addClass('di-status-on');
+				} else {
+		            $(this).removeClass('di-status-on');
+					$(this).addClass('di-status-off');
 				}
 			});
 
@@ -130,6 +133,9 @@
 				if (msg.io_status[i+4].value) {
 		            $(this).removeClass('do-status-off');
 					$(this).addClass('do-status-on');
+				} else {
+		            $(this).removeClass('do-status-on');
+					$(this).addClass('do-status-off');
 				}
 			});
 		}
