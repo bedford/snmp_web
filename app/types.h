@@ -5,6 +5,7 @@ enum
 {
 	REAL_DATA = 1,		/* 实时数据 */
 	RECORD_DATA,		/* 历史数据 */
+	ALARM_DATA,			/* 报警数据 */
 };
 
 typedef struct

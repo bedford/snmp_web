@@ -64,6 +64,15 @@ enum
     WATER_LEAK_DETECT   = 0x00000200,   /* 漏水检测类 */
     AIR_CONDITION       = 0x00000300,   /* 空调检测类 */
     UPS                 = 0x00000400,   /* UPS */
+	LOCAL_DI			= 0x00001000,	/* 设备本身的DI */
+};
+
+enum
+{
+	DI_1	= 0x0,
+	DI_2	= 0x1,
+	DI_3	= 0x2,
+	DI_4	= 0x3,
 };
 
 enum
@@ -110,11 +119,13 @@ typedef struct
 
 enum
 {
-	NORMAL			= 0,	/* 正常 */
-	UP_ALARM 		= 1,	/* 上限报警 */
-	LOW_ALARM		= 2,	/* 下限报警 */
-	THRESHOLD_ALARM	= 4,	/* 超过阈值报警 */
-	ABNORMAL_ALARM	= 8,	/* 枚举量状态异常报警 */
+	NORMAL			= 0x0,	/* 正常 */
+	UP_ALARM_ON		= 0x1,	/* 上限报警 */
+	LOW_ALARM_ON	= 0x2,	/* 下限报警 */
+	LEVEL_ALARM_ON	= 0x4,	/* 枚举量状态异常报警 */
+	UP_ALARM_OFF	= 0x11,
+	LOW_ALARM_OFF	= 0x12,
+	LEVEL_ALARM_OFF	= 0x14
 };
 
 typedef struct
