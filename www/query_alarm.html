@@ -166,7 +166,7 @@
 			</table>
 		</div>
 		<div class="table-body">
-			<table id="data_table">
+			<table id="alarm_table">
 				<tbody>
 				</tbody>
 			</table>
@@ -219,7 +219,7 @@
 				html+="<td>"+item.param_name+"</td>";
 				html+="<td>"+item.analog_value+item.unit+"</td>";
 				html+="<td>"+item.enum_value+"</td>";
-				html+="<td>"+item.enum_desc+"</td>";
+				html+="<td>"+item.alarm_desc+"</td>";
 				html+="</tr>"
 			});
 			$("#alarm_table").append(html);
