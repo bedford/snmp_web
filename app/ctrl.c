@@ -17,6 +17,7 @@
 
 #include "rs232_thread.h"
 #include "rs485_thread.h"
+#include "di_thread.h"
 #include "data_write_thread.h"
 
 typedef struct {
@@ -91,6 +92,10 @@ void create_data_table(priv_info_t *priv)
 	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "alarm_record");
+	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
     sprintf(sql, "create table if not exists %s \
             (id INTEGER PRIMARY KEY AUTOINCREMENT, \
              created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
@@ -118,8 +123,23 @@ void create_data_table(priv_info_t *priv)
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
              enum_value INTEGER, \
+             enum_desc VARCHAR(32))", "data_record");
+    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
+             device_id INTEGER, \
+             device_name VARCHAR(32), \
+			 param_id INTEGER, \
+             param_name VARCHAR(32), \
+             param_type INTEGER, \
+             analog_value DOUBLE, \
+			 unit VARCHAR(32), \
+             enum_value INTEGER, \
              enum_desc VARCHAR(32), \
-             alarm_type INTEGER)", "data_record");
+             alarm_desc VARCHAR(64))", "alarm_record");
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 }
 
@@ -342,7 +362,7 @@ int main(void)
 
 	thread_t *rs485_thread = rs485_thread_create();
 	if (!rs485_thread) {
-		printf("create rs232 thread failed\n");
+		printf("create rs485 thread failed\n");
 		return -1;
 	}
 	rs485_thread_param_t rs485_thread_param;
@@ -354,21 +374,40 @@ int main(void)
 	rs485_thread_param.init_flag		= init_flag;
 	rs485_thread->start(rs485_thread, (void *)&rs485_thread_param);
 
+	thread_t *di_thread = di_thread_create();
+	if (!di_thread) {
+		printf("create di thread failed\n");
+		return -1;
+	}
+	di_thread_param_t di_thread_param;
+	di_thread_param.self			= di_thread;
+	di_thread_param.sys_db_handle	= priv->sys_db_handle;
+	di_thread_param.rb_handle 		= rb_handle;
+	di_thread_param.mpool_handle	= mpool_handle;
+	di_thread_param.pref_handle		= priv->pref_handle;
+	di_thread_param.init_flag		= init_flag;
+	di_thread->start(di_thread, (void *)&di_thread_param);
+
     while (runnable) {
-        sleep(1);
+		sleep(3);
+		priv->pref_handle->reload(priv->pref_handle);
     }
 
 	rs232_thread->terminate(rs232_thread);
 	rs485_thread->terminate(rs485_thread);
+	di_thread->terminate(di_thread);
 
 	rs232_thread->join(rs232_thread);
 	rs485_thread->join(rs485_thread);
+	di_thread->join(di_thread);
 
 	rs232_thread->destroy(rs232_thread);
 	rs485_thread->destroy(rs485_thread);
+	di_thread->destroy(di_thread);
 
 	rs232_thread = NULL;
 	rs485_thread = NULL;
+	di_thread = NULL;
 
 	data_write_thread->terminate(data_write_thread);
 	data_write_thread->join(data_write_thread);
@@ -383,6 +422,11 @@ int main(void)
 	if (priv->data_db_handle) {
     	priv->data_db_handle->destroy(priv->data_db_handle);
 		priv->data_db_handle = NULL;
+	}
+
+	if (priv->pref_handle) {
+		priv->pref_handle->destroy(priv->pref_handle);
+		priv->pref_handle = NULL;
 	}
 
 	rb_handle->destroy(rb_handle);
