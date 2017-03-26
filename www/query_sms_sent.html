@@ -35,7 +35,7 @@
 	}
 
 	.table-head table tr th {
-		width: 16%;
+		/*width: 16%;*/
 		text-align: center;
 		color: #fff;
 	}
@@ -54,7 +54,7 @@
 	}
 
 	.table-body table tr td {
-		width: 16%;
+		/*width: 16%;*/
 		text-align: center;
 		color: #393c3d;
 		border: 1px solid #4faeda;
@@ -157,12 +157,12 @@
 		<div class="table-head">
 			<table>
 				<thead>
-					<th>时间</th>
-					<th>设备名称</th>
-					<th>参数名称</th>
-					<th>接收人</th>
-					<th>状态</th>
-					<th>短信内容</th>
+					<th style="width:15%;">时间</th>
+					<th style="width:15%;">设备名称</th>
+					<th style="width:15%;">参数名称</th>
+					<th style="width:8%;">接收人</th>
+					<th style="width:8%;">状态</th>
+					<th style="width:39%;">短信内容</th>
 				</thead>
 			</table>
 		</div>
@@ -181,18 +181,23 @@
 	<script src="js/WdatePicker.js"></script>
 	<script>
 		function traverse_sms_record(data_list) {
-			$("#sms_table tr:gt(0)").remove();
+			$("#sms_table").empty();
 			var html="";
 			$.each(data_list, function(i, item) {
-				html+="<tr>";
-				html+="<td>"+item.send_time+"</td>";
-				html+="<td>"+item.device_name+"</td>";
-				html+="<td>"+item.param_name+"</td>";
-				html+="<td>"+item.alarm_desc+"</td>";
-				html+="<td>"+item.phone+"</td>";
-				html+="<td>"+item.send_status+"</td>";
-				html+="<td>"+item.sms_content+"</td>";
-				html+="</tr>"
+				html+='<tr>';
+				html+='<td style="width:15%;">'+item.send_time+'</td>';
+				html+='<td style="width:15%;">'+item.protocol_name+'</td>';
+				html+='<td style="width:15%;">'+item.param_name+'</td>';
+				html+='<td style="width:8%;">'+item.user+'</td>';
+
+				if (item.send_status == 1) {
+					html+='<td style="width:8%;">失败</td>';
+				} else {
+					html+='<td style="width:8%;">成功</td>';
+				}
+
+				html+='<td style="width:39%;">'+item.sms_content+'</td>';
+				html+='</tr>';
 			});
 			$("#sms_table").append(html);
 

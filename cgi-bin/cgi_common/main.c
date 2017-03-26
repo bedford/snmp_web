@@ -989,12 +989,14 @@ static int query_sms_record(cJSON *root, priv_info_t *priv)
 		for (i = 1; i < (query_result.row + 1); i++) {
 	    	child = cJSON_CreateObject();
     		cJSON_AddStringToObject(child, "send_time", query_result.result[i * query_result.column + 1]);
-			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 3]);
-			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 4]);
-			cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 6]);
-			cJSON_AddStringToObject(child, "sms_content", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
+			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
+			cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 8]);
+			cJSON_AddStringToObject(child, "sms_content", query_result.result[i * query_result.column + 9]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
