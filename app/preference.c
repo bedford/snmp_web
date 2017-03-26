@@ -18,7 +18,13 @@ typedef struct {
 	int 			rs232_alarm_flag;
 	int				rs485_alarm_flag;
 	int				di_alarm_flag;
-} priv_info;
+
+	int				sms_contact_flag;
+	int				email_contact_flag;
+
+	int				send_times;
+	int				send_interval;
+} priv_info_t;
 
 static void write_profile(dictionary    *dic,
                           const char    *section,
@@ -45,7 +51,7 @@ static void dump_profile(dictionary *dic, char *filename)
     }
 }
 
-static int load_system_param(priv_info *priv)
+static int load_system_param(priv_info_t *priv)
 {
 	priv->init_flag = iniparser_getint(priv->dic, "SYSTEM:init_flag", 1);
 
@@ -53,13 +59,46 @@ static int load_system_param(priv_info *priv)
 	priv->rs485_alarm_flag = iniparser_getint(priv->dic, "ALARM:rs485_alarm_flag", 1);
 	priv->di_alarm_flag = iniparser_getint(priv->dic, "ALARM:di_alarm_flag", 1);
 
+	priv->sms_contact_flag = iniparser_getint(priv->dic, "ALARM:sms_contact_flag", 1);
+	priv->email_contact_flag = iniparser_getint(priv->dic, "ALARM:email_contact_flag", 1);
+
 	return 0;
+}
+
+static int load_sms_send_param(priv_info_t *priv)
+{
+	priv->send_times = iniparser_getint(priv->dic, "SMS:send_times", 3);
+	priv->send_interval = iniparser_getint(priv->dic, "SMS:send_interval", 1);
+}
+
+static int get_send_times(preference_t *thiz)
+{
+	int send_times = 0;
+
+	if (thiz != 0) {
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
+		send_times = priv->send_times;
+	}
+
+	return send_times;
+}
+
+static int get_send_interval(preference_t *thiz)
+{
+	int send_interval = 0;
+
+	if (thiz != 0) {
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
+		send_interval = priv->send_interval;
+	}
+
+	return send_interval;
 }
 
 static void set_init_flag_preference(preference_t *thiz, int flag)
 {
     char tmp[32] = {0};
-    priv_info *priv =  (priv_info *)thiz->priv;
+    priv_info_t *priv =  (priv_info_t *)thiz->priv;
 	priv->init_flag = flag;
     sprintf(tmp, "%d", priv->init_flag);
     write_profile(priv->dic, "SYSTEM", "init_flag", tmp);
@@ -73,7 +112,7 @@ static int get_init_flag_preference(preference_t *thiz)
 	int init_flag = 0;
 
 	if (thiz != 0) {
-		priv_info *priv =  (priv_info *)thiz->priv;
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
 		init_flag = priv->init_flag;
 	}
 
@@ -83,7 +122,7 @@ static int get_init_flag_preference(preference_t *thiz)
 static void set_rs232_alarm_flag_preference(preference_t *thiz, int flag)
 {
     char tmp[32] = {0};
-    priv_info *priv =  (priv_info *)thiz->priv;
+    priv_info_t *priv =  (priv_info_t *)thiz->priv;
 	priv->rs232_alarm_flag = flag;
     sprintf(tmp, "%d", priv->rs232_alarm_flag);
     write_profile(priv->dic, "ALARM", "rs232_alarm_flag", tmp);
@@ -95,7 +134,7 @@ static int get_rs232_alarm_flag_preference(preference_t *thiz)
 	int rs232_alarm_flag = 0;
 
 	if (thiz != 0) {
-		priv_info *priv =  (priv_info *)thiz->priv;
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
 		rs232_alarm_flag = priv->rs232_alarm_flag;
 	}
 
@@ -105,7 +144,7 @@ static int get_rs232_alarm_flag_preference(preference_t *thiz)
 static void set_rs485_alarm_flag_preference(preference_t *thiz, int flag)
 {
     char tmp[32] = {0};
-    priv_info *priv =  (priv_info *)thiz->priv;
+    priv_info_t *priv =  (priv_info_t *)thiz->priv;
 	priv->rs485_alarm_flag = flag;
     sprintf(tmp, "%d", priv->rs485_alarm_flag);
     write_profile(priv->dic, "ALARM", "rs485_alarm_flag", tmp);
@@ -119,7 +158,7 @@ static int get_rs485_alarm_flag_preference(preference_t *thiz)
 	int rs485_alarm_flag = 0;
 
 	if (thiz != 0) {
-		priv_info *priv =  (priv_info *)thiz->priv;
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
 		rs485_alarm_flag = priv->rs485_alarm_flag;
 	}
 
@@ -129,7 +168,7 @@ static int get_rs485_alarm_flag_preference(preference_t *thiz)
 static void set_di_alarm_flag_preference(preference_t *thiz, int flag)
 {
     char tmp[32] = {0};
-    priv_info *priv =  (priv_info *)thiz->priv;
+    priv_info_t *priv =  (priv_info_t *)thiz->priv;
 	priv->di_alarm_flag = flag;
     sprintf(tmp, "%d", priv->di_alarm_flag);
     write_profile(priv->dic, "ALARM", "di_alarm_flag", tmp);
@@ -143,27 +182,76 @@ static int get_di_alarm_flag_preference(preference_t *thiz)
 	int di_alarm_flag = 0;
 
 	if (thiz != 0) {
-		priv_info *priv =  (priv_info *)thiz->priv;
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
 		di_alarm_flag = priv->di_alarm_flag;
 	}
 
 	return di_alarm_flag;
 }
 
-static void load_preference(priv_info *priv)
+static void set_sms_contact_flag_preference(preference_t *thiz, int flag)
+{
+    char tmp[32] = {0};
+    priv_info_t *priv =  (priv_info_t *)thiz->priv;
+	priv->sms_contact_flag = flag;
+    sprintf(tmp, "%d", priv->sms_contact_flag);
+    write_profile(priv->dic, "ALARM", "sms_contact_flag", tmp);
+    dump_profile(priv->dic, INI_FILE_NAME);
+
+    printf("setting sms_contact_flag %d\n", priv->sms_contact_flag);
+}
+
+static int get_sms_contact_flag_preference(preference_t *thiz)
+{
+	int sms_contact_flag = 0;
+
+	if (thiz != 0) {
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
+		sms_contact_flag = priv->sms_contact_flag;
+	}
+
+	return sms_contact_flag;
+}
+
+static void set_email_contact_flag_preference(preference_t *thiz, int flag)
+{
+    char tmp[32] = {0};
+    priv_info_t *priv =  (priv_info_t *)thiz->priv;
+	priv->email_contact_flag = flag;
+    sprintf(tmp, "%d", priv->email_contact_flag);
+    write_profile(priv->dic, "ALARM", "email_contact_flag", tmp);
+    dump_profile(priv->dic, INI_FILE_NAME);
+
+    printf("setting email_contact_flag %d\n", priv->email_contact_flag);
+}
+
+static int get_email_contact_flag_preference(preference_t *thiz)
+{
+	int email_contact_flag = 0;
+
+	if (thiz != 0) {
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
+		email_contact_flag = priv->email_contact_flag;
+	}
+
+	return email_contact_flag;
+}
+
+static void load_preference(priv_info_t *priv)
 {
 	struct stat st;
 	lstat(INI_FILE_NAME, &st);
 	priv->modify_time = st.st_mtime;
 
 	load_system_param(priv);
+	load_sms_send_param(priv);
 }
 
 static int preference_reload(preference_t *thiz)
 {
     int ret = -1;
     if (thiz != NULL) {
-        priv_info *priv = (priv_info *)thiz->priv;
+        priv_info_t *priv = (priv_info_t *)thiz->priv;
         struct stat ini_st;
         lstat(INI_FILE_NAME, &ini_st);
         if (ini_st.st_mtime == priv->modify_time) {
@@ -194,7 +282,7 @@ static int preference_reload(preference_t *thiz)
 static void preference_destroy(preference_t *thiz)
 {
     if (thiz != NULL) {
-        priv_info *priv =  (priv_info *)thiz->priv;
+        priv_info_t *priv =  (priv_info_t *)thiz->priv;
         if (priv->dic) {
 			iniparser_freedict(priv->dic);
 			priv->dic = NULL;
@@ -202,7 +290,7 @@ static void preference_destroy(preference_t *thiz)
 
         pthread_mutex_destroy(&priv->lock_mutex);
 
-        memset(thiz, 0, sizeof(preference_t) + sizeof(priv_info));
+        memset(thiz, 0, sizeof(preference_t) + sizeof(priv_info_t));
         free(thiz);
         thiz = NULL;
     }
@@ -211,7 +299,7 @@ static void preference_destroy(preference_t *thiz)
 preference_t *preference_create(void)
 {
     preference_t *thiz = NULL;
-    thiz = (preference_t *)calloc(1, sizeof(preference_t) + sizeof(priv_info));
+    thiz = (preference_t *)calloc(1, sizeof(preference_t) + sizeof(priv_info_t));
     if (thiz != NULL) {
         thiz->destroy		= preference_destroy;
         thiz->reload		= preference_reload;
@@ -223,11 +311,20 @@ preference_t *preference_create(void)
 		thiz->get_rs485_alarm_flag	= get_rs485_alarm_flag_preference;
 		thiz->get_di_alarm_flag 	= get_di_alarm_flag_preference;
 
+		thiz->get_sms_contact_flag		= get_sms_contact_flag_preference;
+		thiz->get_email_contact_flag 	= get_email_contact_flag_preference;
+
 		thiz->set_rs232_alarm_flag	= set_rs232_alarm_flag_preference;
 		thiz->set_rs485_alarm_flag	= set_rs485_alarm_flag_preference;
 		thiz->set_di_alarm_flag		= set_di_alarm_flag_preference;
 
-        priv_info *priv = (priv_info *)thiz->priv;
+		thiz->set_sms_contact_flag		= set_sms_contact_flag_preference;
+		thiz->set_email_contact_flag 	= set_email_contact_flag_preference;
+
+		thiz->get_send_times	= get_send_times;
+		thiz->get_send_interval	= get_send_interval;
+
+        priv_info_t *priv = (priv_info_t *)thiz->priv;
         priv->dic = iniparser_load(INI_FILE_NAME);
 
         load_preference(priv);

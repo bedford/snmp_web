@@ -117,17 +117,6 @@ typedef struct
     param_enum_t    param_enum[PARAM_ENUM_NUM]; /* 数字枚举量 */
 } param_desc_t;
 
-enum
-{
-	NORMAL			= 0x0,	/* 正常 */
-	UP_ALARM_ON		= 0x1,	/* 上限报警 */
-	LOW_ALARM_ON	= 0x2,	/* 下限报警 */
-	LEVEL_ALARM_ON	= 0x4,	/* 枚举量状态异常报警 */
-	UP_ALARM_OFF	= 0x11,
-	LOW_ALARM_OFF	= 0x12,
-	LEVEL_ALARM_OFF	= 0x14
-};
-
 typedef struct
 {
     unsigned int    param_id;
