@@ -24,6 +24,8 @@ typedef struct {
 
 	int				send_times;
 	int				send_interval;
+
+	email_server_t	email_server_param;
 } priv_info_t;
 
 static void write_profile(dictionary    *dic,
@@ -65,10 +67,37 @@ static int load_system_param(priv_info_t *priv)
 	return 0;
 }
 
-static int load_sms_send_param(priv_info_t *priv)
+static void load_sms_send_param(priv_info_t *priv)
 {
 	priv->send_times = iniparser_getint(priv->dic, "SMS:send_times", 3);
 	priv->send_interval = iniparser_getint(priv->dic, "SMS:send_interval", 1);
+}
+
+static void load_email_server_param(priv_info_t *priv)
+{
+	strncpy(priv->email_server_param.smtp_server,
+		iniparser_getstring(priv->dic, "EMAIL:smtp_server", "smtp.163.com"),
+		sizeof(priv->email_server_param.smtp_server));
+
+	strncpy(priv->email_server_param.email_addr,
+		iniparser_getstring(priv->dic, "EMAIL:email_addr", ""),
+		sizeof(priv->email_server_param.email_addr));
+
+	strncpy(priv->email_server_param.password,
+		iniparser_getstring(priv->dic, "EMAIL:password", ""),
+		sizeof(priv->email_server_param.password));
+}
+
+static email_server_t get_email_server_preference(preference_t *thiz)
+{
+    email_server_t email_server_param;
+    memset(&email_server_param, 0, sizeof(email_server_t));
+    if (thiz != NULL) {
+		priv_info_t *priv = (priv_info_t *)thiz->priv;
+		email_server_param = priv->email_server_param;
+    }
+
+    return email_server_param;
 }
 
 static int get_send_times(preference_t *thiz)
@@ -323,6 +352,8 @@ preference_t *preference_create(void)
 
 		thiz->get_send_times	= get_send_times;
 		thiz->get_send_interval	= get_send_interval;
+
+		thiz->get_email_server_param = get_email_server_preference;
 
         priv_info_t *priv = (priv_info_t *)thiz->priv;
         priv->dic = iniparser_load(INI_FILE_NAME);

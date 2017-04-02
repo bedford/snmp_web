@@ -1,6 +1,8 @@
 #ifndef _PREFERENCE_H_
 #define _PREFERENCE_H_
 
+#include "types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,6 +31,7 @@ typedef void (*_set_email_contact_flag)(preference_t *thiz, int flag);
 
 typedef int (*_get_send_interval)(preference_t *thiz);
 typedef int (*_get_send_times)(preference_t *thiz);
+typedef email_server_t (*_get_email_server)(preference_t *thiz);
 
 typedef void (*_preference_destroy)(preference_t *thiz);
 typedef int (*_preference_reload)(preference_t *thiz);
@@ -54,6 +57,8 @@ struct _preference {
 
 	_get_send_times			get_send_times;
 	_get_send_interval		get_send_interval;
+
+	_get_email_server		get_email_server_param;
 
     _preference_destroy		destroy;
     _preference_reload		reload;
