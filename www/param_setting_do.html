@@ -18,8 +18,8 @@
 			margin-top: 20px;
 		}
 		.do-status {
-		    width: 49%;
-		    height: 100%;
+		    width: 50%;
+		    height: 150px;
 		    box-sizing: border-box;
 		    padding-bottom: 10px;
 			padding-top: 10px;
@@ -27,12 +27,13 @@
 		}
 
 		.do-status li {
-		    width: 25%;
+		    width: 33%;
 		    height: 100%;
 		    float: left;
 		    box-sizing: border-box;
 		    padding-top: 134px;
 		}
+
 		.do-status li span {
 		    display: block;
 		    width: 80px;
@@ -42,6 +43,50 @@
 		    background-color: #d7d7d7;
 		    text-align: center;
 		    color: #555;
+		}
+
+		.do-status-label {
+		    width: 100%;
+		    height: 40px;
+		    padding-bottom: 10px;
+			padding-top: 10px;
+		    float: left;
+		}
+
+		.do-status-label input[type="text"] {
+		    width: 14%;
+		    height: 30px;
+		    margin-left: 10px;
+			margin-right: 10px;
+		    border-radius: 20px;
+		    background-color: #d7d7d7;
+		    text-align: center;
+		    color: #555;
+		}
+
+		.do_beep {
+			width: 100%;
+			height: 40px;
+			margin-left: 20px;
+			margin-top: 20px;
+		}
+
+		.do_beep > input[type="checkbox"] {
+			vertical-align:middle;
+			width: 25px;
+			height: 25px;
+		}
+
+		.confirm_btn {
+			background-color: #117daf;
+			color: #fff;
+			width: 100px;
+			height: 30px;
+			font-size: 14px;
+			font-weight:bold;
+			border: none;
+			margin-top: 30px;
+			margin-left:30px;
 		}
 
 		.do-status .do-status-off {
@@ -57,13 +102,26 @@
 	<div class="do-status-box">
 		<span style="width:150px;font-size:16px;">继电器输出</span>
 		<div class="horizental_split"></div>
-		<ul class="do-status">
-			<li class="do-status-off"><span>DO-1</span></li>
-			<li class="do-status-off"><span>DO-2</span></li>
-			<li class="do-status-off"><span>DO-3</span></li>
-			<li class="do-status-off"><span>DO-4</span></li>
-		</ul>
+		<div class="do_beep">
+			<input type="checkbox" id="do_beep">
+			<span style="width:25px; height:25px;">干接点输出1：蜂鸣器报警使能</span>
+		</div>
+
+			<ul class="do-status">
+				<li class="do-status-off"></li>
+				<li class="do-status-off"></li>
+				<li class="do-status-off"></li>
+			</ul>
+
+		<div class="do-status-label">
+			<input type="text" id="do-2" value="干接点输出2">
+			<input type="text" id="do-3" value="干接点输出3">
+			<input type="text" id="do-4" value="干接点输出4">
+		</div>
     </div>
+	<div>
+    	<input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_do_param()">
+	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
@@ -82,8 +140,91 @@
 		    });
 		});
 
+		function set_do_param() {
+			var json = new Object();
+			json.msg_type = "param_setting";
+			json.cmd_type = "set_do_param";
+
+			var cfg = new Object();
+			var newArray = new Array();
+			$('.do-status li').each(function(i) {
+				var obj = new Object();
+				var is_on = $(this).hasClass('do-status-on');
+				if (is_on) {
+					obj.value = 1;
+				} else {
+					obj.value = 0;
+				}
+
+				obj.name = $('#do-'+(i+2)).val();
+				newArray[i] = obj;
+			});
+
+			if ($('#do_beep').is(':checked')) {
+				cfg.beep_alarm_enable = '1';
+			} else {
+				cfg.beep_alarm_enable = '0';
+			}
+
+			cfg.io_status = newArray;
+			json.cfg = cfg;
+
+			$('#confirm_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#confirm_btn').removeAttr("disabled");
+							if (msg.status == 1) {
+								alert("设置成功");
+							} else {
+								alert("设置失败");
+							}
+		                },
+					});
+		}
+
+		function display_do_param(msg) {
+			$('.do-status li').each(function(i) {
+				if (msg.io_status[i].value) {
+		            $(this).removeClass('do-status-off');
+					$(this).addClass('do-status-on');
+				} else {
+		            $(this).removeClass('do-status-on');
+					$(this).addClass('do-status-off');
+				}
+
+				$('#do-'+(i+2)).val(msg.io_status[i].name);
+			});
+
+			if (msg.beep_alarm_enable == 0) {
+				$('#do_beep').attr('checked', false);
+			} else {
+				$('#do_beep').attr('checked', true);
+			}
+		}
+
+		function load_do_param() {
+		    var json = new Object();
+		    json.msg_type = "param_setting";
+		    json.cmd_type = "get_do_param";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    display_do_param(msg);
+		                },
+		            });
+		}
+
 		$(document).ready(function() {
-			//load_io_param();
+			load_do_param();
 		});
     </script>
 </body>

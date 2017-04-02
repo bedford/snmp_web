@@ -65,7 +65,7 @@
 		height: 50px;
 		box-sizing: border-box;
 		margin-top: 10px;
-		margin-left: 20px;
+		margin-left: 5px;
 		padding-top: 5px;
 		padding-left: 5px;
 	}
@@ -80,7 +80,7 @@
 		border-radius:5px;
 		border: none;
 		letter-spacing: 5px;
-		margin-left: 200px;
+		margin-left: 80px;
 	}
 
 	#set_btn {
@@ -90,6 +90,7 @@
 		height: 30px;
 		font-size: 12px;
 		font-weight:bold;
+		margin-left: 10px;
 	}
 
 	.jq-dialog form fieldset {
@@ -112,22 +113,13 @@
 </head>
 <body>
 	<div class="operation_box">
-		<span>告警邮件发送次数</span>
-		<select id="send_times" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
-			<option value="1">1</option>
-			<option value="2">2</option>
-			<option value="3">3</option>
-		</select>
-		<span>发送时间间隔（分钟）</span>
-		<select id="send_interval" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
-			<option value="1">5</option>
-			<option value="2">10</option>
-			<option value="3">15</option>
-			<option value="4">20</option>
-			<option value="5">25</option>
-			<option value="6">30</option>
-		</select>
-		<input type="button" id="set_btn" value="设置" onclick="set_sms_rule()">
+		<span>邮件服务器地址</span>
+		<input type="text" style="width:150px; height:25px;" id="smtp_server_ip">
+		<span>发件人EMail</span>
+		<input type="text" style="width:150px; height:25px;" id="email_account">
+		<span>邮箱密码</span>
+		<input type="password" style="width:150px; height:25px;" id="email_password">
+		<input type="button" id="set_btn" value="设置" onclick="set_email_rule()">
 		<input type="button" id="add_btn" value="新增" onclick="add_email_contact()">
 	</div>
 	<div id="table-box">
@@ -190,8 +182,9 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function(msg) {
-							$("#send_times").val(msg.send_times);
-							$("#send_interval").val(msg.send_interval);
+							$("#smtp_server_ip").val(msg.smtp_server);
+							$("#email_account").val(msg.email_addr);
+							$('#email_password').val(msg.password)
 		                },
 		            });
 		}
@@ -202,8 +195,9 @@
 			json.cmd_type = "set_email_rule";
 
 			var cfg = new Object();
-			cfg.send_times = $("#send_times").val();
-			cfg.send_interval = $("#send_interval").val();
+			cfg.smtp_server = $("#smtp_server_ip").val();
+			cfg.email_addr = $("#email_account").val();
+			cfg.password = $("#email_password").val();
 			json.cfg = cfg;
 
 			$('#set_btn').attr("disabled", "disabled");

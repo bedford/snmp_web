@@ -167,6 +167,39 @@ static int get_ntp_param(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int get_do_param(cJSON *root, priv_info_t *priv)
+{
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "beep_alarm_enable",
+            iniparser_getint(dic, "DO:beep_alarm_enable", 0));
+
+    cJSON *sub_dir = cJSON_CreateArray();
+	cJSON *child = NULL;
+    cJSON_AddItemToObject(response, "io_status", sub_dir);
+	char value_item_name[16] = {0};
+	char item_name[16] = {0};
+	int i = 0;
+    for (i = 0; i < 3; i++) {
+		sprintf(value_item_name, "DO:do%d_value", i + 2);
+		sprintf(item_name, "DO:do%d_name", i + 2);
+
+        child = cJSON_CreateObject();
+		cJSON_AddNumberToObject(child, "value",
+			iniparser_getint(dic, value_item_name, 0));
+		cJSON_AddStringToObject(child, "name",
+			iniparser_getstring(dic, item_name, "干接点输出"));
+    	cJSON_AddItemToArray(sub_dir, child);
+    }
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 static int get_di_param(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
@@ -416,6 +449,59 @@ static int set_ntp_param(cJSON *root, priv_info_t *priv)
 
     cJSON *response;
     response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int set_do_param(cJSON *root, priv_info_t *priv)
+{
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+	unsigned char status[3] = {0};
+
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    write_profile(dic, "DO", "beep_alarm_enable",
+            cJSON_GetObjectItem(cfg, "beep_alarm_enable")->valuestring);
+
+    cJSON *array_item = cJSON_GetObjectItem(cfg, "io_status");
+    if (array_item != NULL) {
+        int size = cJSON_GetArraySize(array_item);
+        int i = 0;
+        cJSON *object = NULL;
+		char item_name[16] = {0};
+		char item_value[16] = {0};
+        for (i = 0; i < size; i++) {
+            object = cJSON_GetArrayItem(array_item, i);
+
+			memset(item_name, 0, sizeof(item_name));
+			sprintf(item_name, "do%d_name", i + 2);
+		    write_profile(dic, "DO", item_name,
+		            cJSON_GetObjectItem(object, "name")->valuestring);
+
+			memset(item_value, 0, sizeof(item_value));
+			status[i] = cJSON_GetObjectItem(object, "value")->valueint;
+			sprintf(item_value, "%d", status[i]);
+
+			memset(item_name, 0, sizeof(item_name));
+			sprintf(item_name, "do%d_value", i + 2);
+			write_profile(dic, "DO", item_name, item_value);
+        }
+        object = NULL;
+    }
+    dump_profile(dic, INI_FILE_NAME);
+
+	int i = 0;
+    for (i = 0; i < 3; i++) {
+		drv_gpio_open(i + 4);
+		drv_gpio_write(i + 4, status[i]);
+		drv_gpio_close(i + 4);
+    }
+
+    cJSON *response = cJSON_CreateObject();
     cJSON_AddNumberToObject(response, "status", 1);
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -751,6 +837,49 @@ static int set_sms_rule(cJSON *root, priv_info_t *priv)
             cJSON_GetObjectItem(cfg, "send_times")->valuestring);
 	write_profile(dic, "SMS", "send_interval",
 	        cJSON_GetObjectItem(cfg, "send_interval")->valuestring);
+
+    dump_profile(dic, INI_FILE_NAME);
+
+    cJSON *response;
+    response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int get_email_rule(cJSON *root, priv_info_t *priv)
+{
+    dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+    cJSON *response = cJSON_CreateObject();
+
+    cJSON_AddStringToObject(response, "smtp_server",
+            iniparser_getstring(dic, "EMAIL:smtp_server", "smtp.163.com"));
+    cJSON_AddStringToObject(response, "email_addr",
+            iniparser_getstring(dic, "EMAIL:email_addr", ""));
+    cJSON_AddStringToObject(response, "password",
+            iniparser_getstring(dic, "EMAIL:password", ""));
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int set_email_rule(cJSON *root, priv_info_t *priv)
+{
+    dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    write_profile(dic, "EMAIL", "smtp_server",
+            cJSON_GetObjectItem(cfg, "smtp_server")->valuestring);
+	write_profile(dic, "EMAIL", "email_addr",
+	        cJSON_GetObjectItem(cfg, "email_addr")->valuestring);
+	write_profile(dic, "EMAIL", "password",
+	        cJSON_GetObjectItem(cfg, "password")->valuestring);
 
     dump_profile(dic, INI_FILE_NAME);
 
@@ -1319,14 +1448,14 @@ cmd_fun_t cmd_param_setting[] = {
     {
         "set_uart_param",
         set_uart_param
-	/*},
+	},
     {
         "get_do_param",
         get_do_param
 	},
     {
         "set_do_param",
-        set_do_param*/
+        set_do_param
 	}
 };
 
@@ -1422,6 +1551,14 @@ cmd_fun_t cmd_alarm_setting[] = {
 	{
 		"set_di_param",
 		set_di_param
+	},
+	{
+		"get_email_rule",
+		get_email_rule
+	},
+	{
+		"set_email_rule",
+		set_email_rule
 	}
 };
 
