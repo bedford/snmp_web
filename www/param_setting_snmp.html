@@ -72,7 +72,8 @@
 		font-size: 14px;
 		font-weight:bold;
 		border: none;
-		margin-left:50px;
+		margin-top: 50px;
+		margin-left: 30px;
 	}
 	</style>
 </head>
@@ -91,8 +92,10 @@
 		<div class="item">
 			<span>TRAP服务器IP:</span>
 			<input style="height:30px;width:200px" type="text" id="trap_server_ip">
-			<input type="button" class="confirm_btn" id="set_snmp_btn" value="确定" onclick="set_snmp_param()">
 		</div>
+	</div>
+	<div>
+		<input type="button" class="confirm_btn" id="set_snmp_btn" value="应用" onclick="set_snmp_param()">
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
@@ -152,7 +155,7 @@
 				html += '<input type="text" id="authority_ip_'+i+'" value="'+snmp_param.authority_ip[i].ip+'"></li>';
 			}
 			html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_union">';
-			html += '<input type="button" class="confirm_btn" id="set_snmp_btn" value="确定" onclick="set_snmp_param()"></li>';
+			//html += '<input type="button" class="confirm_btn" id="set_snmp_btn" value="应用" onclick="set_snmp_param()"></li>';
 			$('#right_side').append(html);
 
 			$('#trap_server_ip').val(snmp_param.trap_server_ip);
