@@ -20,6 +20,7 @@
 #include "di_thread.h"
 
 #include "sms_alarm_thread.h"
+#include "email_alarm_thread.h"
 #include "data_write_thread.h"
 
 typedef struct {
@@ -466,6 +467,22 @@ int main(void)
 	sms_alarm_param.alarm_pool_handle	= alarm_pool_handle;
 	sms_alarm_thread->start(sms_alarm_thread, (void *)&sms_alarm_param);
 
+	thread_t *email_alarm_thread = email_alarm_thread_create();
+	if (!email_alarm_thread) {
+		printf("create email alarm thread failed\n");
+		return -1;
+	}
+	email_alarm_thread_param_t email_alarm_param;
+	email_alarm_param.self					= email_alarm_thread;
+	email_alarm_param.email_alarm_db_handle	= priv->email_alarm_db_handle;
+	email_alarm_param.sys_db_handle			= priv->sys_db_handle;
+	email_alarm_param.pref_handle 			= priv->pref_handle;
+	email_alarm_param.rb_handle				= rb_handle;
+	email_alarm_param.mpool_handle			= mpool_handle;
+	email_alarm_param.email_rb_handle		= email_rb_handle;
+	email_alarm_param.alarm_pool_handle		= alarm_pool_handle;
+	email_alarm_thread->start(email_alarm_thread, (void *)&email_alarm_param);
+
 	thread_t *rs232_thread = rs232_thread_create();
 	if (!rs232_thread) {
 		printf("create rs232 thread failed\n");
@@ -542,6 +559,11 @@ int main(void)
 	sms_alarm_thread->join(sms_alarm_thread);
 	sms_alarm_thread->destroy(sms_alarm_thread);
 	sms_alarm_thread = NULL;
+
+	email_alarm_thread->terminate(email_alarm_thread);
+	email_alarm_thread->join(email_alarm_thread);
+	email_alarm_thread->destroy(email_alarm_thread);
+	email_alarm_thread = NULL;
 
 	data_write_thread->terminate(data_write_thread);
 	data_write_thread->join(data_write_thread);

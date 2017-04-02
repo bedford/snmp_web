@@ -45,4 +45,10 @@ typedef struct
 	char			reserved[4];
 } alarm_msg_t;
 
+typedef struct {
+	char	smtp_server[32];
+	char	email_addr[32];
+	char	password[32];
+} email_server_t;
+
 #endif
