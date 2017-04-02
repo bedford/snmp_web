@@ -14,6 +14,11 @@ typedef struct
 	void 		*rb_handle;
 	void 		*mpool_handle;
 	void 		*pref_handle;
+
+	void 		*sms_rb_handle;
+	void 		*email_rb_handle;
+	void 		*alarm_pool_handle;
+
 	int			init_flag;
 } rs485_thread_param_t;
 

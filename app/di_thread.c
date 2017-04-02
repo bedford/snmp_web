@@ -45,6 +45,10 @@ typedef struct {
 	mem_pool_t		*mpool_handle;
 	preference_t	*pref_handle;
 
+	ring_buffer_t	*sms_rb_handle;
+	ring_buffer_t	*email_rb_handle;
+	mem_pool_t		*alarm_pool_handle;
+
 	struct timeval	last_record_time;
 	char			last_di_status[4];
 	di_param_t		di_param[4];
@@ -69,8 +73,7 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 			(value == 1) ? param->high_desc : param->low_desc);
 	}
 
-	msg->msg_type = RECORD_DATA;
-    sprintf(msg->buf, "INSERT INTO %s (device_id, device_name, param_id, \
+    sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 		param_name, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
 		VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
         LOCAL_DI, param->di_name, param->id, param->device_name,
@@ -82,6 +85,48 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 		priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
 	}
 	msg = NULL;
+
+	alarm_msg_t *alarm_msg = (alarm_msg_t *)priv->alarm_pool_handle->mpool_alloc(priv->alarm_pool_handle);
+	if (alarm_msg == NULL) {
+		printf("memory pool is empty\n");
+		return;
+	}
+
+	alarm_msg_t *tmp_alarm_msg = (alarm_msg_t *)priv->alarm_pool_handle->mpool_alloc(priv->alarm_pool_handle);
+	if (tmp_alarm_msg == NULL) {
+		printf("memory pool is empty\n");
+		priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
+		return;
+	}
+
+    if (value == param->alarm_level) {
+		alarm_msg->alarm_type = ALARM_DISCARD;
+	} else {
+		alarm_msg->alarm_type = ALARM_RAISE;
+	}
+	alarm_msg->protocol_id = LOCAL_DI;
+	strcpy(alarm_msg->protocol_name, param->di_name);
+	alarm_msg->param_id = param->id;
+	strcpy(alarm_msg->param_name, param->device_name);
+	strcpy(alarm_msg->param_unit, "");
+	alarm_msg->param_type = PARAM_TYPE_ENUM;
+	alarm_msg->param_value = 0.0;
+	alarm_msg->enum_value = value;
+	strcpy(alarm_msg->enum_desc, (value == 1) ? param->high_desc : param->low_desc);
+	strcpy(alarm_msg->alarm_desc, alarm_desc);
+	memcpy(tmp_alarm_msg, alarm_msg, sizeof(alarm_msg_t));
+
+	if (priv->sms_rb_handle->push(priv->sms_rb_handle, (void *)alarm_msg)) {
+		printf("sms ring buffer is full\n");
+		priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
+	}
+	alarm_msg = NULL;
+
+	if (priv->email_rb_handle->push(priv->email_rb_handle, (void *)tmp_alarm_msg)) {
+		printf("email ring buffer is full\n");
+		priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)tmp_alarm_msg);
+	}
+	tmp_alarm_msg = NULL;
 }
 
 static void history_data_record(priv_info_t *priv, int index, unsigned char value)
@@ -94,8 +139,7 @@ static void history_data_record(priv_info_t *priv, int index, unsigned char valu
 		return;
 	}
 
-	msg->msg_type = RECORD_DATA;
-	sprintf(msg->buf, "INSERT INTO %s (device_id, device_name, param_id, \
+	sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 		param_name, param_type, analog_value, unit, enum_value, enum_desc) \
 		VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
         LOCAL_DI, param->di_name, param->id, param->device_name,
@@ -150,6 +194,10 @@ static void *di_process(void *arg)
 	priv->rb_handle = (ring_buffer_t *)thread_param->rb_handle;
 	priv->mpool_handle = (mem_pool_t *)thread_param->mpool_handle;
 	priv->pref_handle = (preference_t *)thread_param->pref_handle;
+
+	priv->sms_rb_handle = (ring_buffer_t *)thread_param->sms_rb_handle;
+	priv->email_rb_handle = (ring_buffer_t *)thread_param->email_rb_handle;
+	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
 	char sql[256] = {0};
 	query_result_t query_result;

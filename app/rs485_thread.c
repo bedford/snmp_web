@@ -25,7 +25,11 @@ typedef struct {
 	preference_t	*pref_handle;
 	protocol_t 		*protocol;
 
-	uart_param_t 	uart_param;
+	ring_buffer_t	*sms_rb_handle;
+	ring_buffer_t	*email_rb_handle;
+	mem_pool_t		*alarm_pool_handle;
+
+	uart_param_t	uart_param;
 	int 			protocol_id;
 	int 			rs485_enable;
 } priv_info_t;
@@ -81,9 +85,8 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		}
 
 		unsigned int status = 0;
-		msg->msg_type = REAL_DATA;
 		if (flag == 1) {
-	        sprintf(msg->buf, "INSERT INTO %s (device_id, device_name, param_id, param_name, param_type, analog_value, \
+	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, param_name, param_type, analog_value, \
 	            unit, enum_value, enum_desc, alarm_type) VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s', %d)",
 	                "real_data",
 	                priv->protocol->protocol_id, priv->protocol->protocol_name,
@@ -92,7 +95,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	                param_desc->param_enum[current_value->enum_value].desc, status);
 		} else {
 	        sprintf(msg->buf, "UPDATE %s SET analog_value=%.1f, enum_value=%d, \
-						enum_desc='%s', alarm_type=%d WHERE device_id=%d and param_id=%d",
+						enum_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
 	            		"real_data", current_value->param_value, current_value->enum_value,
 		                param_desc->param_enum[current_value->enum_value].desc, status,
 						priv->protocol->protocol_id, current_value->param_id);
@@ -108,8 +111,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 			printf("memory pool is empty\n");
 			continue;
 		}
-		msg->msg_type = RECORD_DATA;
-        sprintf(msg->buf, "INSERT INTO %s (device_id, device_name, param_id, \
+        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 			param_name, param_type, analog_value, unit, enum_value, enum_desc) \
 			VALUES (%d, '%s', '%d', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
                 priv->protocol->protocol_id, priv->protocol->protocol_name,
@@ -147,6 +149,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 	}
 
 	msg_t *msg = NULL;
+	alarm_msg_t *alarm_msg = NULL;
 	int data_record_flag = 0;
 	int alarm_record_flag = 0;
 	unsigned int alarm_status = NORMAL;
@@ -171,7 +174,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 					alarm_record_flag = 1;
 				}
 			} else if (last_value->status == LOW_ALARM_ON) {
-				if (current_value->param_value < param_desc->up_free) {
+				if (current_value->param_value > param_desc->low_free) {
 					alarm_status = LOW_ALARM_OFF;
 					alarm_record_flag = 1;
 				}
@@ -221,10 +224,14 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			} else {
 				switch (alarm_status & 0x0F) {
 				case 0x1:
-					sprintf(alarm_desc, "%s%s", param_desc->param_name, "超过上限报警");
+					sprintf(alarm_desc, "%s%.1f%s%s",
+						param_desc->param_name, current_value->param_value,
+						param_desc->param_unit, ",超过阈值");
 					break;
 				case 0x2:
-					sprintf(alarm_desc, "%s%s", param_desc->param_name, "低于下限报警");
+					sprintf(alarm_desc, "%s%.1f%s%s",
+						param_desc->param_name, current_value->param_value,
+						param_desc->param_unit, ",低于阈值");
 					break;
 				case 0x4:
 					sprintf(alarm_desc, "%s%s", param_desc->param_name, "异常");
@@ -239,8 +246,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				printf("memory pool is empty\n");
 				continue;
 			}
-			msg->msg_type = RECORD_DATA;
-	        sprintf(msg->buf, "INSERT INTO %s (device_id, device_name, param_id, \
+	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 				param_name, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
 				VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
 	                priv->protocol->protocol_id, priv->protocol->protocol_name,
@@ -252,6 +258,48 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
 			}
 			msg = NULL;
+
+			alarm_msg = (alarm_msg_t *)priv->alarm_pool_handle->mpool_alloc(priv->alarm_pool_handle);
+			if (alarm_msg == NULL) {
+				printf("memory pool is empty\n");
+				continue;
+			}
+
+			alarm_msg_t *tmp_alarm_msg = (alarm_msg_t *)priv->alarm_pool_handle->mpool_alloc(priv->alarm_pool_handle);
+			if (tmp_alarm_msg == NULL) {
+				printf("memory pool is empty\n");
+				priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
+				continue;
+			}
+
+			if (alarm_status == NORMAL) {
+				alarm_msg->alarm_type = ALARM_DISCARD;
+			} else {
+				alarm_msg->alarm_type = ALARM_RAISE;
+			}
+			alarm_msg->protocol_id = priv->protocol->protocol_id;
+			strcpy(alarm_msg->protocol_name, priv->protocol->protocol_name);
+			alarm_msg->param_id = current_value->param_id;
+			strcpy(alarm_msg->param_name, param_desc->param_name);
+			strcpy(alarm_msg->param_unit, param_desc->param_unit);
+			alarm_msg->param_type = param_desc->param_type;
+			alarm_msg->param_value = current_value->param_value;
+			alarm_msg->enum_value = current_value->enum_value;
+			strcpy(alarm_msg->enum_desc, param_desc->param_enum[current_value->enum_value].desc);
+			strcpy(alarm_msg->alarm_desc, alarm_desc);
+			memcpy(tmp_alarm_msg, alarm_msg, sizeof(alarm_msg_t));
+
+			if (priv->sms_rb_handle->push(priv->sms_rb_handle, (void *)alarm_msg)) {
+				printf("ring buffer is full\n");
+				priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
+			}
+			alarm_msg = NULL;
+
+			if (priv->email_rb_handle->push(priv->email_rb_handle, (void *)tmp_alarm_msg)) {
+				printf("ring buffer is full\n");
+				priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)tmp_alarm_msg);
+			}
+			tmp_alarm_msg = NULL;
 		}
 		last_value->status = alarm_status;
 
@@ -261,8 +309,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				printf("memory pool is empty\n");
 				continue;
 			}
-			msg->msg_type = RECORD_DATA;
-	        sprintf(msg->buf, "INSERT INTO %s (device_id, device_name, param_id, \
+	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 				param_name, param_type, analog_value, unit, enum_value, enum_desc) \
 				VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
 	                priv->protocol->protocol_id, priv->protocol->protocol_name,
@@ -281,9 +328,8 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			printf("memory pool is empty\n");
 			continue;
 		}
-		msg->msg_type = RECORD_DATA;
         sprintf(msg->buf, "UPDATE %s SET analog_value=%.1f, enum_value=%d, \
-					enum_desc='%s', alarm_type=%d WHERE device_id=%d and param_id=%d",
+					enum_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
             		"real_data", current_value->param_value, current_value->enum_value,
 	                param_desc->param_enum[current_value->enum_value].desc, alarm_status,
 					priv->protocol->protocol_id, current_value->param_id);
@@ -336,6 +382,10 @@ static void *rs485_process(void *arg)
 	priv->mpool_handle = (mem_pool_t *)thread_param->mpool_handle;
 	priv->pref_handle = (preference_t *)thread_param->pref_handle;
     priv->uart_param.device_index = 3;
+
+	priv->sms_rb_handle = (ring_buffer_t *)thread_param->sms_rb_handle;
+	priv->email_rb_handle = (ring_buffer_t *)thread_param->email_rb_handle;
+	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
     list_t *protocol_list = list_create(sizeof(protocol_t));
     init_protocol_lib(protocol_list);
@@ -417,7 +467,7 @@ static void *rs485_process(void *arg)
 	        } else {
 	            printf("write cmd failed------------\n");
 	        }
-			sleep(5);
+			sleep(1);
 			if (update_alarm_param_flag) {
 				update_alarm_param_flag = 0;
 				priv->pref_handle->set_rs485_alarm_flag(priv->pref_handle, 0);
@@ -437,6 +487,10 @@ static void *rs485_process(void *arg)
 
     uart->destroy(uart);
     uart = NULL;
+
+	priv = NULL;
+	thiz = NULL;
+	thread_param = NULL;
 
 	return (void *)0;
 }
