@@ -51,4 +51,9 @@ typedef struct {
 	char	password[32];
 } email_server_t;
 
+typedef struct {
+	unsigned char status[3];
+	unsigned char beep_enable;
+} do_param_t;
+
 #endif

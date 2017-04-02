@@ -26,6 +26,7 @@ typedef struct {
 	int				send_interval;
 
 	email_server_t	email_server_param;
+	do_param_t		do_param;
 } priv_info_t;
 
 static void write_profile(dictionary    *dic,
@@ -88,6 +89,17 @@ static void load_email_server_param(priv_info_t *priv)
 		sizeof(priv->email_server_param.password));
 }
 
+static void load_do_param(priv_info_t *priv)
+{
+	priv->do_param.beep_enable = iniparser_getint(priv->dic, "DO:beep_alarm_enable", 0);
+	char item_name[16] = {0};
+	int i = 0;
+    for (i = 0; i < 3; i++) {
+		sprintf(item_name, "DO:do%d_value", i + 2);
+		priv->do_param.status[i] = iniparser_getint(priv->dic, item_name, 0);
+    }
+}
+
 static email_server_t get_email_server_preference(preference_t *thiz)
 {
     email_server_t email_server_param;
@@ -98,6 +110,18 @@ static email_server_t get_email_server_preference(preference_t *thiz)
     }
 
     return email_server_param;
+}
+
+static do_param_t get_do_preference(preference_t *thiz)
+{
+    do_param_t do_param;
+    memset(&do_param, 0, sizeof(do_param_t));
+    if (thiz != NULL) {
+		priv_info_t *priv = (priv_info_t *)thiz->priv;
+		do_param = priv->do_param;
+    }
+
+    return do_param;
 }
 
 static int get_send_times(preference_t *thiz)
@@ -274,6 +298,8 @@ static void load_preference(priv_info_t *priv)
 
 	load_system_param(priv);
 	load_sms_send_param(priv);
+	load_do_param(priv);
+	load_email_server_param(priv);
 }
 
 static int preference_reload(preference_t *thiz)
@@ -353,7 +379,8 @@ preference_t *preference_create(void)
 		thiz->get_send_times	= get_send_times;
 		thiz->get_send_interval	= get_send_interval;
 
-		thiz->get_email_server_param = get_email_server_preference;
+		thiz->get_email_server_param	= get_email_server_preference;
+		thiz->get_do_param				= get_do_preference;
 
         priv_info_t *priv = (priv_info_t *)thiz->priv;
         priv->dic = iniparser_load(INI_FILE_NAME);

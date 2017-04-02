@@ -404,6 +404,69 @@ void create_di_cfg(priv_info_t *priv)
 	}
 }
 
+static void creat_user(priv_info_t *priv)
+{
+		//初始化 用户表
+		char error_msg[512] = {0};
+		char sql[256] = {0};
+	    sprintf(sql, "create table if not exists %s \
+		    (id INTEGER PRIMARY KEY, \
+		     user VARCHAR(32), \
+			 password VARCHAR(32), \
+		     permit VARCHAR(32), \
+		     description VARCHAR(32))", "user_manager");
+	    priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+		memset(sql, 0, sizeof(sql));
+		sprintf(sql, "SELECT * FROM %s", "user_manager");
+
+		query_result_t query_result;
+		memset(&query_result, 0, sizeof(query_result_t));
+		priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
+
+		if (query_result.row == 0) {
+			memset(sql, 0, sizeof(sql));
+		    sprintf(sql, "INSERT INTO %s \
+		            (user, password, permit, description) \
+					VALUES ('%s', '%s', %d, '%s')", "user_manager",
+					"admin", "admin", 1, "管理员");
+			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+			memset(sql, 0, sizeof(sql));
+		    sprintf(sql, "INSERT INTO %s \
+		            (user, password, permit, description) \
+					VALUES ('%s', '%s', %d, '%s')", "user_manager",
+					"ctrl", "ctrl", 2, "控制操作员");
+			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+			memset(sql, 0, sizeof(sql));
+		    sprintf(sql, "INSERT INTO %s \
+		            (user, password, permit, description) \
+					VALUES ('%s', '%s', %d, '%s')", "user_manager",
+					"monitor", "monitor", 4, "监查人员");
+			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+			memset(sql, 0, sizeof(sql));
+		    sprintf(sql, "INSERT INTO %s \
+		            (user, password, permit, description) \
+					VALUES ('%s', '%s', %d, '%s')", "user_manager",
+					"guest", "guest", 8, "访客");
+			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+		}
+}
+
+void static init_do_output(priv_info_t *priv)
+{
+	do_param_t param = priv->pref_handle->get_do_param(priv->pref_handle);
+
+	int i = 0;
+    for (i = 0; i < 3; i++) {
+		drv_gpio_open(i + 5);
+		drv_gpio_write(i + 5, param.status[i]);
+		drv_gpio_close(i + 5);
+    }
+}
+
 int main(void)
 {
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
@@ -416,7 +479,9 @@ int main(void)
 	priv->sms_alarm_db_handle = db_access_create("/opt/app/sms_alarm.db");
 	priv->email_alarm_db_handle = db_access_create("/opt/app/email_alarm.db");
 
+	creat_user(priv);
 	create_di_cfg(priv);
+	init_do_output(priv);
 
 	if (init_flag == 1) {
 		create_data_table(priv);
