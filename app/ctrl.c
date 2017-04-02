@@ -18,11 +18,17 @@
 #include "rs232_thread.h"
 #include "rs485_thread.h"
 #include "di_thread.h"
+
+#include "sms_alarm_thread.h"
 #include "data_write_thread.h"
 
 typedef struct {
 	db_access_t		*sys_db_handle;
 	db_access_t		*data_db_handle;
+
+	db_access_t		*sms_alarm_db_handle;
+	db_access_t		*email_alarm_db_handle;
+
 	preference_t	*pref_handle;
 } priv_info_t;
 
@@ -80,6 +86,56 @@ static void set_signal_handler(int signum, void func(int))
         sigaction(signum, &sigAction, NULL);
 }
 
+void create_alarm_table(priv_info_t *priv)
+{
+	char error_msg[512] = {0};
+	char sql[512] = {0};
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "alarm_record");
+	priv->sms_alarm_db_handle->action(priv->sms_alarm_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "alarm_record");
+	priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             sent_time TIMESTAMP, \
+             protocol_id INTEGER, \
+			 protocol_name VARCHAR(32), \
+			 param_id INTEGER, \
+             param_name VARCHAR(32), \
+             param_type INTEGER, \
+             analog_value DOUBLE, \
+			 unit VARCHAR(32), \
+             enum_value INTEGER, \
+             enum_desc VARCHAR(32), \
+			 alarm_desc VARCHAR(64), \
+             alarm_type INTEGER, \
+		 	 send_cnt INTEGER, \
+             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')))", "alarm_record");
+    priv->sms_alarm_db_handle->action(priv->sms_alarm_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             sent_time TIMESTAMP, \
+             protocol_id INTEGER, \
+			 protocol_name VARCHAR(32), \
+			 param_id INTEGER, \
+             param_name VARCHAR(32), \
+             param_type INTEGER, \
+             analog_value DOUBLE, \
+			 unit VARCHAR(32), \
+             enum_value INTEGER, \
+             enum_desc VARCHAR(32), \
+			 alarm_desc VARCHAR(64), \
+             alarm_type INTEGER, \
+		 	 send_cnt INTEGER, \
+             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')))", "alarm_record");
+    priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
+}
+
 void create_data_table(priv_info_t *priv)
 {
 	char error_msg[512] = {0};
@@ -96,11 +152,19 @@ void create_data_table(priv_info_t *priv)
 	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "sms_record");
+	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "email_record");
+	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
     sprintf(sql, "create table if not exists %s \
             (id INTEGER PRIMARY KEY AUTOINCREMENT, \
              created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
-             device_id INTEGER, \
-             device_name VARCHAR(32), \
+             protocol_id INTEGER, \
+             protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
              param_type INTEGER, \
@@ -115,8 +179,8 @@ void create_data_table(priv_info_t *priv)
     sprintf(sql, "create table if not exists %s \
             (id INTEGER PRIMARY KEY AUTOINCREMENT, \
              created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
-             device_id INTEGER, \
-             device_name VARCHAR(32), \
+             protocol_id INTEGER, \
+             protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
              param_type INTEGER, \
@@ -130,8 +194,8 @@ void create_data_table(priv_info_t *priv)
     sprintf(sql, "create table if not exists %s \
             (id INTEGER PRIMARY KEY AUTOINCREMENT, \
              created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
-             device_id INTEGER, \
-             device_name VARCHAR(32), \
+             protocol_id INTEGER, \
+             protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
              param_type INTEGER, \
@@ -140,6 +204,34 @@ void create_data_table(priv_info_t *priv)
              enum_value INTEGER, \
              enum_desc VARCHAR(32), \
              alarm_desc VARCHAR(64))", "alarm_record");
+    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             send_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
+             protocol_id INTEGER, \
+             protocol_name VARCHAR(32), \
+			 param_id INTEGER, \
+             param_name VARCHAR(32), \
+			 name VARCHAR(32), \
+		 	 phone VARCHAR(32), \
+		 	 send_status INTEGER, \
+             sms_content VARCHAR(64))", "sms_record");
+    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
+
+    memset(sql, 0, sizeof(sql));
+    sprintf(sql, "create table if not exists %s \
+            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
+             send_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
+             protocol_id INTEGER, \
+             protocol_name VARCHAR(32), \
+			 param_id INTEGER, \
+             param_name VARCHAR(32), \
+			 name VARCHAR(32), \
+		 	 email VARCHAR(64), \
+		 	 send_status INTEGER, \
+             email_content VARCHAR(64))", "email_record");
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 }
 
@@ -303,8 +395,8 @@ void create_di_cfg(priv_info_t *priv)
 			memset(di_name, 0, sizeof(di_name));
 			sprintf(di_name, "干接点输入%d", i+1);
 		    sprintf(sql, "INSERT INTO %s \
-		            (id, di_name, device_name, low_desc, high_desc, alarm_level, enable, alarm_method) \
-					VALUES (%d, '%s', '%s', '%s', '%s', %d, %d, %d)",
+		            (id, di_name, device_name, low_desc, high_desc, alarm_level,\
+					enable, alarm_method) VALUES (%d, '%s', '%s', '%s', '%s', %d, %d, %d)",
 					"di_cfg", i, di_name, "", "", "", 0, 0, 0);
 			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 		}
@@ -320,18 +412,30 @@ int main(void)
 	priv->sys_db_handle = db_access_create("/opt/app/sys.db");
 	priv->data_db_handle = db_access_create("/opt/data/data.db");
 
+	priv->sms_alarm_db_handle = db_access_create("/opt/app/sms_alarm.db");
+	priv->email_alarm_db_handle = db_access_create("/opt/app/email_alarm.db");
+
 	create_di_cfg(priv);
 
 	if (init_flag == 1) {
 		create_data_table(priv);
 		update_uart_cfg(priv);
+		create_alarm_table(priv);
 		priv->pref_handle->set_init_flag(priv->pref_handle, 0);
 	}
 
-	ring_buffer_t *rb_handle = ring_buffer_create(36);
+	ring_buffer_t *rb_handle = ring_buffer_create(32);
 	mem_pool_t *mpool_handle = mem_pool_create(sizeof(msg_t), 32);
 	if (mpool_handle == NULL) {
 		printf("failed\n");
+	}
+
+	ring_buffer_t *sms_rb_handle = ring_buffer_create(5);
+	ring_buffer_t *email_rb_handle = ring_buffer_create(5);
+	mem_pool_t *alarm_pool_handle = mem_pool_create(sizeof(alarm_msg_t), 10);
+	if (alarm_pool_handle == NULL) {
+		printf("failed\n");
+		return -1;
 	}
 
 	thread_t *data_write_thread = data_write_thread_create();
@@ -346,6 +450,22 @@ int main(void)
 	data_write_param.mpool_handle	= mpool_handle;
 	data_write_thread->start(data_write_thread, (void *)&data_write_param);
 
+	thread_t *sms_alarm_thread = sms_alarm_thread_create();
+	if (!sms_alarm_thread) {
+		printf("create sms alarm thread failed\n");
+		return -1;
+	}
+	sms_alarm_thread_param_t sms_alarm_param;
+	sms_alarm_param.self				= sms_alarm_thread;
+	sms_alarm_param.sms_alarm_db_handle	= priv->sms_alarm_db_handle;
+	sms_alarm_param.sys_db_handle		= priv->sys_db_handle;
+	sms_alarm_param.pref_handle 		= priv->pref_handle;
+	sms_alarm_param.rb_handle			= rb_handle;
+	sms_alarm_param.mpool_handle		= mpool_handle;
+	sms_alarm_param.sms_rb_handle		= sms_rb_handle;
+	sms_alarm_param.alarm_pool_handle	= alarm_pool_handle;
+	sms_alarm_thread->start(sms_alarm_thread, (void *)&sms_alarm_param);
+
 	thread_t *rs232_thread = rs232_thread_create();
 	if (!rs232_thread) {
 		printf("create rs232 thread failed\n");
@@ -357,6 +477,9 @@ int main(void)
 	rs232_thread_param.rb_handle 		= rb_handle;
 	rs232_thread_param.mpool_handle		= mpool_handle;
 	rs232_thread_param.pref_handle		= priv->pref_handle;
+	rs232_thread_param.sms_rb_handle	= sms_rb_handle;
+	rs232_thread_param.email_rb_handle	= email_rb_handle;
+	rs232_thread_param.alarm_pool_handle = alarm_pool_handle;
 	rs232_thread_param.init_flag		= init_flag;
 	rs232_thread->start(rs232_thread, (void *)&rs232_thread_param);
 
@@ -371,10 +494,13 @@ int main(void)
 	rs485_thread_param.rb_handle 		= rb_handle;
 	rs485_thread_param.mpool_handle		= mpool_handle;
 	rs485_thread_param.pref_handle		= priv->pref_handle;
+	rs485_thread_param.sms_rb_handle	= sms_rb_handle;
+	rs485_thread_param.email_rb_handle	= email_rb_handle;
+	rs485_thread_param.alarm_pool_handle = alarm_pool_handle;
 	rs485_thread_param.init_flag		= init_flag;
 	rs485_thread->start(rs485_thread, (void *)&rs485_thread_param);
 
-	thread_t *di_thread = di_thread_create();
+	/*thread_t *di_thread = di_thread_create();
 	if (!di_thread) {
 		printf("create di thread failed\n");
 		return -1;
@@ -385,8 +511,11 @@ int main(void)
 	di_thread_param.rb_handle 		= rb_handle;
 	di_thread_param.mpool_handle	= mpool_handle;
 	di_thread_param.pref_handle		= priv->pref_handle;
+	di_thread_param.sms_rb_handle	= sms_rb_handle;
+	di_thread_param.email_rb_handle	= email_rb_handle;
+	di_thread_param.alarm_pool_handle = alarm_pool_handle;
 	di_thread_param.init_flag		= init_flag;
-	di_thread->start(di_thread, (void *)&di_thread_param);
+	di_thread->start(di_thread, (void *)&di_thread_param);*/
 
     while (runnable) {
 		sleep(3);
@@ -395,19 +524,24 @@ int main(void)
 
 	rs232_thread->terminate(rs232_thread);
 	rs485_thread->terminate(rs485_thread);
-	di_thread->terminate(di_thread);
+	//di_thread->terminate(di_thread);
 
 	rs232_thread->join(rs232_thread);
 	rs485_thread->join(rs485_thread);
-	di_thread->join(di_thread);
+	//di_thread->join(di_thread);
 
 	rs232_thread->destroy(rs232_thread);
 	rs485_thread->destroy(rs485_thread);
-	di_thread->destroy(di_thread);
+	//di_thread->destroy(di_thread);
 
 	rs232_thread = NULL;
 	rs485_thread = NULL;
-	di_thread = NULL;
+	//di_thread = NULL;
+
+	sms_alarm_thread->terminate(sms_alarm_thread);
+	sms_alarm_thread->join(sms_alarm_thread);
+	sms_alarm_thread->destroy(sms_alarm_thread);
+	sms_alarm_thread = NULL;
 
 	data_write_thread->terminate(data_write_thread);
 	data_write_thread->join(data_write_thread);
@@ -424,6 +558,16 @@ int main(void)
 		priv->data_db_handle = NULL;
 	}
 
+	if (priv->sms_alarm_db_handle) {
+		priv->sms_alarm_db_handle->destroy(priv->sms_alarm_db_handle);
+		priv->sms_alarm_db_handle = NULL;
+	}
+
+	if (priv->email_alarm_db_handle) {
+		priv->email_alarm_db_handle->destroy(priv->email_alarm_db_handle);
+		priv->email_alarm_db_handle = NULL;
+	}
+
 	if (priv->pref_handle) {
 		priv->pref_handle->destroy(priv->pref_handle);
 		priv->pref_handle = NULL;
@@ -431,6 +575,15 @@ int main(void)
 
 	rb_handle->destroy(rb_handle);
 	rb_handle = NULL;
+
+	sms_rb_handle->destroy(sms_rb_handle);
+	sms_rb_handle = NULL;
+
+	email_rb_handle->destroy(email_rb_handle);
+	email_rb_handle = NULL;
+
+	alarm_pool_handle->mpool_destroy(alarm_pool_handle);
+	alarm_pool_handle = NULL;
 
 	mpool_handle->mpool_destroy(mpool_handle);
 	mpool_handle = NULL;
