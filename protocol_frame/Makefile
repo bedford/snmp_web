@@ -1,9 +1,10 @@
 SHARE_TARGET = libprotocol.so
 TEST_TARGET = protocol_test
 
+CC := gcc
 CFLAGS += -O3
 
-LIB_OBJS := list.o ups.o protocol_interfaces.o
+LIB_OBJS := list.o crc16.o ups.o environment.o protocol_interfaces.o
 
 INC_FLAGS	+= -I.
 LD_FLAGS	+= -L. -lprotocol

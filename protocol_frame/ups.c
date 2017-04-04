@@ -40,7 +40,8 @@ static list_t *ups_status_param_desc(void)
     list_t *desc_list = list_create(sizeof(param_desc_t));
     param_desc_t param;
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "当前市电电压");
+    sprintf(param.param_name, "%s", "input_voltage");
+    sprintf(param.param_desc, "%s", "当前市电电压");
     sprintf(param.param_unit, "%s", "V");
     param.param_id  = 1;
     param.up_limit  = 250.0;
@@ -53,7 +54,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "市电电压最低值");
+    sprintf(param.param_name, "%s", "low_voltage");
+    sprintf(param.param_desc, "%s", "市电电压最低值");
     sprintf(param.param_unit, "%s", "V");
     param.param_id  = 2;
     param.up_limit  = 240.0;
@@ -66,7 +68,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "输出电压值");
+    sprintf(param.param_name, "%s", "output_voltage");
+    sprintf(param.param_desc, "%s", "输出电压值");
     sprintf(param.param_unit, "%s", "V");
     param.param_id  = 3;
     param.up_limit  = 240.0;
@@ -79,7 +82,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "当前负载百分比");
+    sprintf(param.param_name, "%s", "load_percent");
+    sprintf(param.param_desc, "%s", "当前负载百分比");
     sprintf(param.param_unit, "%s", "\%");
     param.param_id  = 4;
     param.up_limit  = 95.0;
@@ -92,7 +96,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "市电频率");
+    sprintf(param.param_name, "%s", "frequency");
+    sprintf(param.param_desc, "%s", "市电频率");
     sprintf(param.param_unit, "%s", "Hz");
     param.param_id  = 5;
     param.up_limit  = 60.0;
@@ -105,7 +110,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "电池电量");
+    sprintf(param.param_name, "%s", "battery");
+    sprintf(param.param_desc, "%s", "电池电量");
     sprintf(param.param_unit, "%s", "\%");
     param.param_id  = 6;
     param.up_limit  = 100.0;
@@ -118,7 +124,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "温度");
+    sprintf(param.param_name, "%s", "tempUPS");
+    sprintf(param.param_desc, "%s", "温度");
     sprintf(param.param_unit, "%s", "℃");
     param.param_id  = 7;
     param.up_limit  = 70.0;
@@ -131,7 +138,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "市电状态");
+    sprintf(param.param_name, "%s", "status_input");
+    sprintf(param.param_desc, "%s", "市电状态");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 8;
     param.up_limit  = 0;
@@ -148,7 +156,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "电池状态");
+    sprintf(param.param_name, "%s", "statusBattery");
+    sprintf(param.param_desc, "%s", "电池状态");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 9;
     param.up_limit  = 0;
@@ -165,7 +174,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "输出方式");
+    sprintf(param.param_name, "%s", "output_method");
+    sprintf(param.param_desc, "%s", "输出方式");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 10;
     param.up_limit  = 0;
@@ -182,7 +192,8 @@ static list_t *ups_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "UPS状态");
+    sprintf(param.param_name, "%s", "statusUPS");
+    sprintf(param.param_desc, "%s", "UPS状态");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 11;
     param.up_limit  = 0;

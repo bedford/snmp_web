@@ -50,7 +50,8 @@ static list_t *environment_status_param_desc(void)
     list_t *desc_list = list_create(sizeof(param_desc_t));
     param_desc_t param;
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "当前温度");
+    sprintf(param.param_name, "%s", "temp");
+    sprintf(param.param_desc, "%s", "当前温度");
     sprintf(param.param_unit, "%s", "℃");
     param.param_id  = 1;
     param.up_limit  = 60.0;
@@ -63,7 +64,8 @@ static list_t *environment_status_param_desc(void)
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
-    sprintf(param.param_name, "%s", "当前湿度");
+    sprintf(param.param_name, "%s", "hum");
+    sprintf(param.param_desc, "%s", "当前湿度");
     sprintf(param.param_unit, "%s", "%");
     param.param_id  = 2;
     param.up_limit  = 90.0;
