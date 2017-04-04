@@ -81,8 +81,9 @@ typedef struct
 typedef struct
 {
     unsigned int    param_id;                   /* 参数编号 */
-    unsigned char   param_name[MAX_PARAM_LEN];	/* 参数名称 */
+    unsigned char   param_name[MIN_PARAM_LEN];	/* 参数名称 */
     unsigned char   param_unit[MIN_PARAM_LEN];	/* 参数单位 */
+    unsigned char   param_desc[MAX_PARAM_LEN];	/* 参数描述 */
 
     float           up_limit;					/* 上限 */
     float           up_free;					/* 上限解除 */

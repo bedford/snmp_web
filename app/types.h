@@ -35,6 +35,7 @@ typedef struct
 	unsigned int	param_id;
 	char			param_name[MIN_BUF_SIZE];
 	char			param_unit[MIN_BUF_SIZE];
+	char			param_desc[MED_BUF_SIZE];
 	unsigned int	param_type;
 	float           param_value;
 	unsigned int    enum_value;

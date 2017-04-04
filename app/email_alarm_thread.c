@@ -80,19 +80,19 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 
 	memset(sql, 0, sizeof(sql));
 	if (alarm_msg->alarm_type == ALARM_DISCARD) {
-        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, param_id, param_name, \
+        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, param_id, param_name, param_desc, \
 			param_type, analog_value, unit, enum_value, enum_desc, alarm_desc, alarm_type, send_cnt) \
-			VALUES ('%s', %d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
+			VALUES ('%s', %d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
 			"alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name,
-			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_type,
+			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
 			alarm_msg->param_value, alarm_msg->param_unit, alarm_msg->enum_value,
 			alarm_msg->enum_desc, alarm_msg->alarm_desc, alarm_msg->alarm_type, 1);
 	} else {
-        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, param_id, param_name, \
+        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, param_id, param_name, param_desc, \
 			param_type, analog_value, unit, enum_value, enum_desc, alarm_desc, alarm_type, send_cnt) \
-			VALUES ('%s', %d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
+			VALUES ('%s', %d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
 			"alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name,
-			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_type,
+			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
 			alarm_msg->param_value, alarm_msg->param_unit, alarm_msg->enum_value,
 			alarm_msg->enum_desc, alarm_msg->alarm_desc, alarm_msg->alarm_type, priv->send_times);
 	}
@@ -155,27 +155,27 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 		if (ret == 0) {
 			if (priv->email_handle->send_email(priv->email_handle, &email_param) == 0) {
 		        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-					param_name, name, email, send_status, email_content) \
-					VALUES (%d, '%s', %d, '%s', '%s', '%s', %d, '%s')", "eamil_record",
+					param_name, param_desc, name, email, send_status, email_content) \
+					VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "eamil_record",
 		                alarm_msg->protocol_id, alarm_msg->protocol_name,
-		                alarm_msg->param_id, alarm_msg->param_name,
+		                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
 						priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
 						0, email_content);
 			} else {
 		        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-					param_name, name, email, send_status, email_content) \
-					VALUES (%d, '%s', %d, '%s', '%s', '%s', %d, '%s')", "eamil_record",
+					param_name, param_desc, name, email, send_status, email_content) \
+					VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "eamil_record",
 		                alarm_msg->protocol_id, alarm_msg->protocol_name,
-		                alarm_msg->param_id, alarm_msg->param_name,
+		                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
 						priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
 						1, email_content);
 			}
 		} else {
 	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-				param_name, name, email, send_status, email_content) \
-				VALUES (%d, '%s', %d, '%s', '%s', '%s', %d, '%s')", "eamil_record",
+				param_name, param_desc, name, email, send_status, email_content) \
+				VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "eamil_record",
 	                alarm_msg->protocol_id, alarm_msg->protocol_name,
-	                alarm_msg->param_id, alarm_msg->param_name,
+	                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
 					priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
 					1, email_content);
 		}
@@ -225,14 +225,15 @@ static void send_alarm_email(priv_info_t *priv)
 			strcpy(alarm_msg.protocol_name, query_result.result[i * query_result.column + 3]);
 			alarm_msg.param_id = atoi(query_result.result[i * query_result.column + 4]);
 			strcpy(alarm_msg.param_name, query_result.result[i * query_result.column + 5]);
-			strcpy(alarm_msg.param_unit, query_result.result[i * query_result.column + 6]);
-			alarm_msg.param_type = atoi(query_result.result[i * query_result.column + 7]);
-			alarm_msg.param_value = atof(query_result.result[i * query_result.column + 8]);
-			alarm_msg.enum_value = atoi(query_result.result[i * query_result.column + 9]);
-			strcpy(alarm_msg.enum_desc, query_result.result[i * query_result.column + 10]);
-			strcpy(alarm_msg.alarm_desc, query_result.result[i * query_result.column + 11]);
-			alarm_msg.alarm_type = atoi(query_result.result[i * query_result.column + 12]);
-			alarm_msg.send_times = atoi(query_result.result[i * query_result.column + 13]);
+			strcpy(alarm_msg.param_desc, query_result.result[i * query_result.column + 6]);
+			strcpy(alarm_msg.param_unit, query_result.result[i * query_result.column + 7]);
+			alarm_msg.param_type = atoi(query_result.result[i * query_result.column + 8]);
+			alarm_msg.param_value = atof(query_result.result[i * query_result.column + 9]);
+			alarm_msg.enum_value = atoi(query_result.result[i * query_result.column + 10]);
+			strcpy(alarm_msg.enum_desc, query_result.result[i * query_result.column + 11]);
+			strcpy(alarm_msg.alarm_desc, query_result.result[i * query_result.column + 12]);
+			alarm_msg.alarm_type = atoi(query_result.result[i * query_result.column + 13]);
+			alarm_msg.send_times = atoi(query_result.result[i * query_result.column + 14]);
 
 			send_to_contact(priv, &alarm_msg);
 			alarm_msg.send_times--;

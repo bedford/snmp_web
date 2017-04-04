@@ -85,13 +85,13 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 
 		unsigned int status = 0;
 		if (flag == 1) {
-	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, param_name, param_type, analog_value, \
-	            unit, enum_value, enum_desc, alarm_type) VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s', %d)",
+	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, param_name, param_desc, param_type, analog_value, \
+	            unit, enum_value, enum_desc, alarm_type) VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', %d)",
 	                "real_data",
 	                priv->protocol->protocol_id, priv->protocol->protocol_name,
-	                current_value->param_id, param_desc->param_name, param_desc->param_type,
-	                current_value->param_value, param_desc->param_unit, current_value->enum_value,
-	                param_desc->param_enum[current_value->enum_value].desc, status);
+	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
+                    current_value->param_value, param_desc->param_unit, current_value->enum_value,
+                    param_desc->param_enum[current_value->enum_value].desc, status);
 		} else {
 	        sprintf(msg->buf, "UPDATE %s SET analog_value=%.1f, enum_value=%d, \
 						enum_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
@@ -111,10 +111,10 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 			continue;
 		}
         sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-			param_name, param_type, analog_value, unit, enum_value, enum_desc) \
-			VALUES (%d, '%s', '%d', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
+			param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc) \
+			VALUES (%d, '%s', '%d', '%s', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
                 priv->protocol->protocol_id, priv->protocol->protocol_name,
-                current_value->param_id, param_desc->param_name, param_desc->param_type,
+                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
 				current_value->param_value, param_desc->param_unit, current_value->enum_value,
                 param_desc->param_enum[current_value->enum_value].desc);
 		if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
@@ -246,10 +246,10 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				continue;
 			}
 	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-				param_name, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
-				VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
+				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
+				VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
 	                priv->protocol->protocol_id, priv->protocol->protocol_name,
-	                current_value->param_id, param_desc->param_name, param_desc->param_type,
+	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
 	                current_value->param_value, param_desc->param_unit, current_value->enum_value,
 	                param_desc->param_enum[current_value->enum_value].desc, alarm_desc);
 			if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
@@ -280,6 +280,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			strcpy(alarm_msg->protocol_name, priv->protocol->protocol_name);
 			alarm_msg->param_id = current_value->param_id;
 			strcpy(alarm_msg->param_name, param_desc->param_name);
+			strcpy(alarm_msg->param_desc, param_desc->param_desc);
 			strcpy(alarm_msg->param_unit, param_desc->param_unit);
 			alarm_msg->param_type = param_desc->param_type;
 			alarm_msg->param_value = current_value->param_value;
@@ -309,10 +310,10 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				continue;
 			}
 	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-				param_name, param_type, analog_value, unit, enum_value, enum_desc) \
-				VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
+				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc) \
+				VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
 	                priv->protocol->protocol_id, priv->protocol->protocol_name,
-	                current_value->param_id, param_desc->param_name, param_desc->param_type,
+	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
 	                current_value->param_value, param_desc->param_unit, current_value->enum_value,
 	                param_desc->param_enum[current_value->enum_value].desc);
 			if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {

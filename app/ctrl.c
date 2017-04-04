@@ -106,6 +106,7 @@ void create_alarm_table(priv_info_t *priv)
 			 protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
+			 param_desc	VARCHAR(128), \
              param_type INTEGER, \
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
@@ -125,6 +126,7 @@ void create_alarm_table(priv_info_t *priv)
 			 protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
+			 param_desc	VARCHAR(128), \
              param_type INTEGER, \
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
@@ -168,6 +170,7 @@ void create_data_table(priv_info_t *priv)
              protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
+			 param_desc	VARCHAR(128), \
              param_type INTEGER, \
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
@@ -184,6 +187,7 @@ void create_data_table(priv_info_t *priv)
              protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
+			 param_desc	VARCHAR(128), \
              param_type INTEGER, \
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
@@ -199,6 +203,7 @@ void create_data_table(priv_info_t *priv)
              protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
+			 param_desc	VARCHAR(128), \
              param_type INTEGER, \
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
@@ -215,6 +220,7 @@ void create_data_table(priv_info_t *priv)
              protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
+			 param_desc	VARCHAR(128), \
 			 name VARCHAR(32), \
 		 	 phone VARCHAR(32), \
 		 	 send_status INTEGER, \
@@ -229,6 +235,7 @@ void create_data_table(priv_info_t *priv)
              protocol_name VARCHAR(32), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
+			 param_desc	VARCHAR(128), \
 			 name VARCHAR(32), \
 		 	 email VARCHAR(64), \
 		 	 send_status INTEGER, \
@@ -279,7 +286,8 @@ void update_uart_cfg(priv_info_t *priv)
 			protocol_name VARCHAR(32), \
 			cmd_id INTEGER, \
 			param_id INTEGER, \
-			param_name VARCHAR(128), \
+			param_name VARCHAR(32), \
+			param_desc VARCHAR(128), \
 			param_unit VARCHAR(8), \
 			up_limit DOUBLE, \
 			up_free DOUBLE, \
@@ -342,12 +350,12 @@ void update_uart_cfg(priv_info_t *priv)
 				param_desc_t *param = param_desc_list->get_index_value(param_desc_list, index);
 				memset(sql, 0, sizeof(sql));
 				sprintf(sql, "INSERT INTO %s (protocol_id, protocol_name, cmd_id, param_id, param_name, \
-						param_unit, up_limit, up_free, low_limit, low_free, \
+						param_desc, param_unit, up_limit, up_free, low_limit, low_free, \
 						param_type, update_threshold, low_desc, high_desc) \
 						VALUES (%d, '%s', %d, %d, '%s', '%s', '%.1f', '%.1f', '%.1f', '%.1f',\
 							%d, '%.1f', '%s', '%s')",
 						"parameter", tmp->protocol_id, tmp->protocol_name, cmd->cmd_id,
-						param->param_id, param->param_name,
+						param->param_id, param->param_name, param->param_desc,
 						param->param_unit, param->up_limit, param->up_free,
 						param->low_limit, param->low_free, param->param_type,
 						param->update_threshold, param->param_enum[0].desc,

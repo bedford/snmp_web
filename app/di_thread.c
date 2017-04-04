@@ -73,10 +73,12 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 			(value == 1) ? param->high_desc : param->low_desc);
 	}
 
+	char tmp[32] = {0};
+	sprintf(tmp, "di%d\n", param->id);
     sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-		param_name, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
-		VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
-        LOCAL_DI, param->di_name, param->id, param->device_name,
+		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
+		VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
+        LOCAL_DI, param->di_name, param->id, tmp, param->device_name,
 		PARAM_TYPE_ENUM, 0.0, "", value, (value == 1) ? param->high_desc : param->low_desc,
 		alarm_desc);
 
@@ -139,10 +141,12 @@ static void history_data_record(priv_info_t *priv, int index, unsigned char valu
 		return;
 	}
 
+	char tmp[32] = {0};
+	sprintf(tmp, "di%d\n", param->id);
 	sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-		param_name, param_type, analog_value, unit, enum_value, enum_desc) \
-		VALUES (%d, '%s', %d, '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
-        LOCAL_DI, param->di_name, param->id, param->device_name,
+		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc) \
+		VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
+        LOCAL_DI, param->di_name, param->id, tmp, param->device_name,
 		PARAM_TYPE_ENUM, 0.0, "", value, (value == 1) ? param->high_desc : param->low_desc);
 
 	if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
