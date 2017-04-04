@@ -398,7 +398,7 @@ void create_di_cfg(priv_info_t *priv)
 		    sprintf(sql, "INSERT INTO %s \
 		            (id, di_name, device_name, low_desc, high_desc, alarm_level,\
 					enable, alarm_method) VALUES (%d, '%s', '%s', '%s', '%s', %d, %d, %d)",
-					"di_cfg", i, di_name, "", "", "", 0, 0, 0);
+					"di_cfg", i + 1, di_name, "", "", "", 0, 0, 0);
 			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 		}
 	}

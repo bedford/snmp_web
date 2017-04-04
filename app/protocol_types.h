@@ -60,30 +60,13 @@ enum
 
 enum
 {
+	LOCAL_DI			= 0x00000001,	/* 设备本身的DI */
     TEMP_HUM_DEVICE     = 0x00000100,   /* 温湿度检测类设备 */
     WATER_LEAK_DETECT   = 0x00000200,   /* 漏水检测类 */
     AIR_CONDITION       = 0x00000300,   /* 空调检测类 */
     UPS                 = 0x00000400,   /* UPS */
-	LOCAL_DI			= 0x00001000,	/* 设备本身的DI */
 };
 
-enum
-{
-	DI_1	= 0x0,
-	DI_2	= 0x1,
-	DI_3	= 0x2,
-	DI_4	= 0x3,
-};
-
-enum
-{
-    C_KS = 0x0001,
-};
-
-enum
-{
-    OAO_210 = 0x0001,
-};
 
 #define MAX_PARAM_LEN	(128)
 #define MIN_PARAM_LEN	(32)
