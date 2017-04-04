@@ -47,7 +47,7 @@ int main(void)
     protocol->calculate_data(property, data, sizeof(data), value_list);
 #else
 
-    protocol_t *protocol = get_protocol_handle(protocol_list, TEMP_HUM_DEVICE | OAO_210);
+    protocol_t *protocol = get_protocol_handle(protocol_list, TEMP_HUM_DEVICE | 0x01);
     print_snmp_protocol(protocol);
 
     list_t *property_list = list_create(sizeof(property_t));

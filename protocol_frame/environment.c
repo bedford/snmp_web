@@ -52,7 +52,7 @@ static list_t *environment_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "当前温度");
     sprintf(param.param_unit, "%s", "℃");
-    param.param_id  = 0;
+    param.param_id  = 1;
     param.up_limit  = 60.0;
     param.up_free   = 55.0;
     param.low_limit = 5.0;
@@ -65,7 +65,7 @@ static list_t *environment_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "当前湿度");
     sprintf(param.param_unit, "%s", "%");
-    param.param_id  = 1;
+    param.param_id  = 2;
     param.up_limit  = 90.0;
     param.up_free   = 85.0;
     param.low_limit = 20.0;
@@ -165,8 +165,10 @@ static int calculate_device_data(property_t *property, char *data, int len, list
 static int get_environment_property(list_t *property_list)
 {
     property_t property;
+	memset(&property, 0, sizeof(property_t));
     property.cmd = get_status_cmd();
     property.param_desc = environment_status_param_desc();
+	property.last_param_value = NULL;
 
     property_list->push_back(property_list, &property);
 
@@ -193,7 +195,7 @@ int environment_register(list_t *protocol_list)
 {
     protocol_t protocol;
 
-    protocol.protocol_id = TEMP_HUM_DEVICE | C_KS;
+    protocol.protocol_id = TEMP_HUM_DEVICE | OAO_210;
     strcpy(protocol.protocol_name, "温湿度-OAO-210");
     strcpy(protocol.protocol_desc, "OAO-210温湿度,波特率9600");
     strcpy(protocol.device_brand, "JT");

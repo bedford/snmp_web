@@ -60,21 +60,13 @@ enum
 
 enum
 {
+	LOCAL_DI			= 0x00000001,	/* 设备本身的DI */
     TEMP_HUM_DEVICE     = 0x00000100,   /* 温湿度检测类设备 */
     WATER_LEAK_DETECT   = 0x00000200,   /* 漏水检测类 */
     AIR_CONDITION       = 0x00000300,   /* 空调检测类 */
     UPS                 = 0x00000400,   /* UPS */
 };
 
-enum
-{
-    C_KS = 0x0001,
-};
-
-enum
-{
-    OAO_210 = 0x0001,
-};
 
 #define MAX_PARAM_LEN	(128)
 #define MIN_PARAM_LEN	(32)
@@ -107,15 +99,6 @@ typedef struct
 	unsigned int	enum_alarm_value;			/* 枚举量报警值 */
     param_enum_t    param_enum[PARAM_ENUM_NUM]; /* 数字枚举量 */
 } param_desc_t;
-
-enum
-{
-	NORMAL			= 0,	/* 正常 */
-	UP_ALARM 		= 1,	/* 上限报警 */
-	LOW_ALARM		= 2,	/* 下限报警 */
-	THRESHOLD_ALARM	= 4,	/* 超过阈值报警 */
-	ABNORMAL_ALARM	= 8,	/* 枚举量状态异常报警 */
-};
 
 typedef struct
 {

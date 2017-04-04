@@ -42,7 +42,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "当前市电电压");
     sprintf(param.param_unit, "%s", "V");
-    param.param_id  = 0;
+    param.param_id  = 1;
     param.up_limit  = 250.0;
     param.up_free   = 235.0;
     param.low_limit = 170.0;
@@ -55,7 +55,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "市电电压最低值");
     sprintf(param.param_unit, "%s", "V");
-    param.param_id  = 1;
+    param.param_id  = 2;
     param.up_limit  = 240.0;
     param.up_free   = 235.0;
     param.low_limit = 170.0;
@@ -68,7 +68,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "输出电压值");
     sprintf(param.param_unit, "%s", "V");
-    param.param_id  = 2;
+    param.param_id  = 3;
     param.up_limit  = 240.0;
     param.up_free   = 235.0;
     param.low_limit = 180.0;
@@ -81,7 +81,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "当前负载百分比");
     sprintf(param.param_unit, "%s", "\%");
-    param.param_id  = 3;
+    param.param_id  = 4;
     param.up_limit  = 95.0;
     param.up_free   = 90.0;
     param.low_limit = 20.0;
@@ -94,7 +94,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "市电频率");
     sprintf(param.param_unit, "%s", "Hz");
-    param.param_id  = 4;
+    param.param_id  = 5;
     param.up_limit  = 60.0;
     param.up_free   = 53.0;
     param.low_limit = 40.0;
@@ -107,7 +107,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "电池电量");
     sprintf(param.param_unit, "%s", "\%");
-    param.param_id  = 5;
+    param.param_id  = 6;
     param.up_limit  = 100.0;
     param.up_free   = 90.0;
     param.low_limit = 10.0;
@@ -120,7 +120,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "温度");
     sprintf(param.param_unit, "%s", "℃");
-    param.param_id  = 6;
+    param.param_id  = 7;
     param.up_limit  = 70.0;
     param.up_free   = 65.0;
     param.low_limit = 15.0;
@@ -133,7 +133,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "市电状态");
     sprintf(param.param_unit, "%s", "");
-    param.param_id  = 7;
+    param.param_id  = 8;
     param.up_limit  = 0;
     param.up_free   = 0;
     param.low_limit = 0;
@@ -150,7 +150,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "电池状态");
     sprintf(param.param_unit, "%s", "");
-    param.param_id  = 8;
+    param.param_id  = 9;
     param.up_limit  = 0;
     param.up_free   = 0;
     param.low_limit = 0;
@@ -167,7 +167,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "输出方式");
     sprintf(param.param_unit, "%s", "");
-    param.param_id  = 9;
+    param.param_id  = 10;
     param.up_limit  = 0;
     param.up_free   = 0;
     param.low_limit = 0;
@@ -184,7 +184,7 @@ static list_t *ups_status_param_desc(void)
     memset(&param, 0, sizeof(param_desc_t));
     sprintf(param.param_name, "%s", "UPS状态");
     sprintf(param.param_unit, "%s", "");
-    param.param_id  = 10;
+    param.param_id  = 11;
     param.up_limit  = 0;
     param.up_free   = 0;
     param.low_limit = 0;

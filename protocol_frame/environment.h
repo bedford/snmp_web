@@ -3,6 +3,11 @@
 
 #include "list.h"
 
+enum
+{
+    OAO_210 = 0x01,
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
