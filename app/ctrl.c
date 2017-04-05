@@ -483,7 +483,7 @@ static void creat_user(priv_info_t *priv)
 		priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 }
 
-void static init_do_output(priv_info_t *priv)
+static void init_do_output(priv_info_t *priv)
 {
 	do_param_t param = priv->pref_handle->get_do_param(priv->pref_handle);
 
@@ -493,6 +493,50 @@ void static init_do_output(priv_info_t *priv)
 		drv_gpio_write(i + 5, param.status[i]);
 		drv_gpio_close(i + 5);
     }
+}
+
+static void send_alarm_msg(ring_buffer_t	*sms_rb_handle,
+						   ring_buffer_t	*email_rb_handle,
+						   mem_pool_t		*alarm_pool_handle)
+{
+	alarm_msg_t *alarm_msg = (alarm_msg_t *)alarm_pool_handle->mpool_alloc(alarm_pool_handle);
+	if (alarm_msg == NULL) {
+		printf("memory pool is empty\n");
+		return;
+	}
+
+	alarm_msg_t *tmp_alarm_msg = (alarm_msg_t *)alarm_pool_handle->mpool_alloc(alarm_pool_handle);
+	if (tmp_alarm_msg == NULL) {
+		printf("memory pool is empty\n");
+		alarm_pool_handle->mpool_free(alarm_pool_handle, (void *)alarm_msg);
+		return;
+	}
+
+	alarm_msg->alarm_type = ALARM_DISCARD;
+	alarm_msg->protocol_id = LOCAL_DI;
+	strcpy(alarm_msg->protocol_name, "DI");
+	alarm_msg->param_id = 0;
+	strcpy(alarm_msg->param_name, "input_power");
+	strcpy(alarm_msg->param_desc, "设备供电");
+	strcpy(alarm_msg->param_unit, "");
+	alarm_msg->param_type = PARAM_TYPE_ENUM;
+	alarm_msg->param_value = 0.0;
+	alarm_msg->enum_value = 1;
+	strcpy(alarm_msg->enum_desc, "lost_power");
+	strcpy(alarm_msg->alarm_desc, "设备停电");
+	memcpy(tmp_alarm_msg, alarm_msg, sizeof(alarm_msg_t));
+
+	if (sms_rb_handle->push(sms_rb_handle, (void *)alarm_msg)) {
+		printf("sms ring buffer is full\n");
+		alarm_pool_handle->mpool_free(alarm_pool_handle, (void *)alarm_msg);
+	}
+	alarm_msg = NULL;
+
+	if (email_rb_handle->push(email_rb_handle, (void *)tmp_alarm_msg)) {
+		printf("email ring buffer is full\n");
+		alarm_pool_handle->mpool_free(alarm_pool_handle, (void *)tmp_alarm_msg);
+	}
+	tmp_alarm_msg = NULL;
 }
 
 int main(void)
@@ -632,12 +676,32 @@ int main(void)
 	di_thread_param.alarm_cnt		= &alarm_cnt;
 	di_thread->start(di_thread, (void *)&di_thread_param);
 
+	/* 使能电源管理模块 */
+	unsigned char power_status = 0;
+	drv_gpio_open(POFF_PIN);
+	drv_gpio_write(POFF_PIN, 1);
+	drv_gpio_open(PD_INT_PIN);
+
+	/* 打开看门狗 */
+	//drv_gpio_open(WATCHDOG_PIN);
+
 	drv_gpio_open(DIGITAL_OUT_0);
 	int cnt = 0;
 	unsigned char value = 0;
 	drv_gpio_write(DIGITAL_OUT_0, value);
 	do_param_t do_param;
+	int power_off_cnt = 0;
+	int alarm_flag = 0;
+	unsigned char watchdog = 0;
     while (runnable) {
+		if (watchdog == 0) {
+			watchdog = 1;
+		} else {
+			watchdog = 0;
+		}
+		/* 喂狗 */
+		//drv_gpio_write(WATCHDOG_PIN, watchdog);
+
 		sleep(1);
 		do_param = priv->pref_handle->get_do_param(priv->pref_handle);
 		if (do_param.beep_enable) {
@@ -648,6 +712,21 @@ int main(void)
 				value = 0;
 				drv_gpio_write(DIGITAL_OUT_0, value);
 			}
+		}
+
+		drv_gpio_read(PD_INT_PIN, &power_status);
+		if (power_status) {
+			if (alarm_flag == 0) {
+				alarm_flag = 1;
+				send_alarm_msg(sms_rb_handle, email_rb_handle, alarm_pool_handle);
+			}
+			power_off_cnt++;
+			if (power_off_cnt > 20) {
+				drv_gpio_write(POFF_PIN, 0);
+			}
+		} else {
+			power_off_cnt = 0;
+			alarm_flag = 0;
 		}
 
 		cnt++;
