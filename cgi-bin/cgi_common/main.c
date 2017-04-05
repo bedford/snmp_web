@@ -506,9 +506,8 @@ static int set_do_param(cJSON *root, priv_info_t *priv)
 
 	int i = 0;
     for (i = 0; i < 3; i++) {
-		drv_gpio_open(i + 4);
-		drv_gpio_write(i + 4, status[i]);
-		drv_gpio_close(i + 4);
+		drv_gpio_open(i + 5);
+		drv_gpio_write(i + 5, status[i]);
     }
 
     cJSON *response = cJSON_CreateObject();
@@ -1237,10 +1236,6 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
 		unsigned char io_value = 0;
 		drv_gpio_read(i, &io_value);
     	cJSON_AddNumberToObject(child, "value", io_value);
-		/* 因为主程序打开了DO1，di_thread已经打开DI，如果关闭会导致di_thread异常, 只关闭DO2，DO3，DO4*/
-		if (i > 4) {
-			drv_gpio_close(i);
-		}
     	cJSON_AddItemToArray(sub_dir, child);
     }
 
