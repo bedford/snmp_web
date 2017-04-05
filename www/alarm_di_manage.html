@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>DI报警设置</title>
-    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Type" content-type="text/html"; charset="utf-8">
 	<link rel="stylesheet" href="css/cssReset.css">
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
@@ -210,7 +210,7 @@
 			var html="";
 			var i =  0;
 			$.each(msg.di_param, function(i, item) {
-				html += '<tr id="' + item.id + '"><td>' + item.di_name + '</td>';
+				html += '<tr id="' + item.id + '"><td>' + item.di_desc + '</td>';
 				html += '<td contenteditable="true">' + item.device_name + '</td>';
 				html += '<td contenteditable="true">' + item.low_desc + '</td>';
 				html += '<td contenteditable="true">' + item.high_desc + '</td>';

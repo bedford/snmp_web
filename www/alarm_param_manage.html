@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <title>串口参数报警设置</title>
-    <meta http-equiv="Content-Type" content-type="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Type" content-type="text/html"; charset="utf-8">
 	<link rel="stylesheet" href="css/cssReset.css">
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
@@ -134,7 +134,7 @@
 				var obj = new Object();
 				obj.id = $(this).attr("id");
 				var device_name = $(this).children('td').eq(0).text();
-				var param_name = $(this).children('td').eq(1).text();
+				var param_desc = $(this).children('td').eq(1).text();
 				obj.up_limit = $(this).children('td').eq(2).text();
 				obj.up_free = $(this).children('td').eq(3).text();
 				obj.low_limit = $(this).children('td').eq(4).text();
@@ -214,7 +214,7 @@
 			var html="";
 			$.each(msg.support_list, function(i, item) {
 				html+='<tr id="'+ item.id + '"><td>' + item.protocol_name + '</td><td>'
-				+ item.param_name + '</td><td contenteditable="true">'
+				+ item.param_desc + '</td><td contenteditable="true">'
 				+ item.up_limit + '</td><td contenteditable="true">'
 				+ item.up_free + '</td><td contenteditable="true">'
 				+ item.low_limit + '</td><td contenteditable="true">'
