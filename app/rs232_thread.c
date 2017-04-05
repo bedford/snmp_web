@@ -128,7 +128,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	gettimeofday(&(property->last_record_time), NULL);
 }
 
-static void compare_values(priv_info_t *priv, property_t *property, list_t *valid_value)
+static void compare_values(priv_info_t *priv, property_t *property, list_t *valid_value, int *alarm_cnt)
 {
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
@@ -205,6 +205,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 
 		if (alarm_record_flag) {
 			memset(alarm_desc, 0, sizeof(alarm_desc));
+            int cnt = *alarm_cnt;
 			if (alarm_status & 0x10) {	//解除报警
 				switch (alarm_status & 0x0F) {
 				case 0x1:
@@ -220,6 +221,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 					break;
 				}
 				alarm_status = NORMAL;
+				*alarm_cnt = cnt + 1;
 			} else {
 				switch (alarm_status & 0x0F) {
 				case 0x1:
@@ -238,6 +240,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				default:
 					break;
 				}
+				*alarm_cnt = cnt - 1;
 			}
 
 			msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
@@ -387,6 +390,8 @@ static void *rs232_process(void *arg)
 	priv->email_rb_handle = (ring_buffer_t *)thread_param->email_rb_handle;
 	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
+	int *alarm_cnt = (int *)thread_param->alarm_cnt;
+
     list_t *protocol_list = list_create(sizeof(protocol_t));
     init_protocol_lib(protocol_list);
     protocol_t *protocol = NULL;
@@ -454,7 +459,7 @@ static void *rs232_process(void *arg)
 						create_last_param_value_list(priv, property, value_list,
 							thread_param->init_flag);
 					} else {
-						compare_values(priv, property, value_list);
+						compare_values(priv, property, value_list, alarm_cnt);
 					}
 	                value_list->destroy_list(value_list);
 	                value_list = NULL;

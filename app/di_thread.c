@@ -55,7 +55,7 @@ typedef struct {
 	di_param_t		di_param[4];
 } priv_info_t;
 
-static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
+static void alarm_data_record(priv_info_t *priv, int index, unsigned char value, int *alarm_cnt)
 {
 	msg_t *msg = NULL;
 	di_param_t *param = &(priv->di_param[index]);
@@ -66,10 +66,13 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 	}
 
 	char alarm_desc[64] = {0};
+	int cnt = *alarm_cnt;
 	if (value == param->alarm_level) {
+		*alarm_cnt = cnt + 1;
 		sprintf(alarm_desc, "%s%s", param->device_name,
 			(value == 1) ? param->high_desc : param->low_desc);
 	} else {
+		*alarm_cnt = cnt - 1;
 		sprintf(alarm_desc, "%s%s", param->device_name,
 			(value == 1) ? param->high_desc : param->low_desc);
 	}
@@ -101,9 +104,9 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 	}
 
     if (value == param->alarm_level) {
-		alarm_msg->alarm_type = ALARM_DISCARD;
-	} else {
 		alarm_msg->alarm_type = ALARM_RAISE;
+	} else {
+		alarm_msg->alarm_type = ALARM_DISCARD;
 	}
 	alarm_msg->protocol_id = LOCAL_DI;
 	strcpy(alarm_msg->protocol_name, "DI");
@@ -202,6 +205,8 @@ static void *di_process(void *arg)
 	priv->email_rb_handle = (ring_buffer_t *)thread_param->email_rb_handle;
 	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
+	int *alarm_cnt = (int *)thread_param->alarm_cnt;
+
 	char sql[256] = {0};
 	query_result_t query_result;
 
@@ -242,7 +247,7 @@ static void *di_process(void *arg)
 			 	&& (param->enable)) {
 				printf("line %d, func %s, last %d, now %d\n",
 				__LINE__, __func__, priv->last_di_status[index], value);
-				alarm_data_record(priv, index, value);
+				alarm_data_record(priv, index, value, alarm_cnt);
 			}
 
 			if (timeout_record_flag && param->enable) {

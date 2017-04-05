@@ -497,6 +497,8 @@ void static init_do_output(priv_info_t *priv)
 
 int main(void)
 {
+	int alarm_cnt = 0;
+
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
 	priv->pref_handle = preference_create();
 	int init_flag = priv->pref_handle->get_init_flag(priv->pref_handle);
@@ -591,6 +593,7 @@ int main(void)
 	rs232_thread_param.email_rb_handle	= email_rb_handle;
 	rs232_thread_param.alarm_pool_handle = alarm_pool_handle;
 	rs232_thread_param.init_flag		= init_flag;
+	rs232_thread_param.alarm_cnt		= &alarm_cnt;
 	rs232_thread->start(rs232_thread, (void *)&rs232_thread_param);
 
 	thread_t *rs485_thread = rs485_thread_create();
@@ -608,6 +611,7 @@ int main(void)
 	rs485_thread_param.email_rb_handle	= email_rb_handle;
 	rs485_thread_param.alarm_pool_handle = alarm_pool_handle;
 	rs485_thread_param.init_flag		= init_flag;
+	rs485_thread_param.alarm_cnt		= &alarm_cnt;
 	rs485_thread->start(rs485_thread, (void *)&rs485_thread_param);
 
 	thread_t *di_thread = di_thread_create();
@@ -625,12 +629,35 @@ int main(void)
 	di_thread_param.email_rb_handle	= email_rb_handle;
 	di_thread_param.alarm_pool_handle = alarm_pool_handle;
 	di_thread_param.init_flag		= init_flag;
+	di_thread_param.alarm_cnt		= &alarm_cnt;
 	di_thread->start(di_thread, (void *)&di_thread_param);
 
+	drv_gpio_open(DIGITAL_OUT_0);
+	int cnt = 0;
+	unsigned char value = 0;
+	drv_gpio_write(DIGITAL_OUT_0, value);
+	do_param_t do_param;
     while (runnable) {
-		sleep(3);
-		priv->pref_handle->reload(priv->pref_handle);
+		sleep(1);
+		do_param = priv->pref_handle->get_do_param(priv->pref_handle);
+		if (do_param.beep_enable) {
+			if (alarm_cnt > 0) {
+				value = 1;
+				drv_gpio_write(DIGITAL_OUT_0, value);
+			} else {
+				value = 0;
+				drv_gpio_write(DIGITAL_OUT_0, value);
+			}
+		}
+
+		cnt++;
+		if (cnt > 5) {
+			priv->pref_handle->reload(priv->pref_handle);
+			cnt = 0;
+		}
     }
+	drv_gpio_close(DIGITAL_OUT_0);
+	alarm_cnt = 0;
 
 	rs232_thread->terminate(rs232_thread);
 	rs485_thread->terminate(rs485_thread);

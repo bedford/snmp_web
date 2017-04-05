@@ -19,6 +19,7 @@ typedef struct
 	void 		*email_rb_handle;
 	void 		*alarm_pool_handle;
 
+	int 		*alarm_cnt;
 	int			init_flag;
 } di_thread_param_t;
 
