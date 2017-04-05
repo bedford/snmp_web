@@ -144,9 +144,9 @@
 
 		<label>状态</label>
 		<select id="sent_status" name="sent_status" style="width:130px; height:25px;">
-			<option value="0">全部</option>
-			<option value="1">发送成功</option>
-			<option value="2">发送失败</option>
+			<option value="2">全部状态</option>
+			<option value="0">发送成功</option>
+			<option value="1">发送失败</option>
 		</select>
 		<div id="add_user_box">
 			<input type="button" id="query_btn" value="查询" onclick="email_sent_query()">
@@ -215,6 +215,18 @@
 			var json = new Object();
 			json.msg_type = "query_data";
 			json.cmd_type = "query_email_record";
+
+			var cfg = new Object();
+			cfg.start_time = $('#start_time').val();
+			cfg.end_time = $('#end_time').val();
+			if ($('#device_name').val() == '全部设备') {
+				cfg.device_id = "all";
+			} else {
+				cfg.device_id = $('#device_name').val();
+			}
+			cfg.sent_status = $('#sent_status').val();
+
+			json.cfg = cfg;
 			var data = $.toJSON(json);
 			$.ajax({
 			            url     : "/cgi-bin/common.cgi",

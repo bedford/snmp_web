@@ -1111,14 +1111,61 @@ static int query_sms_record(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->data_db_handle;
+    cJSON *response = cJSON_CreateObject();
+	char sql[512] = {0};
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+	char *start_time = cJSON_GetObjectItem(cfg, "start_time")->valuestring;
+	char *end_time = cJSON_GetObjectItem(cfg, "end_time")->valuestring;
+	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
+	unsigned int send_status = atoi(cJSON_GetObjectItem(cfg, "sent_status")->valuestring);
+	switch (send_status) {
+	case 0:
+		if (strcmp(device_id_string, "all") == 0) {
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND send_status=%d ORDER BY id",
+				"sms_record", start_time, end_time, 0);
+		} else {
+			int device_id = atoi(device_id_string);
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND device_id=%d AND send_status=%d ORDER BY id",
+				"sms_record", start_time, end_time, device_id, 0);
+		}
+		break;
+	case 1:
+		if (strcmp(device_id_string, "all") == 0) {
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND send_status=%d ORDER BY id",
+				"sms_record", start_time, end_time, 1);
+		} else {
+			int device_id = atoi(device_id_string);
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND device_id=%d AND send_status=%d ORDER BY id",
+				"sms_record", start_time, end_time, device_id, 1);
+		}
+		break;
+	default:
+		if (strcmp(device_id_string, "all") == 0) {
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' ORDER BY id",
+				"sms_record", start_time, end_time);
+		} else {
+			int device_id = atoi(device_id_string);
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND device_id=%d ORDER BY id",
+				"sms_record", start_time, end_time, device_id);
+		}
+		break;
+	}
 
-	char sql[256] = {0};
-	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC limit 10", "sms_record");
+	cfg = NULL;
+	start_time = NULL;
+	end_time = NULL;
+	device_id_string = NULL;
+	cJSON_AddStringToObject(response, "sql", sql);
 	query_result_t query_result;
 	memset(&query_result, 0, sizeof(query_result_t));
 	db_handle->query(db_handle, sql, &query_result);
 
-    cJSON *response = cJSON_CreateObject();
+    //cJSON *response = cJSON_CreateObject();
 	cJSON_AddNumberToObject(response, "count", query_result.row);
 	if (query_result.row > 0) {
     	cJSON *sub_dir = cJSON_CreateArray();
@@ -1153,14 +1200,62 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->data_db_handle;
+    cJSON *response = cJSON_CreateObject();
+	char sql[512] = {0};
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+	char *start_time = cJSON_GetObjectItem(cfg, "start_time")->valuestring;
+	char *end_time = cJSON_GetObjectItem(cfg, "end_time")->valuestring;
+	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
+	unsigned int send_status = atoi(cJSON_GetObjectItem(cfg, "sent_status")->valuestring);
+	switch (send_status) {
+	case 0:
+		if (strcmp(device_id_string, "all") == 0) {
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND send_status=%d ORDER BY id",
+				"sms_record", start_time, end_time, 0);
+		} else {
+			int device_id = atoi(device_id_string);
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND device_id=%d AND send_status=%d ORDER BY id",
+				"sms_record", start_time, end_time, device_id, 0);
+		}
+		break;
+	case 1:
+		if (strcmp(device_id_string, "all") == 0) {
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND send_status=%d ORDER BY id",
+				"sms_record", start_time, end_time, 1);
+		} else {
+			int device_id = atoi(device_id_string);
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND device_id=%d AND send_status=%d ORDER BY id",
+				"sms_record", start_time, end_time, device_id, 1);
+		}
+		break;
+	default:
+		if (strcmp(device_id_string, "all") == 0) {
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' ORDER BY id",
+				"sms_record", start_time, end_time);
+		} else {
+			int device_id = atoi(device_id_string);
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' \
+					AND device_id=%d ORDER BY id",
+				"sms_record", start_time, end_time, device_id);
+		}
+		break;
+	}
 
-	char sql[256] = {0};
-	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC limit 10", "email_record");
+	cJSON_AddStringToObject(response, "sql", sql);
+	cfg = NULL;
+	start_time = NULL;
+	end_time = NULL;
+	device_id_string = NULL;
+
 	query_result_t query_result;
 	memset(&query_result, 0, sizeof(query_result_t));
 	db_handle->query(db_handle, sql, &query_result);
 
-    cJSON *response = cJSON_CreateObject();
+
 	cJSON_AddNumberToObject(response, "count", query_result.row);
 	if (query_result.row > 0) {
     	cJSON *sub_dir = cJSON_CreateArray();
