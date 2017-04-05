@@ -90,7 +90,7 @@ static void set_signal_handler(int signum, void func(int))
 void create_alarm_table(priv_info_t *priv)
 {
 	char error_msg[512] = {0};
-	char sql[512] = {0};
+	char sql[1024] = {0};
 	sprintf(sql, "DROP TABLE IF EXISTS %s", "alarm_record");
 	priv->sms_alarm_db_handle->action(priv->sms_alarm_db_handle, sql, error_msg);
 
@@ -142,7 +142,7 @@ void create_alarm_table(priv_info_t *priv)
 void create_data_table(priv_info_t *priv)
 {
 	char error_msg[512] = {0};
-	char sql[512] = {0};
+	char sql[1024] = {0};
 	sprintf(sql, "DROP TABLE IF EXISTS %s", "data_record");
 	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
@@ -247,7 +247,7 @@ void update_uart_cfg(priv_info_t *priv)
 {
 	//初始化
 	char error_msg[512] = {0};
-	char sql[512] = {0};
+	char sql[1024] = {0};
 	sprintf(sql, "DROP TABLE IF EXISTS %s", "uart_cfg");
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
@@ -352,7 +352,7 @@ void update_uart_cfg(priv_info_t *priv)
 				sprintf(sql, "INSERT INTO %s (protocol_id, protocol_name, cmd_id, param_id, param_name, \
 						param_desc, param_unit, up_limit, up_free, low_limit, low_free, \
 						param_type, update_threshold, low_desc, high_desc) \
-						VALUES (%d, '%s', %d, %d, '%s', '%s', '%.1f', '%.1f', '%.1f', '%.1f',\
+						VALUES (%d, '%s', %d, %d, '%s', '%s', '%s', '%.1f', '%.1f', '%.1f', '%.1f',\
 							%d, '%.1f', '%s', '%s')",
 						"parameter", tmp->protocol_id, tmp->protocol_name, cmd->cmd_id,
 						param->param_id, param->param_name, param->param_desc,
@@ -377,10 +377,11 @@ void create_di_cfg(priv_info_t *priv)
 {
 	//初始化 di 配置表
 	char error_msg[512] = {0};
-	char sql[256] = {0};
+	char sql[512] = {0};
     sprintf(sql, "create table if not exists %s \
 	    (id INTEGER PRIMARY KEY, \
 	     di_name VARCHAR(32), \
+		 di_desc VARCHAR(32), \
 		 device_name VARCHAR(32), \
 	     low_desc VARCHAR(32), \
 	     high_desc VARCHAR(32), \
@@ -399,17 +400,21 @@ void create_di_cfg(priv_info_t *priv)
 	if (query_result.row == 0) {
 		int i = 0;
 		char di_name[32] = {0};
+		char di_desc[32] = {0};
 		for (i = 0; i < 4; i++) {
 			memset(sql, 0, sizeof(sql));
+			memset(di_desc, 0, sizeof(di_desc));
 			memset(di_name, 0, sizeof(di_name));
-			sprintf(di_name, "干接点输入%d", i+1);
+			sprintf(di_desc, "干接点输入%d", i + 1);
+			sprintf(di_name, "di%d", i + 1);
 		    sprintf(sql, "INSERT INTO %s \
-		            (id, di_name, device_name, low_desc, high_desc, alarm_level,\
-					enable, alarm_method) VALUES (%d, '%s', '%s', '%s', '%s', %d, %d, %d)",
-					"di_cfg", i + 1, di_name, "", "", "", 0, 0, 0);
+		            (id, di_name, di_desc, device_name, low_desc, high_desc, alarm_level,\
+					enable, alarm_method) VALUES (%d, '%s', '%s', '%s', '%s', '%s', %d, %d, %d)",
+					"di_cfg", i + 1, di_name, di_desc, "", "", "", 0, 0, 0);
 			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 		}
 	}
+	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 }
 
 static void creat_user(priv_info_t *priv)
@@ -461,6 +466,21 @@ static void creat_user(priv_info_t *priv)
 					"guest", "guest", 8, "访客");
 			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 		}
+		priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
+
+		memset(sql, 0, sizeof(sql));
+		sprintf(sql, "create table if not exists %s \
+						(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+						name VARCHAR(32), \
+						phone VARCHAR(32))", "phone_user");
+		priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+		memset(sql, 0, sizeof(sql));
+		sprintf(sql, "create table if not exists %s \
+						(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+						name VARCHAR(32), \
+						email VARCHAR(32))", "email_user");
+		priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 }
 
 void static init_do_output(priv_info_t *priv)
@@ -590,7 +610,7 @@ int main(void)
 	rs485_thread_param.init_flag		= init_flag;
 	rs485_thread->start(rs485_thread, (void *)&rs485_thread_param);
 
-	/*thread_t *di_thread = di_thread_create();
+	thread_t *di_thread = di_thread_create();
 	if (!di_thread) {
 		printf("create di thread failed\n");
 		return -1;
@@ -605,7 +625,7 @@ int main(void)
 	di_thread_param.email_rb_handle	= email_rb_handle;
 	di_thread_param.alarm_pool_handle = alarm_pool_handle;
 	di_thread_param.init_flag		= init_flag;
-	di_thread->start(di_thread, (void *)&di_thread_param);*/
+	di_thread->start(di_thread, (void *)&di_thread_param);
 
     while (runnable) {
 		sleep(3);
@@ -614,19 +634,19 @@ int main(void)
 
 	rs232_thread->terminate(rs232_thread);
 	rs485_thread->terminate(rs485_thread);
-	//di_thread->terminate(di_thread);
+	di_thread->terminate(di_thread);
 
 	rs232_thread->join(rs232_thread);
 	rs485_thread->join(rs485_thread);
-	//di_thread->join(di_thread);
+	di_thread->join(di_thread);
 
 	rs232_thread->destroy(rs232_thread);
 	rs485_thread->destroy(rs485_thread);
-	//di_thread->destroy(di_thread);
+	di_thread->destroy(di_thread);
 
 	rs232_thread = NULL;
 	rs485_thread = NULL;
-	//di_thread = NULL;
+	di_thread = NULL;
 
 	sms_alarm_thread->terminate(sms_alarm_thread);
 	sms_alarm_thread->join(sms_alarm_thread);

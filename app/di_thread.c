@@ -30,6 +30,7 @@ enum {
 
 typedef struct {
 	char			di_name[MIN_PARAM_LEN];		/* DI名称 */
+	char			di_desc[MIN_PARAM_LEN];
 	char			device_name[MIN_PARAM_LEN];
 	char			low_desc[MIN_PARAM_LEN]; 	/* 低电平描述 */
 	char			high_desc[MIN_PARAM_LEN]; 	/* 高电平描述 */
@@ -73,12 +74,10 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 			(value == 1) ? param->high_desc : param->low_desc);
 	}
 
-	char tmp[32] = {0};
-	sprintf(tmp, "di%d\n", param->id);
     sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
 		VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
-        LOCAL_DI, param->di_name, param->id, tmp, param->device_name,
+		LOCAL_DI, "DI", param->id, param->di_name, param->device_name,
 		PARAM_TYPE_ENUM, 0.0, "", value, (value == 1) ? param->high_desc : param->low_desc,
 		alarm_desc);
 
@@ -107,9 +106,10 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 		alarm_msg->alarm_type = ALARM_RAISE;
 	}
 	alarm_msg->protocol_id = LOCAL_DI;
-	strcpy(alarm_msg->protocol_name, param->di_name);
+	strcpy(alarm_msg->protocol_name, "DI");
 	alarm_msg->param_id = param->id;
-	strcpy(alarm_msg->param_name, param->device_name);
+	strcpy(alarm_msg->param_name, param->di_name);
+	strcpy(alarm_msg->param_desc, param->device_name);
 	strcpy(alarm_msg->param_unit, "");
 	alarm_msg->param_type = PARAM_TYPE_ENUM;
 	alarm_msg->param_value = 0.0;
@@ -141,12 +141,10 @@ static void history_data_record(priv_info_t *priv, int index, unsigned char valu
 		return;
 	}
 
-	char tmp[32] = {0};
-	sprintf(tmp, "di%d\n", param->id);
 	sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc) \
 		VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
-        LOCAL_DI, param->di_name, param->id, tmp, param->device_name,
+		LOCAL_DI, "DI", param->id, param->di_name, param->device_name,
 		PARAM_TYPE_ENUM, 0.0, "", value, (value == 1) ? param->high_desc : param->low_desc);
 
 	if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
@@ -171,12 +169,13 @@ static void update_di_param(priv_info_t *priv)
 			param = &(priv->di_param[i]);
 			param->id = atoi(query_result.result[(i + 1) * query_result.column]);
 			strcpy(param->di_name, query_result.result[(i + 1) * query_result.column + 1]);
-			strcpy(param->device_name, query_result.result[(i + 1) * query_result.column + 2]);
-			strcpy(param->low_desc, query_result.result[(i + 1) * query_result.column + 3]);
-			strcpy(param->high_desc, query_result.result[(i + 1) * query_result.column + 4]);
-			param->alarm_level = atoi(query_result.result[(i + 1) * query_result.column + 5]);
-			param->enable = atoi(query_result.result[(i + 1) * query_result.column + 6]);
-			param->alarm_method = atoi(query_result.result[(i + 1) * query_result.column + 7]);
+			strcpy(param->di_desc, query_result.result[(i + 1) * query_result.column + 2]);
+			strcpy(param->device_name, query_result.result[(i + 1) * query_result.column + 3]);
+			strcpy(param->low_desc, query_result.result[(i + 1) * query_result.column + 4]);
+			strcpy(param->high_desc, query_result.result[(i + 1) * query_result.column + 5]);
+			param->alarm_level = atoi(query_result.result[(i + 1) * query_result.column + 6]);
+			param->enable = atoi(query_result.result[(i + 1) * query_result.column + 7]);
+			param->alarm_method = atoi(query_result.result[(i + 1) * query_result.column + 8]);
 			printf("device_name %s, low_desc %s, high_desc %s, alarm_level %d, alarm_method %d, enable %d\n",
 			param->device_name, param->low_desc, param->high_desc, param->alarm_level,
 			param->alarm_method, param->enable);
