@@ -202,7 +202,7 @@ static void send_alarm_sms(priv_info_t *priv)
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
 
-	char time_in_sec[16] = {0};
+	char time_in_sec[32] = {0};
 	struct tm *tm = localtime(&(current_time.tv_sec));
 	sprintf(time_in_sec, "%04d-%02d-%02d %02d:%02d:%02d",
                         tm->tm_year + 1900, tm->tm_mon + 1,
@@ -211,7 +211,7 @@ static void send_alarm_sms(priv_info_t *priv)
 	current_time.tv_sec -= priv->send_interval * 300;
 	tm = localtime(&(current_time.tv_sec));
 
-	char dead_line[16] = {0};
+	char dead_line[32] = {0};
 	sprintf(dead_line, "%04d-%02d-%02d %02d:%02d:%02d",
                         tm->tm_year + 1900, tm->tm_mon + 1,
                         tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);

@@ -491,7 +491,7 @@ static void init_do_output(priv_info_t *priv)
     for (i = 0; i < 3; i++) {
 		drv_gpio_open(i + 5);
 		drv_gpio_write(i + 5, param.status[i]);
-		drv_gpio_close(i + 5);
+		//drv_gpio_close(i + 5);
     }
 }
 
@@ -811,6 +811,11 @@ int main(void)
 
 	free(priv);
 	priv = NULL;
+
+	int i = 0;
+    for (i = 0; i < 8; i++) {
+		drv_gpio_close(i);
+    }
 
     return 0;
 }
