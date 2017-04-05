@@ -6,8 +6,10 @@
 #include "cJSON.h"
 #include "iniparser.h"
 #include "db_access.h"
+#include "mib_create.h"
 
 #define INI_FILE_NAME	"/opt/app/param.ini"
+#define MIB_FILE_NAME	"/tmp/JT_Gaurd.mib"
 
 typedef struct {
     int     req_len;
@@ -227,12 +229,13 @@ static int get_di_param(cJSON *root, priv_info_t *priv)
 	    	child = cJSON_CreateObject();
 			cJSON_AddNumberToObject(child, "id", atoi(query_result.result[i * query_result.column]));
 			cJSON_AddStringToObject(child, "di_name", query_result.result[i * query_result.column + 1]);
-			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "low_desc", query_result.result[i * query_result.column + 3]);
-			cJSON_AddStringToObject(child, "high_desc", query_result.result[i * query_result.column + 4]);
-			cJSON_AddNumberToObject(child, "alarm_level", atoi(query_result.result[i * query_result.column + 5]));
-			cJSON_AddNumberToObject(child, "enable", atoi(query_result.result[i * query_result.column + 6]));
-			cJSON_AddNumberToObject(child, "alarm_method", atoi(query_result.result[i * query_result.column + 7]));
+			cJSON_AddStringToObject(child, "di_desc", query_result.result[i * query_result.column + 2]);
+			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 3]);
+			cJSON_AddStringToObject(child, "low_desc", query_result.result[i * query_result.column + 4]);
+			cJSON_AddStringToObject(child, "high_desc", query_result.result[i * query_result.column + 5]);
+			cJSON_AddNumberToObject(child, "alarm_level", atoi(query_result.result[i * query_result.column + 6]));
+			cJSON_AddNumberToObject(child, "enable", atoi(query_result.result[i * query_result.column + 7]));
+			cJSON_AddNumberToObject(child, "alarm_method", atoi(query_result.result[i * query_result.column + 8]));
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -392,7 +395,7 @@ static int set_di_param(cJSON *root, priv_info_t *priv)
     cJSON *response;
     response = cJSON_CreateObject();
 
-	char sql[256] = {0};
+	char sql[512] = {0};
 	char error_msg[256] = {0};
     cJSON *array_item = cJSON_GetObjectItem(root, "cfg");
     if (array_item != NULL) {
@@ -406,6 +409,7 @@ static int set_di_param(cJSON *root, priv_info_t *priv)
 		char *device_name = NULL;
 		char *low_desc = NULL;
 		char *high_desc = NULL;
+		int ret = 0;
         for (i = 0; i < size; i++) {
             object = cJSON_GetArrayItem(array_item, i);
 			id = atoi(cJSON_GetObjectItem(object, "id")->valuestring);
@@ -416,12 +420,18 @@ static int set_di_param(cJSON *root, priv_info_t *priv)
 			low_desc = cJSON_GetObjectItem(object, "low_desc")->valuestring;
 			high_desc = cJSON_GetObjectItem(object, "high_desc")->valuestring;
 			memset(sql, 0, sizeof(sql));
-			sprintf(sql, "UPDATE %s SET device_name='%s', low_desc='%s', high_desc='%s', \
-			 			alarm_level=%d, enable=%d, alarm_method=%d WHERE id=%d",
+			sprintf(sql, "UPDATE %s SET device_name='%s', low_desc='%s', high_desc='%s', alarm_level=%d, enable=%d, alarm_method=%d WHERE id=%d",
 					"di_cfg", device_name, low_desc, high_desc,
 					alarm_level, enable, alarm_method, id);
-			db_handle->action(db_handle, sql, error_msg);
+			ret = db_handle->action(db_handle, sql, error_msg);
+			if (ret != 0) {
+				cJSON_AddStringToObject(response, "sql", sql);
+				cJSON_AddStringToObject(response, "error_msg", error_msg);
+			}
         }
+		device_name = NULL;
+		low_desc = NULL;
+		high_desc = NULL;
         object = NULL;
     }
 
@@ -999,16 +1009,17 @@ static int query_data_record(cJSON *root, priv_info_t *priv)
 			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 3]);
 			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
 			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
-			if (strcmp(query_result.result[i * query_result.column + 6], "1") == 0) {
-				cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 7]);
-				cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 8]);
+			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 6]);
+			if (strcmp(query_result.result[i * query_result.column + 7], "1") == 0) {
+				cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 8]);
+				cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 9]);
 				cJSON_AddStringToObject(child, "enum_value", "-");
 				cJSON_AddStringToObject(child, "enum_desc", "-");
 			} else {
 				cJSON_AddStringToObject(child, "analog_value", "-");
 				cJSON_AddStringToObject(child, "unit", "");
-				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 9]);
-				cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 10]);
+				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 10]);
+				cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
 			}
     		cJSON_AddItemToArray(sub_dir, child);
 		}
@@ -1073,18 +1084,19 @@ static int query_alarm_record(cJSON *root, priv_info_t *priv)
 			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 3]);
 			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
 			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
-			if (strcmp(query_result.result[i * query_result.column + 6], "1") == 0) {
-				cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 7]);
-				cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 8]);
+			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 6]);
+			if (strcmp(query_result.result[i * query_result.column + 7], "1") == 0) {
+				cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 8]);
+				cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 9]);
 				cJSON_AddStringToObject(child, "enum_value", "-");
 				cJSON_AddStringToObject(child, "enum_desc", "-");
 			} else {
 				cJSON_AddStringToObject(child, "analog_value", "-");
 				cJSON_AddStringToObject(child, "unit", "");
-				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 9]);
-				cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 10]);
+				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 10]);
+				cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
 			}
-			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 11]);
+			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 12]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -1122,10 +1134,11 @@ static int query_sms_record(cJSON *root, priv_info_t *priv)
 			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
 			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
 			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 6]);
-			cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 7]);
-			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 8]);
-			cJSON_AddStringToObject(child, "sms_content", query_result.result[i * query_result.column + 9]);
+			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 8]);
+			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 9]);
+			cJSON_AddStringToObject(child, "sms_content", query_result.result[i * query_result.column + 10]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -1161,10 +1174,11 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
     		cJSON_AddStringToObject(child, "send_time", query_result.result[i * query_result.column + 1]);
 			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 2]);
 			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 3]);
-			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 4]);
-			cJSON_AddStringToObject(child, "email", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 6]);
-			cJSON_AddStringToObject(child, "email_content", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 4]);
+			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 5]);
+			cJSON_AddStringToObject(child, "email", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "email_content", query_result.result[i * query_result.column + 8]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -1203,12 +1217,13 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
 			cJSON_AddStringToObject(child, "device_name", query_result.result[i * query_result.column + 3]);
 			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
 			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "param_type", query_result.result[i * query_result.column + 6]);
-			cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 7]);
-			cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 8]);
-			cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 9]);
-			cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 10]);
-			cJSON_AddStringToObject(child, "alarm_type", query_result.result[i * query_result.column + 11]);
+			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "param_type", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 8]);
+			cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 9]);
+			cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 10]);
+			cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
+			cJSON_AddStringToObject(child, "alarm_type", query_result.result[i * query_result.column + 12]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -1296,6 +1311,7 @@ static int query_support_param(cJSON *root, priv_info_t *priv)
         	child = cJSON_CreateObject();
 			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
 			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
+			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 6]);
     		cJSON_AddItemToArray(sub_dir, child);
     	}
 	}
@@ -1344,12 +1360,13 @@ static int get_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 2]);
 			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 4]);
 			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "param_unit", query_result.result[i * query_result.column + 6]);
-			cJSON_AddStringToObject(child, "up_limit", query_result.result[i * query_result.column + 7]);
-			cJSON_AddStringToObject(child, "up_free", query_result.result[i * query_result.column + 8]);
-			cJSON_AddStringToObject(child, "low_limit", query_result.result[i * query_result.column + 9]);
-			cJSON_AddStringToObject(child, "low_free", query_result.result[i * query_result.column + 10]);
-			cJSON_AddStringToObject(child, "update_threshold", query_result.result[i * query_result.column + 12]);
+			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 6]);
+			cJSON_AddStringToObject(child, "param_unit", query_result.result[i * query_result.column + 7]);
+			cJSON_AddStringToObject(child, "up_limit", query_result.result[i * query_result.column + 8]);
+			cJSON_AddStringToObject(child, "up_free", query_result.result[i * query_result.column + 9]);
+			cJSON_AddStringToObject(child, "low_limit", query_result.result[i * query_result.column + 10]);
+			cJSON_AddStringToObject(child, "low_free", query_result.result[i * query_result.column + 11]);
+			cJSON_AddStringToObject(child, "update_threshold", query_result.result[i * query_result.column + 13]);
     		cJSON_AddItemToArray(sub_dir, child);
     	}
 	}
@@ -1617,22 +1634,102 @@ msg_fun_t msg_flow[] = {
 	}
 };
 
-static int mib_download(req_buf_t *req_buf, const char *filename)
+#define MAX_MIB_SIZE (1024 * 1024)
+static int mib_download(req_buf_t *req_buf, priv_info_t *priv, const char *filename)
 {
-    struct stat s;
-    stat(filename, &s);
+	db_access_t *db_handle = priv->sys_db_handle;
+	unsigned int offset = 0;
+	unsigned int i = 0;
+
+	char *buf = calloc(1, MAX_MIB_SIZE);
+	offset = fill_mib_header(buf, offset);
+	offset = fill_do_mib(buf, offset);
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s ORDER by id", "di_cfg");
+
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+	if (query_result.row > 0) {
+		di_param_t di_param;
+		for (i = 1; i < (query_result.row + 1); i++) {
+			memset(&di_param, 0, sizeof(di_param_t));
+			di_param.id = atoi(query_result.result[i * query_result.column]);
+			strcpy(di_param.di_name, query_result.result[i * query_result.column + 1]);
+			strcpy(di_param.di_desc, query_result.result[i * query_result.column + 2]);
+			strcpy(di_param.device_name, query_result.result[i * query_result.column + 3]);
+			strcpy(di_param.low_desc, query_result.result[i * query_result.column + 4]);
+			strcpy(di_param.high_desc, query_result.result[i * query_result.column + 5]);
+			di_param.enable = atoi(query_result.result[i * query_result.column + 7]);
+
+			if (di_param.enable) {
+				offset = fill_di_mib(buf, offset, &di_param);
+			}
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s WHERE enable=1 ORDER BY protocol_id", "uart_cfg");
+
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+	unsigned int protocol_id_array[2] = {0};
+	unsigned int protocol_id_cnt = 0;
+	if (query_result.row > 0) {
+		for (i = 0; i < query_result.row; i++) {
+			protocol_id_array[i] = atoi(query_result.result[(i + 1 ) * query_result.column + 1]);
+			protocol_id_cnt++;
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+	for (i = 0; i < protocol_id_cnt; i++) {
+		memset(sql, 0, sizeof(sql));
+		sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d ORDER BY id",
+				"parameter", protocol_id_array[i]);
+		memset(&query_result, 0, sizeof(query_result_t));
+		db_handle->query(db_handle, sql, &query_result);
+
+		if (query_result.row > 0) {
+			offset = fill_protocol_mib(buf, offset, protocol_id_array[i],
+				query_result.result[query_result.column + 2]);
+
+			unsigned int j = 0;
+			param_desc_t param_desc;
+			for (j = 1; j < query_result.row + 1; j++) {
+				memset(&param_desc, 0, sizeof(param_desc_t));
+				param_desc.param_id = atoi(query_result.result[j * query_result.column + 4]);
+				strcpy(param_desc.param_name, query_result.result[j * query_result.column + 5]);
+				strcpy(param_desc.param_desc, query_result.result[j * query_result.column + 6]);
+				strcpy(param_desc.param_unit, query_result.result[j * query_result.column + 7]);
+				param_desc.param_type = atoi(query_result.result[j * query_result.column + 12]);
+				strcpy(param_desc.param_enum[0].desc,
+					query_result.result[j * query_result.column + 14]);
+				strcpy(param_desc.param_enum[0].desc,
+					query_result.result[j * query_result.column + 15]);
+				offset = fill_param_mib(buf, offset,
+					query_result.result[query_result.column + 2], &param_desc);
+			}
+		}
+		db_handle->free_table(db_handle, query_result.result);
+	}
+	offset = fill_mib_tail(buf, offset);
+
     printf("Content-Type: application/octet-stream\r\n");
-    printf("Content-Length: %ld\r\n", s.st_size);
+    printf("Content-Length: %ld\r\n", offset);
     printf("Content-Disposition: attachment; filename=%s\r\n\r\n", filename);
 
-    FILE *fp = fopen(filename, "rb");
-    char buf[1024] = {0};
-    int n = 0;
-    while ((n = fread(buf, 1, 1024, fp)) > 0) {
-        fwrite(buf, 1, n, stdout);
-    }
+#if 0
+    FILE *fp = fopen(MIB_FILE_NAME, "wb");
+	fwrite(buf, 1, offset, fp);
     fclose(fp);
     fp = NULL;
+#endif
+	fwrite(buf, 1, offset, stdout);
 
     return 0;
 }
@@ -1681,72 +1778,6 @@ int main(void)
 	priv->sys_db_handle = db_access_create("/opt/app/sys.db");
     priv->data_db_handle = db_access_create("/opt/data/data.db");
 
-	char error_msg[512] = {0};
-	char sql[512] = {0};
-	sprintf(sql, "create table if not exists %s \
-					(id INTEGER PRIMARY KEY AUTOINCREMENT, \
-					name VARCHAR(32), \
-					phone VARCHAR(32))", "phone_user");
-	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
-
-	memset(sql, 0, sizeof(sql));
-	sprintf(sql, "create table if not exists %s \
-					(id INTEGER PRIMARY KEY AUTOINCREMENT, \
-					name VARCHAR(32), \
-					email VARCHAR(32))", "email_user");
-	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
-    sprintf(sql, "create table if not exists %s \
-            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
-             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
-             device_id INTEGER, \
-             device_name VARCHAR(32), \
-             param_name VARCHAR(32), \
-             param_type INTEGER, \
-             analog_value DOUBLE, \
-             enum_value INTEGER, \
-             enum_desc VARCHAR(32))", "data_record");
-    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
-    sprintf(sql, "create table if not exists %s \
-            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
-             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
-             device_id INTEGER, \
-             device_name VARCHAR(32), \
-             param_name VARCHAR(32), \
-             param_type INTEGER, \
-             analog_value DOUBLE, \
-             enum_value INTEGER, \
-             enum_desc VARCHAR(32), \
-             alarm_desc VARCHAR(32))", "alarm_record");
-    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
-    sprintf(sql, "create table if not exists %s \
-            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
-             send_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
-             device_name VARCHAR(32), \
-             param_name VARCHAR(32), \
-             alarm_desc VARCHAR(32), \
-             phone VARCHAR(32), \
-             send_status INTEGER, \
-             sms_content VARCHAR(128))", "sms_record");
-    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
-    sprintf(sql, "create table if not exists %s \
-            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
-             send_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
-             device_name VARCHAR(32), \
-             param_name VARCHAR(32), \
-             alarm_desc VARCHAR(32), \
-             email VARCHAR(32), \
-             send_status INTEGER, \
-             email_content VARCHAR(128))", "email_record");
-    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
-
 	priv->request.max_len = 512 * 1024;
     priv->request.buf     = (char *)calloc(1, priv->request.max_len);
     ret = parse_request(&(priv->request));
@@ -1779,7 +1810,7 @@ int main(void)
     } else if (ret == 1) {
         //下载MIB
         if (strstr(priv->request.buf, "mib") != NULL) {
-            ret = mib_download(&(priv->request), "param.ini");
+            ret = mib_download(&(priv->request), priv, "JT_Guard.mib");
         }
     }
     free(priv->request.buf);
