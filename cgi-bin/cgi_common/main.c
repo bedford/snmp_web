@@ -1237,7 +1237,10 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
 		unsigned char io_value = 0;
 		drv_gpio_read(i, &io_value);
     	cJSON_AddNumberToObject(child, "value", io_value);
-		//drv_gpio_close(i);  /* 因为di_thread已经打开，如果关闭会导致di_thread异常 */
+		/* 因为主程序打开了DO1，di_thread已经打开DI，如果关闭会导致di_thread异常, 只关闭DO2，DO3，DO4*/
+		if (i > 4) {
+			drv_gpio_close(i);
+		}
     	cJSON_AddItemToArray(sub_dir, child);
     }
 
