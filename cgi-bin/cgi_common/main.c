@@ -291,6 +291,20 @@ static int set_network_param(cJSON *root, priv_info_t *priv)
 
     cJSON *response;
     response = cJSON_CreateObject();
+
+	char buf[64] = {0};
+	FILE *fp = fopen("/etc/resolv.conf", "wb+");
+	sprintf(buf, "nameserver %s\n", cJSON_GetObjectItem(cfg, "master_dns")->valuestring);
+	cJSON_AddStringToObject(response, "master_dns", buf);
+	int ret = fwrite(buf, 1, strlen(buf), fp);
+	memset(buf, 0, sizeof(buf));
+	sprintf(buf, "nameserver %s\n", cJSON_GetObjectItem(cfg, "slave_dns")->valuestring);
+	cJSON_AddStringToObject(response, "slave_dns", buf);
+	ret = fwrite(buf, 1, strlen(buf), fp);
+	fclose(fp);
+	fp = NULL;
+
+
     cJSON_AddNumberToObject(response, "status", 1);
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -1111,7 +1125,7 @@ static int query_sms_record(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->data_db_handle;
-    cJSON *response = cJSON_CreateObject();
+
 	char sql[512] = {0};
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
 	char *start_time = cJSON_GetObjectItem(cfg, "start_time")->valuestring;
@@ -1160,12 +1174,12 @@ static int query_sms_record(cJSON *root, priv_info_t *priv)
 	start_time = NULL;
 	end_time = NULL;
 	device_id_string = NULL;
-	cJSON_AddStringToObject(response, "sql", sql);
+
 	query_result_t query_result;
 	memset(&query_result, 0, sizeof(query_result_t));
 	db_handle->query(db_handle, sql, &query_result);
 
-    //cJSON *response = cJSON_CreateObject();
+    cJSON *response = cJSON_CreateObject();
 	cJSON_AddNumberToObject(response, "count", query_result.row);
 	if (query_result.row > 0) {
     	cJSON *sub_dir = cJSON_CreateArray();
@@ -1200,7 +1214,7 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->data_db_handle;
-    cJSON *response = cJSON_CreateObject();
+
 	char sql[512] = {0};
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
 	char *start_time = cJSON_GetObjectItem(cfg, "start_time")->valuestring;
@@ -1245,7 +1259,6 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
 		break;
 	}
 
-	cJSON_AddStringToObject(response, "sql", sql);
 	cfg = NULL;
 	start_time = NULL;
 	end_time = NULL;
@@ -1255,7 +1268,7 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
 	memset(&query_result, 0, sizeof(query_result_t));
 	db_handle->query(db_handle, sql, &query_result);
 
-
+    cJSON *response = cJSON_CreateObject();
 	cJSON_AddNumberToObject(response, "count", query_result.row);
 	if (query_result.row > 0) {
     	cJSON *sub_dir = cJSON_CreateArray();
