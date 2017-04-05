@@ -148,7 +148,7 @@ static void phone_to_pdu(char *src, char *dst)
 
     int len = strlen(tmp) + 1;
     if ((len % 2) == 0) {   /* 加上前缀后的号码长度是否为奇数，如果是，则最后补F */
-        sprintf(tmp, "%sF", tmp);
+        strncat(tmp, "F", 1);
     }
 
     int i = 0;  /* 奇偶位对调 */
@@ -246,18 +246,30 @@ static int send_sms(priv_info_t *priv, char *phone_num, char *content)
 
     int len = (strlen(priv->sca_pdu) + 2) / 2;
     sprintf(sms_packet, "%02x", len);
-    sprintf(sms_packet, "%s%d", sms_packet, 91);
-    sprintf(sms_packet, "%s%s", sms_packet, priv->sca_pdu);
+    strncat(sms_packet, "91", 2);
+    strncat(sms_packet, priv->sca_pdu, strlen(priv->sca_pdu));
+
     int header_len = strlen(sms_packet);
-    sprintf(sms_packet, "%s1100", sms_packet);
+
+    strncat(sms_packet, "1100", 4);
     len = strlen(phone_num_pdu) - 1;    /* 不计算'F'和'+'字符 */
-    sprintf(sms_packet, "%s%02x", sms_packet, len);
-    sprintf(sms_packet, "%s%d", sms_packet, 91);
-    sprintf(sms_packet, "%s%s", sms_packet, phone_num_pdu);
-    sprintf(sms_packet, "%s000800", sms_packet);
+
+	char len_buf[8] = {0};
+	sprintf(len_buf, "%02x", len);
+	strncat(sms_packet, len_buf, 2);
+    strncat(sms_packet, "91", 2);
+
+    strncat(sms_packet, phone_num_pdu, strlen(phone_num_pdu));
+	strncat(sms_packet, "000800", 6);
+
     len = sms_text_len / 2;
-    sprintf(sms_packet, "%s%02x", sms_packet, len);
-    sprintf(sms_packet, "%s%s%c", sms_packet, tmp, 0x1A);
+	sprintf(len_buf, "%02x", len);
+	strncat(sms_packet, len_buf, 2);
+
+    strncat(sms_packet, tmp, strlen(tmp));
+	sprintf(len_buf, "%c", 0x1A);
+	strncat(sms_packet, len_buf, 1);
+
     len = strlen(sms_packet + header_len) / 2;
 
     char cmd[16] = {0};
