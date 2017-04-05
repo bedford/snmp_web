@@ -96,8 +96,9 @@ int drv_gpio_open(enum GPIO_NAME gpio_name)
 
 	char value[4] = {0};
 	read(tmp_fd, value, sizeof(value));
-	if (strcmp(value, "in") == 0) {
+	if (strncmp(value, "in", 2) == 0) {
 	    /* 设置GPIO为输入或输出 */
+    	memset(fname, 0, sizeof(fname));
 	    if (gpio_info[gpio_name].direction == 1) {
 	        strcpy(fname, "in");
 	    } else {
