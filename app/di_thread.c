@@ -211,7 +211,8 @@ static void *di_process(void *arg)
 	query_result_t query_result;
 
 	char buf[256] = {0};
-	int update_di_param_flag = 1;
+	int update_di_param_flag = 0;
+	update_di_param(priv);
 
 	int index = 0;
 	di_param_t *param = NULL;

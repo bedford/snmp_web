@@ -156,7 +156,7 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 			if (priv->email_handle->send_email(priv->email_handle, &email_param) == 0) {
 		        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 					param_name, param_desc, name, email, send_status, email_content) \
-					VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "eamil_record",
+					VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "email_record",
 		                alarm_msg->protocol_id, alarm_msg->protocol_name,
 		                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
 						priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
@@ -164,7 +164,7 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 			} else {
 		        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 					param_name, param_desc, name, email, send_status, email_content) \
-					VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "eamil_record",
+					VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "email_record",
 		                alarm_msg->protocol_id, alarm_msg->protocol_name,
 		                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
 						priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
@@ -173,7 +173,7 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 		} else {
 	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
 				param_name, param_desc, name, email, send_status, email_content) \
-				VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "eamil_record",
+				VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "email_record",
 	                alarm_msg->protocol_id, alarm_msg->protocol_name,
 	                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
 					priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
