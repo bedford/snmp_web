@@ -356,7 +356,7 @@ int ups_register(list_t *protocol_list)
     protocol_t protocol;
 
     protocol.protocol_id = UPS | C_KS;
-    strcpy(protocol.protocol_name, "UPS-C1KS");
+    strcpy(protocol.protocol_name, "ups-C1KS");
     strcpy(protocol.protocol_desc, "C1KS型号UPS协议,波特率2400");
     strcpy(protocol.device_brand, "C1KS");
 
