@@ -67,7 +67,7 @@ int drv_gpio_open(enum GPIO_NAME gpio_name)
     }
 
     if (gpio_info[gpio_name].fd >= 0) {
-        return ret; 
+        return ret;
     }
 
     printf("open export\n");
@@ -94,20 +94,24 @@ int drv_gpio_open(enum GPIO_NAME gpio_name)
         return RET_ERR_OPEN;
     }
 
-    /* 设置GPIO为输入或输出 */
-    if (gpio_info[gpio_name].direction == 1) {
-        strcpy(fname, "in");
-    } else {
-        strcpy(fname, "out");
-    }
+	char value[4] = {0};
+	read(tmp_fd, value, sizeof(value));
+	if (strcmp(value, "in") == 0) {
+	    /* 设置GPIO为输入或输出 */
+	    if (gpio_info[gpio_name].direction == 1) {
+	        strcpy(fname, "in");
+	    } else {
+	        strcpy(fname, "out");
+	    }
 
-    ret = write(tmp_fd, fname, strlen(fname));
-    if (ret != strlen(fname)) {
-        printf("gpio %s gpio_dir file:%s, write err:%s\n",
-                gpio_info[gpio_name].name, fname, strerror(errno));
-        return RET_ERR_WRITE;
-    }
-    fsync(tmp_fd);
+	    ret = write(tmp_fd, fname, strlen(fname));
+	    if (ret != strlen(fname)) {
+	        printf("gpio %s gpio_dir file:%s, write err:%s\n",
+	                gpio_info[gpio_name].name, fname, strerror(errno));
+	        return RET_ERR_WRITE;
+	    }
+    	fsync(tmp_fd);
+	}
     close(tmp_fd);
 
     if (gpio_info[gpio_name].edge != 0) {
@@ -176,9 +180,9 @@ int drv_gpio_write(unsigned int gpio_name, unsigned char val)
         return RET_ERR;
     }
 
-    if (gpio_info[gpio_name].cur_val == val) {
+    /*if (gpio_info[gpio_name].cur_val == val) {
         return RET_OK;
-    }
+    }*/
 
     ret = write(gpio_info[gpio_name].fd, &asc_val, 1);
     if (ret < 0) {
@@ -204,9 +208,9 @@ int drv_gpio_read(unsigned int gpio_name, unsigned char *pval)
         return RET_ERR_NOT_EXIST;
     }
 
-    if (gpio_info[gpio_name].direction == 0) {
+    /*if (gpio_info[gpio_name].direction == 0) {
         return RET_ERR;
-    }
+    }*/
 
     ret = lseek(gpio_info[gpio_name].fd, 0, SEEK_SET);
     if (ret < 0) {
@@ -258,4 +262,3 @@ int drv_gpio_close(unsigned int gpio_name)
 
     return ret;
 }
-
