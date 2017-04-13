@@ -299,6 +299,7 @@ static void *sms_alarm_process(void *arg)
 
 		send_alarm_sms(priv);
 		alarm_msg = NULL;
+		sleep(1);
 	}
 
 	clear_ring_buffer(priv->sms_alarm_db_handle, priv->rb_handle, priv->mpool_handle);

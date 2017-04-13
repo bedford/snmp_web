@@ -282,13 +282,14 @@ static void *email_alarm_process(void *arg)
 			alarm_msg = NULL;
 		}
 
-		/*if (priv->pref_handle->get_sms_contact_flag(priv->pref_handle)) {
-			priv->pref_handle->set_sms_contact_flag(priv->pref_handle, 0);
+		if (priv->pref_handle->get_email_contact_flag(priv->pref_handle)) {
+			priv->pref_handle->set_email_contact_flag(priv->pref_handle, 0);
 			update_email_contact(priv);
-		}*/
+		}
 
 		send_alarm_email(priv);
 		alarm_msg = NULL;
+		sleep(1);
 	}
 
 	clear_ring_buffer(priv->email_alarm_db_handle, priv->rb_handle, priv->mpool_handle);
