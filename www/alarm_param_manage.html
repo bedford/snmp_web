@@ -262,7 +262,7 @@
 			            success : function(msg) {
 							for (var i in msg.support_list) {
 							    $('#device_name').append('<option value="'+ msg.support_list[i].protocol_id
-									+ '">' + msg.support_list[i].protocol_name + '</option>');
+									+ '">' + msg.support_list[i].protocol_desc + '</option>');
 							}
 							device_type_change();
 			            },
