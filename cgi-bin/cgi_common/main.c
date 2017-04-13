@@ -1356,33 +1356,54 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
 static int query_support_device(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
-	db_access_t *sys_db_handle = priv->sys_db_handle;
+	db_access_t *db_handle = priv->sys_db_handle;
 
 	char sql[256] = {0};
-	sprintf(sql, "SELECT * FROM %s ORDER BY list_index", "support_list");
+	sprintf(sql, "SELECT * FROM %s WHERE enable=1 ORDER BY protocol_id", "uart_cfg");
+
 	query_result_t query_result;
 	memset(&query_result, 0, sizeof(query_result_t));
-	sys_db_handle->query(sys_db_handle, sql, &query_result);
+	db_handle->query(db_handle, sql, &query_result);
+
+	unsigned int protocol_id_array[2] = {0};
+	unsigned int protocol_id_cnt = 0;
+	int i = 0;
+	if (query_result.row > 0) {
+		for (i = 0; i < query_result.row; i++) {
+			protocol_id_array[i] = atoi(query_result.result[(i + 1 ) * query_result.column + 1]);
+			protocol_id_cnt++;
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
 
     cJSON *response = cJSON_CreateObject();
 	cJSON *sub_dir = NULL;
 	cJSON *child = NULL;
-	int i = 0;
-	cJSON_AddNumberToObject(response, "support_list_count", query_result.row);
-	if (query_result.row > 0) {
-    	sub_dir = cJSON_CreateArray();
-    	cJSON_AddItemToObject(response, "support_list", sub_dir);
-		for (i = 1; i < (query_result.row + 1); i++) {
+
+	sub_dir = cJSON_CreateArray();
+	cJSON_AddItemToObject(response, "support_list", sub_dir);
+
+	int index = 0;
+	for (i = 0; i < protocol_id_cnt; i++) {
+		memset(sql, 0, sizeof(sql));
+		sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d ORDER BY list_index",
+			"support_list", protocol_id_array[i]);
+
+		memset(&query_result, 0, sizeof(query_result_t));
+		db_handle->query(db_handle, sql, &query_result);
+		if (query_result.row > 0) {
         	child = cJSON_CreateObject();
-    		cJSON_AddStringToObject(child, "list_index", query_result.result[i * query_result.column]);
-			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 1]);
-			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 3]);
-			cJSON_AddStringToObject(child, "device_brand", query_result.result[i * query_result.column + 4]);
+    		cJSON_AddStringToObject(child, "list_index", query_result.result[query_result.column]);
+			cJSON_AddStringToObject(child, "protocol_id", query_result.result[query_result.column + 1]);
+			cJSON_AddStringToObject(child, "protocol_name", query_result.result[query_result.column + 2]);
+			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[query_result.column + 3]);
+			cJSON_AddStringToObject(child, "device_brand", query_result.result[query_result.column + 4]);
     		cJSON_AddItemToArray(sub_dir, child);
-    	}
+			index++;
+		}
+		db_handle->free_table(db_handle, query_result.result);
 	}
-	sys_db_handle->free_table(sys_db_handle, query_result.result);
+	cJSON_AddNumberToObject(response, "support_list_count", index);
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
