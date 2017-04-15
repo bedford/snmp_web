@@ -74,7 +74,8 @@ enum
 
 typedef struct
 {
-    unsigned char   desc[MIN_PARAM_LEN];	/* 枚举量描述 */
+	unsigned char	en_desc[MIN_PARAM_LEN];	/* 枚举量英文描述 */
+    unsigned char   cn_desc[MIN_PARAM_LEN];	/* 枚举量中文描述 */
     unsigned int    value;					/* 枚举量值 */
 } param_enum_t;
 

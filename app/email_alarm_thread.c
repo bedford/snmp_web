@@ -66,13 +66,13 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 
 	query_result_t query_result;
 	sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d AND param_id=%d order by id",
-			"alarm_record", alarm_msg->protocol_id, alarm_msg->param_id);
+			"email_alarm_record", alarm_msg->protocol_id, alarm_msg->param_id);
 	memset(&query_result, 0, sizeof(query_result_t));
 	priv->email_alarm_db_handle->query(priv->email_alarm_db_handle, sql, &query_result);
 
 	if (query_result.row > 0) {
 		memset(sql, 0, sizeof(sql));
-        sprintf(sql, "DELETE FROM %s WHERE id=%d", "alarm_record",
+        sprintf(sql, "DELETE FROM %s WHERE id=%d", "email_alarm_record",
 			atoi(query_result.result[query_result.column]));
 		priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
 	}
@@ -83,7 +83,7 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
         sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, param_id, param_name, param_desc, \
 			param_type, analog_value, unit, enum_value, enum_desc, alarm_desc, alarm_type, send_cnt) \
 			VALUES ('%s', %d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
-			"alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name,
+			"email_alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name,
 			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
 			alarm_msg->param_value, alarm_msg->param_unit, alarm_msg->enum_value,
 			alarm_msg->enum_desc, alarm_msg->alarm_desc, alarm_msg->alarm_type, 1);
@@ -91,7 +91,7 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
         sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, param_id, param_name, param_desc, \
 			param_type, analog_value, unit, enum_value, enum_desc, alarm_desc, alarm_type, send_cnt) \
 			VALUES ('%s', %d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
-			"alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name,
+			"email_alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name,
 			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
 			alarm_msg->param_value, alarm_msg->param_unit, alarm_msg->enum_value,
 			alarm_msg->enum_desc, alarm_msg->alarm_desc, alarm_msg->alarm_type, priv->send_times);
@@ -210,7 +210,7 @@ static void send_alarm_email(priv_info_t *priv)
 	char sql[512] = {0};
 	char error_msg[512] = {0};
 	sprintf(sql, "SELECT * FROM %s WHERE sent_time='' or sent_time < '%s' order by id",
-		"alarm_record", dead_line);
+		"email_alarm_record", dead_line);
 
 	query_result_t query_result;
 	memset(&query_result, 0, sizeof(query_result_t));
@@ -240,11 +240,11 @@ static void send_alarm_email(priv_info_t *priv)
 
 			memset(sql, 0, sizeof(sql));
 			if (alarm_msg.send_times == 0) {
-		        sprintf(sql, "DELETE FROM %s WHERE id=%d", "alarm_record",
+		        sprintf(sql, "DELETE FROM %s WHERE id=%d", "email_alarm_record",
 					atoi(query_result.result[i * query_result.column]));
 			} else {
 		        sprintf(sql, "UPDATE %s SET sent_time='%s', send_cnt=%d WHERE id=%d",
-					"alarm_record", time_in_sec, alarm_msg.send_times,
+					"email_alarm_record", time_in_sec, alarm_msg.send_times,
 					atoi(query_result.result[i * query_result.column]));
 			}
 			priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);

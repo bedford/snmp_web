@@ -38,7 +38,6 @@ static void print_snmp_protocol(protocol_t *snmp_protocol)
         printf("#############################################\n");
         printf("protocol_id:%d\n", snmp_protocol->protocol_id);
         printf("protocol_description:%s\n", snmp_protocol->protocol_name);
-        printf("brand_name:%s\n", snmp_protocol->device_brand);
         printf("get_cmd_info func %p\n", snmp_protocol->get_property);
         printf("cal_dev_data func %p\n", snmp_protocol->calculate_data);
         printf("#############################################\n");
@@ -85,18 +84,21 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 
 		unsigned int status = 0;
 		if (flag == 1) {
-	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, param_name, param_desc, param_type, analog_value, \
-	            unit, enum_value, enum_desc, alarm_type) VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', %d)",
-	                "real_data",
-	                priv->protocol->protocol_id, priv->protocol->protocol_name,
+            sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, \
+					param_id, param_name, param_desc, param_type, analog_value, \
+	            	unit, enum_value, enum_en_desc, enum_cn_desc, alarm_type) \
+					VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d)",
+	                "real_data", priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
 	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
                     current_value->param_value, param_desc->param_unit, current_value->enum_value,
-                    param_desc->param_enum[current_value->enum_value].desc, status);
-		} else {
+                    param_desc->param_enum[current_value->enum_value].en_desc,
+					param_desc->param_enum[current_value->enum_value].cn_desc, status);
+        } else {
 	        sprintf(msg->buf, "UPDATE %s SET analog_value=%.1f, enum_value=%d, \
-						enum_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
+						enum_en_desc='%s', enum_cn_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
 	            		"real_data", current_value->param_value, current_value->enum_value,
-		                param_desc->param_enum[current_value->enum_value].desc, status,
+		                param_desc->param_enum[current_value->enum_value].en_desc,
+						param_desc->param_enum[current_value->enum_value].cn_desc, status,
 						priv->protocol->protocol_id, current_value->param_id);
 		}
 		if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
@@ -110,13 +112,13 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 			printf("memory pool is empty\n");
 			continue;
 		}
-        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-			param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc) \
-			VALUES (%d, '%s', '%d', '%s', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
-                priv->protocol->protocol_id, priv->protocol->protocol_name,
+        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
+			param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc) \
+			VALUES (%d, '%s', '%s', '%d', '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
+                priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
                 current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
 				current_value->param_value, param_desc->param_unit, current_value->enum_value,
-                param_desc->param_enum[current_value->enum_value].desc);
+                param_desc->param_enum[current_value->enum_value].en_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
 		if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 			printf("ring buffer is full\n");
 			priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
@@ -179,9 +181,11 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				}
 			} else {
 				if (current_value->param_value > param_desc->up_limit) {
+                    printf("up limit %f, current %f\n", param_desc->up_limit, current_value->param_value);
 					alarm_status = UP_ALARM_ON;
 					alarm_record_flag = 1;
 				} else if (current_value->param_value < param_desc->low_limit) {
+                    printf("low limit %f, current %f\n", param_desc->low_limit, current_value->param_value);
 					alarm_status = LOW_ALARM_ON;
 					alarm_record_flag = 1;
 				}
@@ -248,13 +252,14 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				printf("memory pool is empty\n");
 				continue;
 			}
-	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
-				VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
-	                priv->protocol->protocol_id, priv->protocol->protocol_name,
+            sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
+				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc, alarm_desc) \
+				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
+	                priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
 	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
 	                current_value->param_value, param_desc->param_unit, current_value->enum_value,
-	                param_desc->param_enum[current_value->enum_value].desc, alarm_desc);
+	                param_desc->param_enum[current_value->enum_value].en_desc,
+					param_desc->param_enum[current_value->enum_value].cn_desc, alarm_desc);
 			if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 				printf("ring buffer is full\n");
 				priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
@@ -288,7 +293,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			alarm_msg->param_type = param_desc->param_type;
 			alarm_msg->param_value = current_value->param_value;
 			alarm_msg->enum_value = current_value->enum_value;
-			strcpy(alarm_msg->enum_desc, param_desc->param_enum[current_value->enum_value].desc);
+			strcpy(alarm_msg->enum_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
 			strcpy(alarm_msg->alarm_desc, alarm_desc);
 			memcpy(tmp_alarm_msg, alarm_msg, sizeof(alarm_msg_t));
 
@@ -312,13 +317,13 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				printf("memory pool is empty\n");
 				continue;
 			}
-	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
+            sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
 				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc) \
-				VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
-	                priv->protocol->protocol_id, priv->protocol->protocol_name,
+				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
+	                priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
 	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
 	                current_value->param_value, param_desc->param_unit, current_value->enum_value,
-	                param_desc->param_enum[current_value->enum_value].desc);
+	                param_desc->param_enum[current_value->enum_value].en_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
 			if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 				printf("ring buffer is full\n");
 				priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
@@ -332,10 +337,11 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			continue;
 		}
         sprintf(msg->buf, "UPDATE %s SET analog_value=%.1f, enum_value=%d, \
-					enum_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
+					enum_en_desc='%s', enum_cn_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
             		"real_data", current_value->param_value, current_value->enum_value,
-	                param_desc->param_enum[current_value->enum_value].desc, alarm_status,
-					priv->protocol->protocol_id, current_value->param_id);
+	                param_desc->param_enum[current_value->enum_value].en_desc,
+					param_desc->param_enum[current_value->enum_value].en_desc, alarm_status,
+                    priv->protocol->protocol_id, current_value->param_id);
 		if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 			printf("ring buffer is full\n");
 			priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
@@ -360,11 +366,11 @@ static void update_alarm_param(priv_info_t *priv, property_t *property)
 	if (query_result.row > 0) {
 		for (i = 0; i < list_size; i++) {
 			param_desc = desc_list->get_index_value(desc_list, i);
-			param_desc->up_limit = atof(query_result.result[(i + 1) * query_result.column + 7]);
-			param_desc->up_free = atof(query_result.result[(i + 1) * query_result.column + 8]);
-			param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 9]);
-			param_desc->low_free = atof(query_result.result[(i + 1) * query_result.column + 10]);
-			param_desc->update_threshold = atof(query_result.result[(i + 1) * query_result.column + 12]);
+			param_desc->up_limit = atof(query_result.result[(i + 1) * query_result.column + 9]);
+			param_desc->up_free = atof(query_result.result[(i + 1) * query_result.column + 10]);
+			param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 11]);
+			param_desc->low_free = atof(query_result.result[(i + 1) * query_result.column + 12]);
+			param_desc->update_threshold = atof(query_result.result[(i + 1) * query_result.column + 14]);
 		}
 	}
 
@@ -444,7 +450,7 @@ static void *rs232_process(void *arg)
     		print_buf(property->cmd.cmd_code, property->cmd.cmd_len);
 
 	        if (uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2)
-							== property->cmd.cmd_len) {
+                    == property->cmd.cmd_len) {
 	            int len = uart->read(uart, buf, property->cmd.check_len, 2);
 	            printf("read len %d\n", len);
 	            print_buf(buf, len);

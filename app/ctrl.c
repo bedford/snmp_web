@@ -40,7 +40,6 @@ static void print_snmp_protocol(protocol_t *snmp_protocol)
     printf("#############################################\n");
     printf("protocol_id:%d\n", snmp_protocol->protocol_id);
     printf("protocol_description:%s\n", snmp_protocol->protocol_name);
-    printf("brand_name:%s\n", snmp_protocol->device_brand);
     printf("get_cmd_info func %p\n", snmp_protocol->get_property);
     printf("cal_dev_data func %p\n", snmp_protocol->calculate_data);
     printf("#############################################\n");
@@ -91,11 +90,11 @@ void create_alarm_table(priv_info_t *priv)
 {
 	char error_msg[512] = {0};
 	char sql[1024] = {0};
-	sprintf(sql, "DROP TABLE IF EXISTS %s", "alarm_record");
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "sms_alarm_record");
 	priv->sms_alarm_db_handle->action(priv->sms_alarm_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
-	sprintf(sql, "DROP TABLE IF EXISTS %s", "alarm_record");
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "email_alarm_record");
 	priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
@@ -104,6 +103,7 @@ void create_alarm_table(priv_info_t *priv)
              sent_time TIMESTAMP, \
              protocol_id INTEGER, \
 			 protocol_name VARCHAR(32), \
+			 protocol_desc VARCHAR(128), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
 			 param_desc	VARCHAR(128), \
@@ -115,7 +115,7 @@ void create_alarm_table(priv_info_t *priv)
 			 alarm_desc VARCHAR(64), \
              alarm_type INTEGER, \
 		 	 send_cnt INTEGER, \
-             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')))", "alarm_record");
+             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')))", "sms_alarm_record");
     priv->sms_alarm_db_handle->action(priv->sms_alarm_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
@@ -124,6 +124,7 @@ void create_alarm_table(priv_info_t *priv)
              sent_time TIMESTAMP, \
              protocol_id INTEGER, \
 			 protocol_name VARCHAR(32), \
+			 protocol_desc VARCHAR(128), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
 			 param_desc	VARCHAR(128), \
@@ -135,7 +136,7 @@ void create_alarm_table(priv_info_t *priv)
 			 alarm_desc VARCHAR(64), \
              alarm_type INTEGER, \
 		 	 send_cnt INTEGER, \
-             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')))", "alarm_record");
+             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')))", "email_alarm_record");
     priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
 }
 
@@ -168,6 +169,7 @@ void create_data_table(priv_info_t *priv)
              created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
              protocol_id INTEGER, \
              protocol_name VARCHAR(32), \
+			 protocol_desc VARCHAR(128), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
 			 param_desc	VARCHAR(128), \
@@ -175,7 +177,8 @@ void create_data_table(priv_info_t *priv)
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
              enum_value INTEGER, \
-             enum_desc VARCHAR(32), \
+             enum_en_desc VARCHAR(32), \
+             enum_cn_desc VARCHAR(32), \
              alarm_type INTEGER)", "real_data");
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
@@ -185,6 +188,7 @@ void create_data_table(priv_info_t *priv)
              created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
              protocol_id INTEGER, \
              protocol_name VARCHAR(32), \
+			 protocol_desc VARCHAR(128), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
 			 param_desc	VARCHAR(128), \
@@ -192,7 +196,8 @@ void create_data_table(priv_info_t *priv)
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
              enum_value INTEGER, \
-             enum_desc VARCHAR(32))", "data_record");
+             enum_en_desc VARCHAR(32), \
+             enum_cn_desc VARCHAR(32))", "data_record");
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
@@ -201,6 +206,7 @@ void create_data_table(priv_info_t *priv)
              created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
              protocol_id INTEGER, \
              protocol_name VARCHAR(32), \
+			 protocol_desc VARCHAR(128), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
 			 param_desc	VARCHAR(128), \
@@ -208,7 +214,8 @@ void create_data_table(priv_info_t *priv)
              analog_value DOUBLE, \
 			 unit VARCHAR(32), \
              enum_value INTEGER, \
-             enum_desc VARCHAR(32), \
+             enum_en_desc VARCHAR(32), \
+             enum_cn_desc VARCHAR(32), \
              alarm_desc VARCHAR(64))", "alarm_record");
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
@@ -218,9 +225,14 @@ void create_data_table(priv_info_t *priv)
              send_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
              protocol_id INTEGER, \
              protocol_name VARCHAR(32), \
+			 protocol_desc VARCHAR(128), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
 			 param_desc	VARCHAR(128), \
+			 param_type INTEGER, \
+             analog_value DOUBLE, \
+			 enum_value INTEGER, \
+			 enum_desc VARCHAR(32), \
 			 name VARCHAR(32), \
 		 	 phone VARCHAR(32), \
 		 	 send_status INTEGER, \
@@ -233,9 +245,14 @@ void create_data_table(priv_info_t *priv)
              send_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
              protocol_id INTEGER, \
              protocol_name VARCHAR(32), \
+			 protocol_desc VARCHAR(128), \
 			 param_id INTEGER, \
              param_name VARCHAR(32), \
 			 param_desc	VARCHAR(128), \
+			 param_type INTEGER, \
+             analog_value DOUBLE, \
+			 enum_value INTEGER, \
+			 enum_desc VARCHAR(32), \
 			 name VARCHAR(32), \
 		 	 email VARCHAR(64), \
 		 	 send_status INTEGER, \
@@ -275,8 +292,7 @@ void update_uart_cfg(priv_info_t *priv)
 		(list_index INTEGER PRIMARY KEY, \
 		protocol_id INTEGER, \
 		protocol_name VARCHAR(32), \
-		protocol_desc VARCHAR(128), \
-		device_brand VARCHAR(32))", "support_list");
+		protocol_desc VARCHAR(128))", "support_list");
     priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
 	memset(sql, 0, sizeof(sql));
@@ -284,6 +300,7 @@ void update_uart_cfg(priv_info_t *priv)
 			(id INTEGER PRIMARY KEY AUTOINCREMENT, \
 			protocol_id INTEGER, \
 			protocol_name VARCHAR(32), \
+			protocol_desc VARCHAR(128), \
 			cmd_id INTEGER, \
 			param_id INTEGER, \
 			param_name VARCHAR(32), \
@@ -295,8 +312,10 @@ void update_uart_cfg(priv_info_t *priv)
 			low_free DOUBLE, \
 			param_type INTEGER, \
 			update_threshold DOUBLE, \
-			low_desc VARCHAR(8), \
-			high_desc VARCHAR(8))", "parameter");
+			low_en_desc VARCHAR(32), \
+			low_cn_desc VARCHAR(32), \
+			high_en_desc VARCHAR(32), \
+			high_cn_desc VARCHAR(32))", "parameter");
     priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
 	memset(sql, 0, sizeof(sql));
@@ -323,11 +342,10 @@ void update_uart_cfg(priv_info_t *priv)
 	for (i = 0; i < list_size; i++) {
 		tmp = protocol_list->get_index_value(protocol_list, i);
 	    memset(sql, 0, sizeof(sql));
-	    sprintf(sql, "INSERT INTO %s (list_index, protocol_id, protocol_name, \
-			protocol_desc, device_brand) VALUES (%d, %d, '%s', '%s', '%s')",
-		"support_list", i, tmp->protocol_id,
-		tmp->protocol_name, tmp->protocol_desc, tmp->device_brand);
-    	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	    sprintf(sql, "INSERT INTO %s (list_index, protocol_id, protocol_name, protocol_desc) \
+				VALUES (%d, %d, '%s', '%s')",
+				"support_list", i, tmp->protocol_id, tmp->protocol_name, tmp->protocol_desc);
+				priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 	}
 
 	for (i = 0; i < list_size; i++) {
@@ -349,17 +367,18 @@ void update_uart_cfg(priv_info_t *priv)
 			for (index = 0; index < param_list_size; index++) {
 				param_desc_t *param = param_desc_list->get_index_value(param_desc_list, index);
 				memset(sql, 0, sizeof(sql));
-				sprintf(sql, "INSERT INTO %s (protocol_id, protocol_name, cmd_id, param_id, param_name, \
-						param_desc, param_unit, up_limit, up_free, low_limit, low_free, \
-						param_type, update_threshold, low_desc, high_desc) \
-						VALUES (%d, '%s', %d, %d, '%s', '%s', '%s', '%.1f', '%.1f', '%.1f', '%.1f',\
-							%d, '%.1f', '%s', '%s')",
-						"parameter", tmp->protocol_id, tmp->protocol_name, cmd->cmd_id,
-						param->param_id, param->param_name, param->param_desc,
+				sprintf(sql, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, \
+						cmd_id, param_id, param_name, param_desc, param_unit, \
+						up_limit, up_free, low_limit, low_free, param_type, update_threshold, \
+						low_en_desc, low_cn_desc, high_en_desc, high_cn_desc) \
+						VALUES (%d, '%s', '%s', %d, %d, '%s', '%s', '%s', '%.1f', '%.1f', '%.1f', '%.1f',\
+							%d, '%.1f', '%s', '%s', '%s', '%s')",
+						"parameter", tmp->protocol_id, tmp->protocol_name, tmp->protocol_desc,
+						cmd->cmd_id, param->param_id, param->param_name, param->param_desc,
 						param->param_unit, param->up_limit, param->up_free,
 						param->low_limit, param->low_free, param->param_type,
-						param->update_threshold, param->param_enum[0].desc,
-						param->param_enum[1].desc);
+						param->update_threshold, param->param_enum[0].en_desc, param->param_enum[0].cn_desc,
+						param->param_enum[1].en_desc, param->param_enum[1].cn_desc);
     			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 			}
 		}

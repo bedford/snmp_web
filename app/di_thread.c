@@ -77,10 +77,10 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value,
 			(value == 1) ? param->high_desc : param->low_desc);
 	}
 
-    sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
+    sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
 		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
-		VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
-		LOCAL_DI, "DI", param->id, param->di_name, param->device_name,
+		VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
+		LOCAL_DI, "DI", param->di_desc, param->id, param->di_name, param->device_name,
 		PARAM_TYPE_ENUM, 0.0, "", value, (value == 1) ? param->high_desc : param->low_desc,
 		alarm_desc);
 
@@ -144,11 +144,13 @@ static void history_data_record(priv_info_t *priv, int index, unsigned char valu
 		return;
 	}
 
-	sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc) \
-		VALUES (%d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s')", "data_record",
-		LOCAL_DI, "DI", param->id, param->di_name, param->device_name,
-		PARAM_TYPE_ENUM, 0.0, "", value, (value == 1) ? param->high_desc : param->low_desc);
+	char tmp[32] = {0};
+	sprintf(tmp, "di%d", index);
+	sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
+		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc) \
+		VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
+		LOCAL_DI, "DI", param->di_desc, param->id, param->di_name, param->device_name,
+		PARAM_TYPE_ENUM, 0.0, "", value, tmp, (value == 1) ? param->high_desc : param->low_desc);
 
 	if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 		printf("ring buffer is full\n");

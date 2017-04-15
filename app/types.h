@@ -32,6 +32,7 @@ typedef struct
 {
 	unsigned int	protocol_id;
 	char			protocol_name[MIN_BUF_SIZE];
+	char			protocol_desc[MIN_BUF_SIZE];
 	unsigned int	param_id;
 	char			param_name[MIN_BUF_SIZE];
 	char			param_unit[MIN_BUF_SIZE];
