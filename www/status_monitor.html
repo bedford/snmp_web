@@ -105,13 +105,13 @@
 
 				var html="";
 				if (item.alarm_type == '0') {
-					var html = '<tr><td>' + item.device_name + '</td><td>'
-					+ item.param_name + '</td><td>' + item.analog_value + item.unit + '</td><td>'
-					+ item.enum_value + '</td><td>'+ item.enum_desc + '</td><td>正常</td></tr>';
+					var html = '<tr><td>' + item.protocol_desc + '</td><td>'
+					+ item.param_desc + '</td><td>' + item.analog_value + item.unit + '</td><td>'
+					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>正常</td></tr>';
 				} else {
-					var html = '<tr class="warning"><td>' + item.device_name + '</td><td>'
-					+ item.param_name + '</td><td>' + item.analog_value + item.unit + '</td><td>'
-					+ item.enum_value + '</td><td>'+ item.enum_desc + '</td><td>报警</td></tr>';
+					var html = '<tr class="warning"><td>' + item.protocol_desc + '</td><td>'
+					+ item.param_desc + '</td><td>' + item.analog_value + item.unit + '</td><td>'
+					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>报警</td></tr>';
 				}
 
 				$("#real_data").append(html);

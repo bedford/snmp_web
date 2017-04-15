@@ -216,11 +216,11 @@
 			$.each(data_list, function(i, item) {
 				html+="<tr>";
 				html+="<td>"+item.created_time+"</td>";
-				html+="<td>"+item.device_name+"</td>";
-				html+="<td>"+item.param_name+"</td>";
+				html+="<td>"+item.protocol_desc+"</td>";
+				html+="<td>"+item.param_desc+"</td>";
 				html+="<td>"+item.analog_value+item.unit+"</td>";
 				html+="<td>"+item.enum_value+"</td>";
-				html+="<td>"+item.enum_desc+"</td>";
+				html+="<td>"+item.enum_cn_desc+"</td>";
 				html+="</tr>"
 			});
 			$("#data_table").append(html);
