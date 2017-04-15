@@ -8,7 +8,6 @@ static void print_snmp_protocol(protocol_t *snmp_protocol)
         printf("#############################################\n");
         printf("protocol_id:%d\n", snmp_protocol->protocol_id);
         printf("protocol_description:%s\n", snmp_protocol->protocol_name);
-        printf("brand_name:%s\n", snmp_protocol->device_brand);
         printf("get_cmd_info func %p\n", snmp_protocol->get_property);
         printf("cal_dev_data func %p\n", snmp_protocol->calculate_data);
         printf("#############################################\n");

@@ -150,9 +150,11 @@ static list_t *ups_status_param_desc(void)
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
-    sprintf(param.param_enum[0].desc, "%s", "市电正常");
+	sprintf(param.param_enum[0].en_desc, "%s", "input_normal");
+    sprintf(param.param_enum[0].cn_desc, "%s", "市电正常");
     param.param_enum[1].value = 1;
-    sprintf(param.param_enum[1].desc, "%s", "市电异常");
+	sprintf(param.param_enum[1].en_desc, "%s", "input_abnormal");
+    sprintf(param.param_enum[1].cn_desc, "%s", "市电异常");
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -168,9 +170,11 @@ static list_t *ups_status_param_desc(void)
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
-    sprintf(param.param_enum[0].desc, "%s", "电池正常");
+	sprintf(param.param_enum[0].en_desc, "%s", "battery_normal");
+    sprintf(param.param_enum[0].cn_desc, "%s", "电池正常");
     param.param_enum[0].value = 1;
-    sprintf(param.param_enum[1].desc, "%s", "电池低");
+	sprintf(param.param_enum[1].en_desc, "%s", "battery_low");
+    sprintf(param.param_enum[1].cn_desc, "%s", "电池低");
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -186,9 +190,11 @@ static list_t *ups_status_param_desc(void)
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
-    sprintf(param.param_enum[0].desc, "%s", "逆变");
+	sprintf(param.param_enum[0].en_desc, "%s", "battery_used");
+    sprintf(param.param_enum[0].cn_desc, "%s", "逆变");
     param.param_enum[0].value = 1;
-    sprintf(param.param_enum[1].desc, "%s", "旁路");
+	sprintf(param.param_enum[1].en_desc, "%s", "battery_notused");
+    sprintf(param.param_enum[1].cn_desc, "%s", "旁路");
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -204,9 +210,11 @@ static list_t *ups_status_param_desc(void)
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
-    sprintf(param.param_enum[0].desc, "%s", "正常");
+	sprintf(param.param_enum[0].en_desc, "%s", "ups_normal");
+    sprintf(param.param_enum[0].cn_desc, "%s", "正常");
     param.param_enum[0].value = 1;
-    sprintf(param.param_enum[1].desc, "%s", "异常");
+	sprintf(param.param_enum[1].en_desc, "%s", "ups_abnormal");
+    sprintf(param.param_enum[1].cn_desc, "%s", "异常");
     desc_list->push_back(desc_list, &param);
 
     return desc_list;
@@ -357,8 +365,7 @@ int ups_register(list_t *protocol_list)
 
     protocol.protocol_id = UPS | C_KS;
     strcpy(protocol.protocol_name, "ups-C1KS");
-    strcpy(protocol.protocol_desc, "C1KS型号UPS协议,波特率2400");
-    strcpy(protocol.device_brand, "C1KS");
+    strcpy(protocol.protocol_desc, "C1KS型号UPS");
 
     protocol.get_property       = get_ups_property;
     protocol.calculate_data     = calculate_device_data;

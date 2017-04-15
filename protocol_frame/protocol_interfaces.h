@@ -29,9 +29,8 @@ typedef void (*_release_property)(list_t *property_list);
 typedef struct
 {
 	unsigned int 	    protocol_id;
-	unsigned char	    protocol_name[MIN_PROTOCOL_LEN];
-	unsigned char	    protocol_desc[MAX_PROTOCOL_LEN];
-	unsigned char	    device_brand[MIN_PROTOCOL_LEN];
+	unsigned char	    protocol_name[MIN_PROTOCOL_LEN];		/* 协议库名称 */
+	unsigned char	    protocol_desc[MIN_PROTOCOL_LEN];		/* 协议库描述 */
 
 	_get_property       get_property;
     _release_property   release_property;

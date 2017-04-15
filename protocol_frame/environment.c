@@ -199,8 +199,7 @@ int environment_register(list_t *protocol_list)
 
     protocol.protocol_id = TEMP_HUM_DEVICE | OAO_210;
     strcpy(protocol.protocol_name, "oao-210");
-    strcpy(protocol.protocol_desc, "OAO-210温湿度,波特率9600");
-    strcpy(protocol.device_brand, "JT");
+    strcpy(protocol.protocol_desc, "OAO-210温湿度");
 
     protocol.get_property       = get_environment_property;
     protocol.calculate_data     = calculate_device_data;
