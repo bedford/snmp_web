@@ -1372,6 +1372,37 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int query_di_support(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+
+	char sql[256] = {0};
+	sprintf(sql, "SELECT * FROM %s WHERE enable=1 ORDER by id", "di_cfg");
+
+    cJSON *response = cJSON_CreateObject();
+
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+	if (query_result.row > 0) {
+		cJSON_AddNumberToObject(response, "support_list_count", 1);
+	} else {
+		cJSON_AddNumberToObject(response, "support_list_count", 0);
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+	cJSON_AddStringToObject(response, "list_index", "2");
+	cJSON_AddStringToObject(response, "protocol_id", "1");
+	cJSON_AddStringToObject(response, "protocol_name", "di");
+	cJSON_AddStringToObject(response, "protocol_desc", "干接点输入");
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 static int query_support_device(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
@@ -1758,6 +1789,10 @@ cmd_fun_t cmd_query_data[] = {
 	{
 		"query_support_param",
 		query_support_param
+	},
+	{
+		"query_di_support",
+		query_di_support
 	}
 };
 
