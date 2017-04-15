@@ -90,6 +90,10 @@
 		}
 
 		function display_real_data(real_data, device_type, status) {
+			if (real_data.count == 0) {
+				return;
+			}
+
 			$('#real_data').empty();
 			$.each(real_data, function(i, item) {
 				if ((device_type != '全部') && (device_type != item.device_id)) {

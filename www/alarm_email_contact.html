@@ -113,12 +113,14 @@
 </head>
 <body>
 	<div class="operation_box">
-		<span>邮件服务器地址</span>
+		<span>邮件服务器</span>
 		<input type="text" style="width:150px; height:25px;" id="smtp_server_ip">
-		<span>发件人EMail</span>
+		<span>发件人</span>
 		<input type="text" style="width:150px; height:25px;" id="email_account">
-		<span>邮箱密码</span>
+		<span>密码</span>
 		<input type="password" style="width:150px; height:25px;" id="email_password">
+		<span>端口</span>
+		<input type="text" style="width:40px; height:25px;" id="email_port">
 		<input type="button" id="set_btn" value="设置" onclick="set_email_rule()">
 		<input type="button" id="add_btn" value="新增" onclick="add_email_contact()">
 	</div>
@@ -184,7 +186,8 @@
 		                success : function(msg) {
 							$("#smtp_server_ip").val(msg.smtp_server);
 							$("#email_account").val(msg.email_addr);
-							$('#email_password').val(msg.password)
+							$('#email_password').val(msg.password);
+							$('#email_port').val(msg.port);
 		                },
 		            });
 		}
@@ -198,6 +201,7 @@
 			cfg.smtp_server = $("#smtp_server_ip").val();
 			cfg.email_addr = $("#email_account").val();
 			cfg.password = $("#email_password").val();
+			cfg.port = $('#email_port').val();
 			json.cfg = cfg;
 
 			$('#set_btn').attr("disabled", "disabled");

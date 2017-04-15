@@ -883,6 +883,8 @@ static int get_email_rule(cJSON *root, priv_info_t *priv)
             iniparser_getstring(dic, "EMAIL:email_addr", ""));
     cJSON_AddStringToObject(response, "password",
             iniparser_getstring(dic, "EMAIL:password", ""));
+    cJSON_AddNumberToObject(response, "port",
+            iniparser_getint(dic, "EMAIL:port", 25));
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -902,6 +904,8 @@ static int set_email_rule(cJSON *root, priv_info_t *priv)
 	        cJSON_GetObjectItem(cfg, "email_addr")->valuestring);
 	write_profile(dic, "EMAIL", "password",
 	        cJSON_GetObjectItem(cfg, "password")->valuestring);
+	write_profile(dic, "EMAIL", "port",
+	        cJSON_GetObjectItem(cfg, "port")->valuestring);
 
     dump_profile(dic, INI_FILE_NAME);
 
