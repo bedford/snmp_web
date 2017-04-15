@@ -20,7 +20,7 @@ typedef struct
 	void 		*alarm_pool_handle;
 
 	int 		*alarm_cnt;
-	int			init_flag;
+	void 		*data_db_handle;
 } rs232_thread_param_t;
 
 thread_t *rs232_thread_create(void);

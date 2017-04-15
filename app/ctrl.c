@@ -655,7 +655,7 @@ int main(void)
 	rs232_thread_param.sms_rb_handle	= sms_rb_handle;
 	rs232_thread_param.email_rb_handle	= email_rb_handle;
 	rs232_thread_param.alarm_pool_handle = alarm_pool_handle;
-	rs232_thread_param.init_flag		= init_flag;
+	rs232_thread_param.data_db_handle	= priv->data_db_handle;
 	rs232_thread_param.alarm_cnt		= &alarm_cnt;
 	rs232_thread->start(rs232_thread, (void *)&rs232_thread_param);
 
@@ -673,7 +673,7 @@ int main(void)
 	rs485_thread_param.sms_rb_handle	= sms_rb_handle;
 	rs485_thread_param.email_rb_handle	= email_rb_handle;
 	rs485_thread_param.alarm_pool_handle = alarm_pool_handle;
-	rs485_thread_param.init_flag		= init_flag;
+	rs485_thread_param.data_db_handle	= priv->data_db_handle;
 	rs485_thread_param.alarm_cnt		= &alarm_cnt;
 	rs485_thread->start(rs485_thread, (void *)&rs485_thread_param);
 

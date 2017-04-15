@@ -56,7 +56,7 @@ static void print_param_value(list_t *param_value_list)
     }
 }
 
-static void create_last_param_value_list(priv_info_t *priv, property_t *property, list_t *valid_value, int flag)
+static void create_last_param_value_list(priv_info_t *priv, property_t *property, list_t *valid_value, db_access_t *data_db_handle)
 {
 	list_t *last_value_list = list_create(sizeof(param_value_t));
 	list_t *desc_list = property->param_desc;
@@ -64,6 +64,21 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	param_desc_t *param_desc = NULL;
 	param_value_t *current_value = NULL;
 	int list_size = valid_value->get_list_size(valid_value);
+
+    /* 确认实时数据表中是否有相应协议库的数据 */
+    int init_flag = 1;
+	char error_msg[512] = {0};
+	char sql[512] = {0};
+	sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d", "real_data", priv->protocol->protocol_id);
+
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	data_db_handle->query(data_db_handle, sql, &query_result);
+
+	if (query_result.row > 0) {
+		init_flag = 0;
+	}
+	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 
 	int i = 0;
 	msg_t *msg = NULL;
@@ -83,7 +98,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		}
 
 		unsigned int status = 0;
-		if (flag == 1) {
+		if (init_flag == 1) {
             sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, \
 					param_id, param_name, param_desc, param_type, analog_value, \
 	            	unit, enum_value, enum_en_desc, enum_cn_desc, alarm_type) \
@@ -463,7 +478,7 @@ static void *rs232_process(void *arg)
 					}
 					if (property->last_param_value == NULL) {
 						create_last_param_value_list(priv, property, value_list,
-							thread_param->init_flag);
+							(db_access_t *)thread_param->data_db_handle);
 					} else {
 						compare_values(priv, property, value_list, alarm_cnt);
 					}
