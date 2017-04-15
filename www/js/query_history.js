@@ -30,3 +30,19 @@ function load_device_list(callback) {
 	            },
 	        });
 }
+
+function load_di_list(callback) {
+    var json = new Object();
+    json.msg_type = "query_data";
+    json.cmd_type = "query_di_support";
+    var data = $.toJSON(json);
+    $.ajax({
+                url     : "/cgi-bin/common.cgi",
+                type    : "POST",
+                dataType: "json",
+                data    : data,
+                success : function(msg) {
+					callback(msg);
+                },
+            });
+}

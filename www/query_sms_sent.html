@@ -186,7 +186,7 @@
 			$.each(data_list, function(i, item) {
 				html+='<tr>';
 				html+='<td style="width:15%;">'+item.send_time+'</td>';
-				html+='<td style="width:15%;">'+item.protocol_name+'</td>';
+				html+='<td style="width:15%;">'+item.protocol_desc+'</td>';
 				html+='<td style="width:15%;">'+item.param_name+'</td>';
 				html+='<td style="width:8%;">'+item.user+'</td>';
 
@@ -248,13 +248,21 @@
 		function display_device_list(msg) {
 			for (var i in msg.support_list) {
 			    $('#device_name').append('<option value="'+ msg.support_list[i].protocol_id
-					+ '">' + msg.support_list[i].protocol_name + '</option>');
+					+ '">' + msg.support_list[i].protocol_desc + '</option>');
+			}
+		}
+
+		function dislplay_di_list(msg) {
+			if (msg.support_list_count == 1) {
+			    $('#device_name').append('<option value="'+ msg.protocol_id
+					+ '">' + msg.protocol_desc + '</option>');
 			}
 		}
 
         $(document).ready(function () {
 			load_timepicker_default();
 			load_device_list(display_device_list);
+			load_di_list(dislplay_di_list);
         })
     </script>
 </body>

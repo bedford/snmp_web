@@ -163,9 +163,9 @@
 		function display_uart_param(io_param) {
 			for (var i in io_param.support_list) {
 			    $('#rs232_protocol_select').append('<option value="'+ io_param.support_list[i].protocol_id
-					+ '">' + io_param.support_list[i].protocol_name + '</option>');
+					+ '">' + io_param.support_list[i].protocol_desc + '</option>');
 				$('#rs485_protocol_select').append('<option value="'+ io_param.support_list[i].protocol_id
-					+ '">' + io_param.support_list[i].protocol_name + '</option>');
+					+ '">' + io_param.support_list[i].protocol_desc + '</option>');
 			}
 
 			$('#rs232_protocol_select').val(io_param.rs232_cfg.protocol_id);
