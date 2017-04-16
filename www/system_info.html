@@ -52,54 +52,88 @@
 	</style>
 </head>
 
-<body>
+<body onbeforeunload="checkLeave()">
 	<div id="table-box">
 		<div class="table-content">
 			<table id="system_info_table">
+			<tr>
+				<td>设备当前时间</td>
+				<td><span id="device_time"><span></td>
+			</tr>
+			<tr>
+				<td>运行时间</td>
+				<td><span id="run_time"><span></td>
+			</tr>
+			<tr>
+				<td>硬件版本</td>
+				<td><span id="hardware_version"><span></td>
+			</tr>
+			<tr>
+				<td>内核版本</td>
+				<td><span id="bsp_version"><span></td>
+			</tr>
+			<tr>
+				<td>应用程序版本</td>
+				<td><span id="app_version"><span></td>
+			</tr>
+			<tr>
+				<td>设备序列号</td>
+				<td><span id="serial_number"><span></td>
+			</tr>
 			</table>
 		</div>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
+		function addzero(v) {
+			if (v < 10) return '0' + v;
+			return v.toString();
+		}
+
+		function update_device_time() {
+			var last_time = $('#device_time').html();
+			last_time = last_time.replace(new RegExp("-","gm"),"/");
+			last_time_in_mil_second = (new Date(last_time)).getTime();
+			var date = new Date(last_time_in_mil_second + 1000);
+
+			var current_time = date.getFullYear().toString() + '-' + addzero(date.getMonth() + 1) + '-'
+					+ addzero(date.getDate()) + ' ' + addzero(date.getHours()) + ':'
+					+ addzero(date.getMinutes()) + ':' + addzero(date.getSeconds());
+			$('#device_time').html(current_time);
+		}
+
+		var interval_handle;
+
+		function checkLeave() {
+			clearInterval(interval_handle);
+		}
+
 		function load_system_info() {
-			var param_list = [
-			{
-				"name":"设备当前时间",
-				"value":"2016-12-24 17:00:00"
-			},
-			{
-				"name":"设备运行时长",
-				"value":"300分钟"
-			},
-			{
-				"name":"硬件版本",
-				"value":"V1.2"
-			},
-			{
-				"name":"BSP版本",
-				"value":"Kernel-2.6.31-20160110"
-			},
-			{
-				"name":"软件版本",
-				"value":"V0.3"
-			},
-			{
-				"name":"设备序列号",
-				"value":"20160820010001"
-			}
-			];
-			show_system_info(param_list);
+			var json = new Object();
+			json.msg_type = "system_setting";
+			json.cmd_type = "system_runtime_info";
+			var data = $.toJSON(json);
+			$.ajax({
+			            url     : "/cgi-bin/common.cgi",
+			            type    : "POST",
+			            dataType: "json",
+			            data    : data,
+			            success : function(msg) {
+							show_system_info(msg);
+			            },
+			        });
 		}
 
 		function show_system_info(system_param_list) {
-			var html="";
-			$.each(system_param_list, function(i, item) {
-				html+="<tr><td>"+item.name+"</td>";
-				html+="<td>"+item.value+"</td>";
-				html+="</tr>"
-			});
-			$("#system_info_table").append(html);
+			$('#device_time').html(system_param_list.device_time);
+			$('#run_time').html(system_param_list.run_time);
+			$('#hardware_version').html(system_param_list.hardware_version);
+			$('#bsp_version').html(system_param_list.bsp_version);
+			$('#app_version').html(system_param_list.app_version);
+			$('#serial_number').html(system_param_list.serial_number);
+			interval_handle = setInterval("update_device_time()", 1000);
 		}
 
         $(document).ready(function () {

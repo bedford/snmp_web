@@ -104,8 +104,8 @@
 
 		function reboot() {
 			var json = new Object();
-			json.msg_type = 3;
-			json.cmd_type = 2;
+			json.msg_type = "system_setting";
+			json.cmd_type = "system_reboot";
 
 			$('#reboot_btn').attr("disabled", "disabled");
 			var data = $.toJSON(json);
@@ -117,7 +117,7 @@
 		                success : function(msg) {
 		                    $('#reboot_btn').removeAttr("disabled");
 							if (msg.status == 1) {
-								alert("设置成功");
+								alert("重启成功，正在重启中，请稍后再连接设备");
 							} else {
 								alert("设置失败");
 							}

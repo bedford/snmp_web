@@ -2,6 +2,9 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sys/reboot.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "cJSON.h"
 #include "iniparser.h"
@@ -545,6 +548,51 @@ static int set_device_time(cJSON *root, priv_info_t *priv)
     cJSON *response;
     response = cJSON_CreateObject();
     cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int system_reboot(cJSON *root, priv_info_t *priv)
+{
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+	reboot(RB_AUTOBOOT);
+
+    cJSON *response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int system_runtime_info(cJSON *root, priv_info_t *priv)
+{
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *response = cJSON_CreateObject();
+
+	struct timeval current_time;
+	gettimeofday(&current_time, NULL);
+
+	char time_in_sec[32] = {0};
+	struct tm *tm = localtime(&(current_time.tv_sec));
+	sprintf(time_in_sec, "%04d-%02d-%02d %02d:%02d:%02d",
+                        tm->tm_year + 1900, tm->tm_mon + 1,
+                        tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+    cJSON_AddStringToObject(response, "device_time", time_in_sec);
+    cJSON_AddStringToObject(response, "run_time", "300");
+	cJSON_AddStringToObject(response, "hardware_version", "V1.2");
+	cJSON_AddStringToObject(response, "bsp_version", "V0.9");
+	cJSON_AddStringToObject(response, "app_version", "beta 0.1");
+	cJSON_AddStringToObject(response, "serial_number", "20160820010001");
+
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
 
@@ -1695,7 +1743,15 @@ cmd_fun_t cmd_system_setting[] = {
 	{
 		"login"
 		login
-	*/}
+	*/},
+	{
+		"system_runtime_info",
+		system_runtime_info
+	},
+	{
+		"system_reboot",
+		system_reboot
+	}
 };
 
 cmd_fun_t cmd_alarm_setting[] = {
