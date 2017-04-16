@@ -37,15 +37,17 @@ typedef struct
 
 static gpio_info_t gpio_info[] = {
     /* 干接点输入 */
-    {   -1,     6,      5,      1,      0,      0,      "GPG5"  },  /* GPG5 */
-    {   -1,     6,      4,      1,      0,      0,      "GPG4"  },  /* GPG4 */
-    {   -1,     5,      4,      1,      0,      0,      "GPF4"  },  /* GPF4 */
     {   -1,     5,      3,      1,      0,      0,      "GPF3"  },  /* GPF3 */
+    {   -1,     5,      4,      1,      0,      0,      "GPF4"  },  /* GPF4 */
+    {   -1,     6,      4,      1,      0,      0,      "GPG4"  },  /* GPG4 */
+    {   -1,     6,      5,      1,      0,      0,      "GPG5"  },  /* GPG5 */
+
     /* 干接点输出 */
-    {   -1,     5,      2,      0,      0,      0,      "GPF2"  },  /* GPF2 */
-    {   -1,     5,      1,      0,      0,      0,      "GPF1"  },  /* GPF1 */
-    {   -1,     5,      0,      0,      0,      0,      "GPF0"  },  /* GPF0 */
     {   -1,     1,      2,      0,      0,      0,      "GPF6"  },  /* GPF6 */
+    {   -1,     5,      0,      0,      0,      0,      "GPF0"  },  /* GPF0 */
+    {   -1,     5,      1,      0,      0,      0,      "GPF1"  },  /* GPF1 */
+    {   -1,     5,      2,      0,      0,      0,      "GPF2"  },  /* GPF2 */
+
     /* 电源管理 */
     {   -1,     6,      3,      0,      0,      0,      "GPG3"  },  /* GPG3 */
     {   -1,     5,      5,      1,      0,      0,      "GPF5"  },  /* GPF5 */
@@ -70,7 +72,7 @@ int drv_gpio_open(enum GPIO_NAME gpio_name)
         return ret;
     }
 
-    printf("open export\n");
+    //printf("open export\n");
     tmp_fd = open(DRV_GPIO_EXPORT_NAME, O_WRONLY);
     if (tmp_fd < 0) {
         printf("export file open %s err:%s\n",
@@ -78,7 +80,7 @@ int drv_gpio_open(enum GPIO_NAME gpio_name)
         return RET_ERR_OPEN;
     }
 
-    printf("write export\n");
+    //printf("write export\n");
     pin_num = gpio_info[gpio_name].port * 32 + gpio_info[gpio_name].pin;
     sprintf(fname, "%d", pin_num);
     ret = write(tmp_fd, fname, strlen(fname));
