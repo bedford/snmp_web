@@ -48,9 +48,10 @@ typedef struct
 } alarm_msg_t;
 
 typedef struct {
-	char	smtp_server[32];
-	char	email_addr[32];
-	char	password[32];
+	char			smtp_server[32];
+	char			email_addr[32];
+	char			password[32];
+	unsigned int 	port;
 } email_server_t;
 
 typedef struct {

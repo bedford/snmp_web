@@ -87,6 +87,8 @@ static void load_email_server_param(priv_info_t *priv)
 	strncpy(priv->email_server_param.password,
 		iniparser_getstring(priv->dic, "EMAIL:password", ""),
 		sizeof(priv->email_server_param.password));
+
+	priv->email_server_param.port = iniparser_getint(priv->dic, "EMAIL:port", 25);
 }
 
 static void load_do_param(priv_info_t *priv)

@@ -14,7 +14,7 @@
 #include "mem_pool.h"
 #include "ring_buffer.h"
 
-#include "email.h"
+#include "smtp.h"
 
 typedef struct {
 	char	name[32];
@@ -38,7 +38,7 @@ typedef struct {
 	ring_buffer_t 	*email_rb_handle;
 	mem_pool_t 		*alarm_pool_handle;
 
-	email_t 		*email_handle;
+	smtp_t			*smtp_handle;
 } priv_info_t;
 
 static void clear_ring_buffer(db_access_t	*email_alarm_db_handle,
@@ -80,18 +80,18 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 
 	memset(sql, 0, sizeof(sql));
 	if (alarm_msg->alarm_type == ALARM_DISCARD) {
-        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, param_id, param_name, param_desc, \
+        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, protocol_desc, param_id, param_name, param_desc, \
 			param_type, analog_value, unit, enum_value, enum_desc, alarm_desc, alarm_type, send_cnt) \
-			VALUES ('%s', %d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
-			"email_alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name,
+			VALUES ('%s', %d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
+			"email_alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name, alarm_msg->protocol_desc,
 			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
 			alarm_msg->param_value, alarm_msg->param_unit, alarm_msg->enum_value,
 			alarm_msg->enum_desc, alarm_msg->alarm_desc, alarm_msg->alarm_type, 1);
 	} else {
-        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, param_id, param_name, param_desc, \
+        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, protocol_desc, param_id, param_name, param_desc, \
 			param_type, analog_value, unit, enum_value, enum_desc, alarm_desc, alarm_type, send_cnt) \
-			VALUES ('%s', %d, '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
-			"email_alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name,
+			VALUES ('%s', %d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
+			"email_alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name, alarm_msg->protocol_desc,
 			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
 			alarm_msg->param_value, alarm_msg->param_unit, alarm_msg->enum_value,
 			alarm_msg->enum_desc, alarm_msg->alarm_desc, alarm_msg->alarm_type, priv->send_times);
@@ -125,25 +125,50 @@ static void update_email_contact(priv_info_t *priv)
 
 static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 {
-	int ret = -1;
-	int i = 0;
-	msg_t *msg = NULL;
-
-	email_param_t email_param;
-	memset(&email_param, 0, sizeof(email_param_t));
-
 	char email_content[128] = {0};
 	sprintf(email_content, "%s, %s", alarm_msg->protocol_name, alarm_msg->alarm_desc);
 
 	email_server_t email_server_param;
 	email_server_param = priv->pref_handle->get_email_server_param(priv->pref_handle);
 
-	strcpy(email_param.smtp_server, email_server_param.smtp_server);
-	strcpy(email_param.user, email_server_param.email_addr);
+	email_param_t email_param;
+	memset(&email_param, 0, sizeof(email_param_t));
+
+	int ret = -1;
+	int i = 0;
+	msg_t *msg = NULL;
+
+	strcpy(email_param.server_addr, email_server_param.smtp_server);
+	strcpy(email_param.sender_name, email_server_param.email_addr);
+	strcpy(email_param.sender_email, email_server_param.email_addr);
 	strcpy(email_param.password, email_server_param.password);
 
 	strcpy(email_param.title, "Alarm warning");
 	strcpy(email_param.content, email_content);
+
+	switch (email_server_param.port) {
+	case 25:
+		email_param.port = 25;
+		email_param.security_type = NO_SECURITY;
+	break;
+	case 587:
+		email_param.port = 587;
+		email_param.security_type = USE_TLS;
+	break;
+	case 465:
+	default:
+		email_param.port = 465;
+		email_param.security_type = USE_SSL;
+	break;
+	}
+
+	for (i = 0; i < priv->email_contact_cnt; i++) {
+		strcpy(email_param.email_receiver[i].receiver_mail, priv->email_user_array[i].email_addr);
+		strcpy(email_param.email_receiver[i].receiver_name, priv->email_user_array[i].name);
+	}
+
+	ret = priv->smtp_handle->send_email(priv->smtp_handle, &email_param);
+
 	for (i = 0; i < priv->email_contact_cnt; i++) {
 		msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
 		if (msg == NULL) {
@@ -151,31 +176,22 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 			continue;
 		}
 
-		strcpy(email_param.to_addr, priv->email_user_array[i].email_addr);
 		if (ret == 0) {
-			if (priv->email_handle->send_email(priv->email_handle, &email_param) == 0) {
-		        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-					param_name, param_desc, name, email, send_status, email_content) \
-					VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "email_record",
-		                alarm_msg->protocol_id, alarm_msg->protocol_name,
-		                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
-						priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
-						0, email_content);
-			} else {
-		        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-					param_name, param_desc, name, email, send_status, email_content) \
-					VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "email_record",
-		                alarm_msg->protocol_id, alarm_msg->protocol_name,
-		                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
-						priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
-						1, email_content);
-			}
+	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
+				param_name, param_desc, param_type, analog_value, enum_value, enum_desc, name, email, send_status, email_content) \
+				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, %d, '%s', '%s', '%s', %d, '%s')", "email_record",
+	                alarm_msg->protocol_id, alarm_msg->protocol_name, alarm_msg->protocol_desc,
+	                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
+					alarm_msg->param_value, alarm_msg->enum_value, alarm_msg->enum_desc,
+					priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
+					0, email_content);
 		} else {
-	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, param_id, \
-				param_name, param_desc, name, email, send_status, email_content) \
-				VALUES (%d, '%s', %d, '%s', '%s', '%s', '%s', %d, '%s')", "email_record",
-	                alarm_msg->protocol_id, alarm_msg->protocol_name,
-	                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc,
+	        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
+				param_name, param_desc, param_type, analog_value, enum_value, enum_desc, name, email, send_status, email_content) \
+				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, %d, '%s', '%s', '%s', %d, '%s')", "email_record",
+	                alarm_msg->protocol_id, alarm_msg->protocol_name, alarm_msg->protocol_desc,
+	                alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
+					alarm_msg->param_value, alarm_msg->enum_value, alarm_msg->enum_desc,
 					priv->email_user_array[i].name, priv->email_user_array[i].email_addr,
 					1, email_content);
 		}
@@ -223,17 +239,18 @@ static void send_alarm_email(priv_info_t *priv)
 		for (i = 1; i < (query_result.row + 1); i++) {
 			alarm_msg.protocol_id = atoi(query_result.result[i * query_result.column + 2]);
 			strcpy(alarm_msg.protocol_name, query_result.result[i * query_result.column + 3]);
-			alarm_msg.param_id = atoi(query_result.result[i * query_result.column + 4]);
-			strcpy(alarm_msg.param_name, query_result.result[i * query_result.column + 5]);
-			strcpy(alarm_msg.param_desc, query_result.result[i * query_result.column + 6]);
-			strcpy(alarm_msg.param_unit, query_result.result[i * query_result.column + 7]);
-			alarm_msg.param_type = atoi(query_result.result[i * query_result.column + 8]);
-			alarm_msg.param_value = atof(query_result.result[i * query_result.column + 9]);
-			alarm_msg.enum_value = atoi(query_result.result[i * query_result.column + 10]);
-			strcpy(alarm_msg.enum_desc, query_result.result[i * query_result.column + 11]);
-			strcpy(alarm_msg.alarm_desc, query_result.result[i * query_result.column + 12]);
-			alarm_msg.alarm_type = atoi(query_result.result[i * query_result.column + 13]);
-			alarm_msg.send_times = atoi(query_result.result[i * query_result.column + 14]);
+			strcpy(alarm_msg.protocol_desc, query_result.result[i * query_result.column + 4]);
+			alarm_msg.param_id = atoi(query_result.result[i * query_result.column + 5]);
+			strcpy(alarm_msg.param_name, query_result.result[i * query_result.column + 6]);
+			strcpy(alarm_msg.param_desc, query_result.result[i * query_result.column + 7]);
+			strcpy(alarm_msg.param_unit, query_result.result[i * query_result.column + 8]);
+			alarm_msg.param_type = atoi(query_result.result[i * query_result.column + 9]);
+			alarm_msg.param_value = atof(query_result.result[i * query_result.column + 10]);
+			alarm_msg.enum_value = atoi(query_result.result[i * query_result.column + 11]);
+			strcpy(alarm_msg.enum_desc, query_result.result[i * query_result.column + 12]);
+			strcpy(alarm_msg.alarm_desc, query_result.result[i * query_result.column + 13]);
+			alarm_msg.alarm_type = atoi(query_result.result[i * query_result.column + 14]);
+			alarm_msg.send_times = atoi(query_result.result[i * query_result.column + 15]);
 
 			send_to_contact(priv, &alarm_msg);
 			alarm_msg.send_times--;
@@ -270,7 +287,7 @@ static void *email_alarm_process(void *arg)
 	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
 	update_email_contact(priv);
-	priv->email_handle = email_create();
+	priv->smtp_handle = smtp_create();
 
 	alarm_msg_t *alarm_msg = NULL;
 	priv->send_times = 1;
@@ -293,8 +310,8 @@ static void *email_alarm_process(void *arg)
 	}
 
 	clear_ring_buffer(priv->email_alarm_db_handle, priv->rb_handle, priv->mpool_handle);
-	priv->email_handle->destroy(priv->email_handle);
-	priv->email_handle = NULL;
+	priv->smtp_handle->destroy(priv->smtp_handle);
+	priv->smtp_handle = NULL;
 
 	priv = NULL;
 	thiz = NULL;
