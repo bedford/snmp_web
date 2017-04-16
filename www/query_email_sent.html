@@ -157,12 +157,12 @@
 		<div class="table-head">
 			<table>
 				<thead>
-					<th>时间</th>
-					<th>设备名称</th>
-					<th>参数名称</th>
-					<th>接收人</th>
-					<th>状态</th>
-					<th>邮件内容</th>
+					<th style="width:15%;">时间</th>
+					<th style="width:15%;">设备名称</th>
+					<th style="width:15%;">参数名称</th>
+					<th style="width:8%;">接收人</th>
+					<th style="width:8%;">状态</th>
+					<th style="width:39%;">邮件内容</th>
 				</thead>
 			</table>
 		</div>
@@ -184,15 +184,20 @@
 			$("#email_table").empty();
 			var html="";
 			$.each(data_list, function(i, item) {
-				html+="<tr>";
-				html+="<td>"+item.send_time+"</td>";
-				html+="<td>"+item.protocol_desc+"</td>";
-				html+="<td>"+item.param_desc+"</td>";
-				html+="<td>"+item.alarm_desc+"</td>";
-				html+="<td>"+item.email+"</td>";
-				html+="<td>"+item.send_status+"</td>";
-				html+="<td>"+item.email_content+"</td>";
-				html+="</tr>"
+				html+='<tr>';
+				html+='<td style="width:15%;">'+item.send_time+'</td>';
+				html+='<td style="width:15%;">'+item.protocol_desc+'</td>';
+				html+='<td style="width:15%;">'+item.param_desc+'</td>';
+				html+='<td style="width:8%;">'+item.user+'</td>';
+
+				if (item.send_status == 1) {
+					html+='<td style="width:8%;">失败</td>';
+				} else {
+					html+='<td style="width:8%;">成功</td>';
+				}
+
+				html+='<td style="width:39%;">'+item.email_content+'</td>';
+				html+='</tr>';
 			});
 			$("#email_table").append(html);
 
