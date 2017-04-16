@@ -90,10 +90,6 @@
 		}
 
 		function display_real_data(real_data, device_type, status) {
-			if (real_data.count == 0) {
-				return;
-			}
-
 			$('#real_data').empty();
 			$.each(real_data, function(i, item) {
 				if ((device_type != '全部') && (device_type != item.device_id)) {
@@ -171,9 +167,11 @@
 			                dataType: "json",
 			                data    : data,
 			                success : function(msg) {
-								display_real_data(msg.real_data, '全部', '全部');
-								window.localStorage.removeItem("real_data");
-								window.localStorage.setItem("real_data", JSON.stringify(msg.real_data));
+								if (msg.count > 0) {
+									display_real_data(msg.real_data, '全部', '全部');
+									window.localStorage.removeItem("real_data");
+									window.localStorage.setItem("real_data", JSON.stringify(msg.real_data));
+								}
 								display_io(msg);
 			                },
 			            });
