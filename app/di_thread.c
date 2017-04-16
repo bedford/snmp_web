@@ -78,11 +78,11 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value,
 	}
 
     sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
-		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc, alarm_desc) \
-		VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "alarm_record",
+		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc, alarm_desc) \
+		VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
 		LOCAL_DI, "DI", param->di_desc, param->id, param->di_name, param->device_name,
-		PARAM_TYPE_ENUM, 0.0, "", value, (value == 1) ? param->high_desc : param->low_desc,
-		alarm_desc);
+		PARAM_TYPE_ENUM, 0.0, "", value, (value == 1) ? "high" : "low",
+		(value == 1) ? param->high_desc : param->low_desc, alarm_desc);
 
 	if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 		printf("ring buffer is full\n");
@@ -110,6 +110,7 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value,
 	}
 	alarm_msg->protocol_id = LOCAL_DI;
 	strcpy(alarm_msg->protocol_name, "DI");
+	strcpy(alarm_msg->protocol_desc, "干接点输入");
 	alarm_msg->param_id = param->id;
 	strcpy(alarm_msg->param_name, param->di_name);
 	strcpy(alarm_msg->param_desc, param->device_name);

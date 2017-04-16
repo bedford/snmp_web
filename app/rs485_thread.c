@@ -302,6 +302,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			}
 			alarm_msg->protocol_id = priv->protocol->protocol_id;
 			strcpy(alarm_msg->protocol_name, priv->protocol->protocol_name);
+			strcpy(alarm_msg->protocol_desc, priv->protocol->protocol_desc);
 			alarm_msg->param_id = current_value->param_id;
 			strcpy(alarm_msg->param_name, param_desc->param_name);
 			strcpy(alarm_msg->param_desc, param_desc->param_desc);
