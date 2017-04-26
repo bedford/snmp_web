@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>实时状态监测</title>
+	<link rel="stylesheet" href="css/cssReset.css">
+	<style>
+	#table-box {
+		width: 100%;
+		height: 80%;
+		position: relative;
+		box-sizing: border-box;
+		margin-top: 20px;
+	}
+
+	.table-head {
+		padding-right: 17px;
+		background-color: #4faeda;
+	}
+
+	.table-body {
+		width: 100%;
+		height: 85%;
+    	overflow-y: auto;
+	}
+
+	.table-head table,
+	.table-body table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+
+	.table-head table tr {
+		height: 40px;
+	}
+
+	.table-head table tr th {
+		/*width: 16%;*/
+		text-align: center;
+		color: #fff;
+	}
+
+	.table-body table tr {
+		height: 40px;
+		background-color: #e4eff5;
+	}
+
+	.table-body tr:nth-child(odd) {
+		background-color: #dde6ea;
+	}
+
+	.table-body tr:nth-child(even) {
+		background-color: #fff;
+	}
+
+	.table-body table tr td {
+		/*width: 16%;*/
+		text-align: center;
+		color: #393c3d;
+		border: 1px solid #4faeda;
+	}
+	</style>
+</head>
+<body onbeforeunload="leave_page()">
+	<div id="table-box">
+		<div class="table-head">
+			<table>
+				<thead>
+					<th style="width:25%;">设备名称
+						<select style="width:120px; height:25px;" id="device_type" onchange="device_type_change()">
+							<option value="全部">全部</option>
+						</select>
+					</th>
+					<th style="width:15%;">参数名称</th>
+					<th style="width:15%;">模拟量</th>
+					<th style="width:15%;">开关量</th>
+					<th style="width:15%;">开关量描述</th>
+					<th style="width:15%;">状态
+						<select style="width:80px; height:25px;" id="status_type" onchange="status_type_change()">
+							<option value="全部">全部</option>
+							<option value="0">正常</option>
+							<option value="1">报警</option>
+						</select>
+					</th>
+				</thead>
+			</table>
+		</div>
+		<div class="table-body">
+			<table id="real_data">
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+	</div>
+    <script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+    <script>
+		function leave_page() {
+			clearInterval(interval_handle);
+			window.localStorage.removeItem("real_data");
+		}
+
+		function display_device_type_list(msg) {
+			for (var i in msg.support_list) {
+			    $('#device_type').append('<option value="'+ msg.support_list[i].protocol_id
+					+ '">' + msg.support_list[i].protocol_desc + '</option>');
+			}
+		}
+
+		function load_device_type_list() {
+		    var json = new Object();
+		    json.msg_type = "query_data";
+		    json.cmd_type = "query_support_device";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+							display_device_type_list(msg);
+		                },
+		            });
+		}
+
+		function display_real_data(msg, device_type, status) {
+			$('#real_data').empty();
+			$.each(msg.real_data_rs232, function(i, item) {
+				if ((device_type != '全部') && (device_type != item.device_id)) {
+					return true;
+				}
+
+				if (status != '全部') {
+					if (((status == '0') && (item.alarm_type != '0'))
+						|| ((status != '0') && (item.alarm_type == '0'))) {
+						return true;
+					}
+				}
+
+				var html="";
+				if (item.alarm_type == '0') {
+					var html = '<tr><td>' + item.protocol_desc + '</td><td>'
+					+ item.param_desc + '</td><td>' + item.analog_value + item.param_unit + '</td><td>'
+					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>正常</td></tr>';
+				} else {
+					var html = '<tr class="warning"><td>' + item.protocol_desc + '</td><td>'
+					+ item.param_desc + '</td><td>' + item.analog_value + item.param_unit + '</td><td>'
+					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>报警</td></tr>';
+				}
+
+				$("#real_data").append(html);
+			});
+
+			$.each(msg.real_data_rs485, function(i, item) {
+				if ((device_type != '全部') && (device_type != item.device_id)) {
+					return true;
+				}
+
+				if (status != '全部') {
+					if (((status == '0') && (item.alarm_type != '0'))
+						|| ((status != '0') && (item.alarm_type == '0'))) {
+						return true;
+					}
+				}
+
+				var html="";
+				if (item.alarm_type == '0') {
+					var html = '<tr><td>' + item.protocol_desc + '</td><td>'
+					+ item.param_desc + '</td><td>' + item.analog_value + item.param_unit + '</td><td>'
+					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>正常</td></tr>';
+				} else {
+					var html = '<tr class="warning"><td>' + item.protocol_desc + '</td><td>'
+					+ item.param_desc + '</td><td>' + item.analog_value + item.param_unit + '</td><td>'
+					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>报警</td></tr>';
+				}
+
+				$("#real_data").append(html);
+			});
+		}
+
+		function device_type_change() {
+			var device_type = $('#device_type').val();
+			var status = $('#status_type').val();
+			var collection = window.localStorage.getItem("real_data");
+			var data = JSON.parse(collection);
+			display_real_data(data, device_type, status);
+		}
+
+		function status_type_change() {
+			var device_type = $('#device_type').val();
+			var status = $('#status_type').val();
+			var collection = window.localStorage.getItem("real_data");
+			var data = JSON.parse(collection);
+			display_real_data(data, device_type, status);
+		}
+
+		function load_real_status() {
+			    var json = new Object();
+			    json.msg_type = "query_data";
+			    json.cmd_type = "query_real_uart_data";
+			    var data = $.toJSON(json);
+			    $.ajax({
+			                url     : "/cgi-bin/common.cgi",
+			                type    : "POST",
+			                dataType: "json",
+			                data    : data,
+			                success : function(msg) {
+								display_real_data(msg, '全部', '全部');
+								//window.localStorage.removeItem("real_data");
+								//window.localStorage.setItem("real_data", JSON.stringify(msg));
+			                },
+			            });
+		}
+
+		var interval_handle;
+        $(document).ready(function () {
+            //当table-content出现滚动条时，设置table-title的padding-right为17px
+            if ($(".table-content table").height() > $(".table-content").height()){
+                $(".table-title").css("padding-right", "17px");
+            }
+
+			load_device_type_list();
+			load_real_status();
+			interval_handle = setInterval("load_real_status()", 5000);
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>干接点输入状态</title>
+    <link rel="stylesheet" href="css/cssReset.css">
+<style>
+.content-wr {
+    height: 100%;
+    padding: 20px 20px;
+}
+.di-status {
+    width: 49%;
+    height: 40%;
+    box-sizing: border-box;
+    padding-bottom: 32px;
+}
+.di-status {
+    float: left;
+}
+
+.di-status h3 {
+    height: 32px;
+    line-height: 32px;
+    text-indent: 10px;
+    background-color: #acacac;
+    color: #ececec;
+}
+
+.di-status ul {
+    width: 100%;
+    height: 100%;
+    background-color: #eaeaea;
+}
+
+.di-status li {
+    width: 25%;
+    height: 100%;
+    float: left;
+    box-sizing: border-box;
+    padding-top: 134px;
+}
+
+.di-status li span {
+    display: block;
+    width: 80px;
+    height: 24px;
+    margin: 0 auto;
+    border-radius: 20px;
+    background-color: #d7d7d7;
+    text-align: center;
+    color: #555;
+}
+
+.di_alarm_on {
+    background-color: #f30707;
+}
+
+.di-status-off {
+    background: url("../images/di_off.png") center 30px no-repeat;
+}
+.di-status-on {
+    background: url("../images/di_on.png") center 30px no-repeat;
+}
+</style>
+</head>
+<body onbeforeunload="leave_page()">
+    <div class="content-wr">
+        <div class="di-status">
+            <h3>干接点输入DI状态</h3>
+            <ul class="clear-fix">
+                <li class="di-status-off"><span>输入1</span></li>
+                <li class="di-status-off"><span>输入2</span></li>
+                <li class="di-status-off"><span>输入3</span></li>
+                <li class="di-status-off"><span>输入4</span></li>
+            </ul>
+        </div>
+    </div>
+    <script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+    <script>
+		function leave_page() {
+			clearInterval(interval_handle);
+		}
+
+		function display_io(msg) {
+			$('.di-status li').each(function(i) {
+				if (msg.io_status[i].value) {
+		            $(this).removeClass('di-status-off');
+					$(this).addClass('di-status-on');
+				} else {
+		            $(this).removeClass('di-status-on');
+					$(this).addClass('di-status-off');
+				}
+			});
+		}
+
+		function load_real_status() {
+			    var json = new Object();
+			    json.msg_type = "query_data";
+			    json.cmd_type = "query_real_di_data";
+			    var data = $.toJSON(json);
+			    $.ajax({
+			                url     : "/cgi-bin/common.cgi",
+			                type    : "POST",
+			                dataType: "json",
+			                data    : data,
+			                success : function(msg) {
+								display_io(msg);
+			                },
+			            });
+		}
+
+		var interval_handle;
+        $(document).ready(function () {
+            //当table-content出现滚动条时，设置table-title的padding-right为17px
+            if ($(".table-content table").height() > $(".table-content").height()){
+                $(".table-title").css("padding-right", "17px");
+            }
+
+			load_real_status();
+			interval_handle = setInterval("load_real_status()", 5000);
+        })
+    </script>
+</body>
+</html>
