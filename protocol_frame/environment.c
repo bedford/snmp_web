@@ -9,9 +9,6 @@
 #include "environment.h"
 #include "crc16.h"
 
-static int start_flag = 1;
-static struct timeval last_record_time;
-
 enum
 {
     READ_STATUS_CMD = 0x01,
@@ -106,20 +103,6 @@ static int calculate_device_status(cmd_t    *cmd,
         printf("file %s, func %s, line %d, crc low %x, crc high %x, %x, %x\n",
                 __FILE__, __func__, __LINE__, crc_low, crc_high, data[data_len - 1], data[data_len - 2]);
         return ret;
-    }
-
-    struct timeval current_time;
-    gettimeofday(&current_time, NULL);
-
-    int record_flag = 0;
-    if (start_flag == 1) {
-        record_flag = 1;
-        last_record_time = current_time;
-    }
-
-    if ((current_time.tv_sec - last_record_time.tv_sec) > (cmd->record_interval * 60)) {
-        record_flag = 1;
-        last_record_time = current_time;
     }
 
     param_desc_t *desc = NULL;
