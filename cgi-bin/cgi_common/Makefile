@@ -9,9 +9,7 @@ DEPS    := $(OBJS:.o=.d)
 
 INC_FLAGS += -I.
 
-LD_FLAGS += -L/usr/local/lib
 LD_FLAGS += -lm
-#LD_FLAGS += -lpthread
 
 CC = arm-linux-gcc
 LD_FLAGS += -L/opt/work/web/cgi-bin/cgi_common/arm-lib -lsqlite3

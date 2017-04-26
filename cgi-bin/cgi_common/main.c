@@ -11,6 +11,9 @@
 #include "db_access.h"
 #include "mib_create.h"
 
+#include "lf_queue.h"
+#include "common_type.h"
+
 #define INI_FILE_NAME	"/opt/app/param.ini"
 #define MIB_FILE_NAME	"/tmp/JT_Gaurd.mib"
 
@@ -1366,48 +1369,102 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
-static int query_real_data(cJSON *root, priv_info_t *priv)
+static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 {
 	req_buf_t *req_buf	= &(priv->request);
-	db_access_t *data_db_handle = priv->data_db_handle;
+	int ret = 0;
 
-	char sql[256] = {0};
-	sprintf(sql, "SELECT * FROM %s ORDER BY id DESC", "real_data");
-	query_result_t query_result;
-	memset(&query_result, 0, sizeof(query_result_t));
-	data_db_handle->query(data_db_handle, sql, &query_result);
+	lf_queue_t rs232_queue;
+	lf_queue_t rs485_queue;
+	uart_realdata_t *uart_realdata = NULL;
+	do {
+		if (lf_queue_init(&rs232_queue, RS232_SHM_KEY, sizeof(uart_realdata_t), 5) < 0) {
+			printf("create RS232 share memory queue failed\n");
+			ret = -1;
+			break;
+		}
+
+		if (lf_queue_init(&rs485_queue, RS485_SHM_KEY, sizeof(uart_realdata_t), 5) < 0) {
+			printf("create RS232 share memory queue failed\n");
+			ret = -1;
+			break;
+		}
+
+		uart_realdata = calloc(1, sizeof(uart_realdata_t));
+		if (uart_realdata == NULL) {
+			ret = -1;
+			break;
+		}
+	} while(0);
 
     cJSON *response = cJSON_CreateObject();
 	cJSON *sub_dir = NULL;
 	cJSON *child = NULL;
 	int i = 0;
-	cJSON_AddNumberToObject(response, "count", query_result.row);
-	if (query_result.row > 0) {
-    	sub_dir = cJSON_CreateArray();
-    	cJSON_AddItemToObject(response, "real_data", sub_dir);
+	if (ret == -1) {
+		cJSON_AddNumberToObject(response, "count", 1000);
+	} else {
+		if (lf_queue_pop(rs232_queue, (void *)uart_realdata) == 0) {
+			sub_dir = cJSON_CreateArray();
+			cJSON_AddItemToObject(response, "real_data_rs232", sub_dir);
+			cJSON_AddNumberToObject(response, "rs232_count", uart_realdata->cnt);
+			for (i = 0; i < uart_realdata->cnt; i++) {
+				child = cJSON_CreateObject();
+				char tmp[32] = {0};
+				sprintf(tmp, "%.1f", uart_realdata->data[i].analog_value);
+				cJSON_AddNumberToObject(child, "protocol_id", uart_realdata->data[i].protocol_id);
+				cJSON_AddStringToObject(child, "protocol_name", uart_realdata->data[i].protocol_name);
+				cJSON_AddStringToObject(child, "protocol_desc", uart_realdata->data[i].protocol_desc);
+				cJSON_AddNumberToObject(child, "param_id", uart_realdata->data[i].param_id);
+				cJSON_AddStringToObject(child, "param_name", uart_realdata->data[i].param_name);
+				cJSON_AddStringToObject(child, "param_desc", uart_realdata->data[i].param_desc);
+				cJSON_AddNumberToObject(child, "param_type", uart_realdata->data[i].param_type);
+				cJSON_AddStringToObject(child, "analog_value", tmp);
+				cJSON_AddStringToObject(child, "param_unit", uart_realdata->data[i].param_unit);
+				cJSON_AddNumberToObject(child, "enum_value", uart_realdata->data[i].enum_value);
+				cJSON_AddStringToObject(child, "enum_en_desc", uart_realdata->data[i].enum_en_desc);
+				cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->data[i].enum_cn_desc);
+				cJSON_AddNumberToObject(child, "alarm_type", uart_realdata->data[i].alarm_type);
+				cJSON_AddItemToArray(sub_dir, child);
+			}
+		} else {
+			cJSON_AddNumberToObject(response, "rs232_count", 0);
+		}
 
-		for (i = 1; i < (query_result.row + 1); i++) {
-	    	child = cJSON_CreateObject();
-    		cJSON_AddStringToObject(child, "created_time", query_result.result[i * query_result.column + 1]);
-			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
-			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 4]);
-			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
-			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 7]);
-			cJSON_AddStringToObject(child, "param_type", query_result.result[i * query_result.column + 8]);
-			cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
-			cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 10]);
-			cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 11]);
-			cJSON_AddStringToObject(child, "enum_en_desc", query_result.result[i * query_result.column + 12]);
-			cJSON_AddStringToObject(child, "enum_cn_desc", query_result.result[i * query_result.column + 13]);
-			cJSON_AddStringToObject(child, "alarm_type", query_result.result[i * query_result.column + 14]);
-    		cJSON_AddItemToArray(sub_dir, child);
+		if (lf_queue_pop(rs485_queue, (void *)uart_realdata) == 0) {
+			sub_dir = cJSON_CreateArray();
+			cJSON_AddItemToObject(response, "real_data_rs485", sub_dir);
+			cJSON_AddNumberToObject(response, "rs485_count", uart_realdata->cnt);
+			for (i = 0; i < uart_realdata->cnt; i++) {
+				child = cJSON_CreateObject();
+				char tmp[32] = {0};
+				sprintf(tmp, "%.1f", uart_realdata->data[i].analog_value);
+				cJSON_AddNumberToObject(child, "protocol_id", uart_realdata->data[i].protocol_id);
+				cJSON_AddStringToObject(child, "protocol_name", uart_realdata->data[i].protocol_name);
+				cJSON_AddStringToObject(child, "protocol_desc", uart_realdata->data[i].protocol_desc);
+				cJSON_AddNumberToObject(child, "param_id", uart_realdata->data[i].param_id);
+				cJSON_AddStringToObject(child, "param_name", uart_realdata->data[i].param_name);
+				cJSON_AddStringToObject(child, "param_desc", uart_realdata->data[i].param_desc);
+				cJSON_AddNumberToObject(child, "param_type", uart_realdata->data[i].param_type);
+				cJSON_AddStringToObject(child, "analog_value", tmp);
+				cJSON_AddStringToObject(child, "param_unit", uart_realdata->data[i].param_unit);
+				cJSON_AddNumberToObject(child, "enum_value", uart_realdata->data[i].enum_value);
+				cJSON_AddStringToObject(child, "enum_en_desc", uart_realdata->data[i].enum_en_desc);
+				cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->data[i].enum_cn_desc);
+				cJSON_AddNumberToObject(child, "alarm_type", uart_realdata->data[i].alarm_type);
+				cJSON_AddItemToArray(sub_dir, child);
+			}
+		} else {
+			cJSON_AddNumberToObject(response, "rs485_count", 0);
 		}
 	}
-	data_db_handle->free_table(data_db_handle, query_result.result);
 
-    sub_dir = cJSON_CreateArray();
+	free(uart_realdata);
+	uart_realdata = NULL;
+	lf_queue_fini(&rs232_queue);
+	lf_queue_fini(&rs485_queue);
+
+    /*sub_dir = cJSON_CreateArray();
     cJSON_AddItemToObject(response, "io_status", sub_dir);
     for (i = 0; i < 8; i++) {
 		drv_gpio_open(i);
@@ -1416,7 +1473,73 @@ static int query_real_data(cJSON *root, priv_info_t *priv)
 		drv_gpio_read(i, &io_value);
     	cJSON_AddNumberToObject(child, "value", io_value);
     	cJSON_AddItemToArray(sub_dir, child);
-    }
+    }*/
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int query_real_di_data(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	int ret = 0;
+
+	lf_queue_t di_queue;
+	di_realdata_t *di_realdata = NULL;
+	do {
+		if (lf_queue_init(&di_queue, DI_SHM_KEY, sizeof(di_realdata_t), 5) < 0) {
+			printf("create RS232 share memory queue failed\n");
+			ret = -1;
+			break;
+		}
+
+		di_realdata = calloc(1, sizeof(di_realdata));
+		if (di_realdata == NULL) {
+			ret = -1;
+			break;
+		}
+	} while(0);
+
+    cJSON *response = cJSON_CreateObject();
+	cJSON *sub_dir = NULL;
+	cJSON *child = NULL;
+	int i = 0;
+	if (ret == -1) {
+		cJSON_AddNumberToObject(response, "count", 1000);
+	} else {
+		if (lf_queue_pop(di_queue, (void *)di_realdata) == 0) {
+			sub_dir = cJSON_CreateArray();
+			cJSON_AddItemToObject(response, "real_data_di", sub_dir);
+			cJSON_AddNumberToObject(response, "di_count", di_realdata->cnt);
+			for (i = 0; i < di_realdata->cnt; i++) {
+				child = cJSON_CreateObject();
+				char tmp[32] = {0};
+				sprintf(tmp, "%.1f", di_realdata->data[i].analog_value);
+				cJSON_AddNumberToObject(child, "protocol_id", di_realdata->data[i].protocol_id);
+				cJSON_AddStringToObject(child, "protocol_name", di_realdata->data[i].protocol_name);
+				cJSON_AddStringToObject(child, "protocol_desc", di_realdata->data[i].protocol_desc);
+				cJSON_AddNumberToObject(child, "param_id", di_realdata->data[i].param_id);
+				cJSON_AddStringToObject(child, "param_name", di_realdata->data[i].param_name);
+				cJSON_AddStringToObject(child, "param_desc", di_realdata->data[i].param_desc);
+				cJSON_AddNumberToObject(child, "param_type", di_realdata->data[i].param_type);
+				cJSON_AddStringToObject(child, "analog_value", tmp);
+				cJSON_AddStringToObject(child, "param_unit", di_realdata->data[i].param_unit);
+				cJSON_AddNumberToObject(child, "enum_value", di_realdata->data[i].enum_value);
+				cJSON_AddStringToObject(child, "enum_en_desc", di_realdata->data[i].enum_en_desc);
+				cJSON_AddStringToObject(child, "enum_cn_desc", di_realdata->data[i].enum_cn_desc);
+				cJSON_AddNumberToObject(child, "alarm_type", di_realdata->data[i].alarm_type);
+				cJSON_AddItemToArray(sub_dir, child);
+			}
+		} else {
+			cJSON_AddNumberToObject(response, "di_count", 0);
+		}
+	}
+
+	free(di_realdata);
+	di_realdata = NULL;
+	lf_queue_fini(&di_queue);
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -1839,8 +1962,12 @@ cmd_fun_t cmd_query_data[] = {
 		query_email_record
 	},
 	{
-		"query_real_data",
-		query_real_data
+		"query_real_uart_data",
+		query_real_uart_data
+	},
+	{
+		"query_real_di_data",
+		query_real_di_data
 	},
 	{
 		"query_support_device",
