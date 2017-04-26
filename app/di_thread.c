@@ -17,6 +17,9 @@
 #include "ring_buffer.h"
 #include "mem_pool.h"
 
+#include "lf_queue.h"
+#include "common_type.h"
+
 #define MAX_DI_NUMBER	(4)
 #define MAX_PARAM_LEN	(128)
 #define MIN_PARAM_LEN	(32)
@@ -50,6 +53,9 @@ typedef struct {
 	ring_buffer_t	*email_rb_handle;
 	mem_pool_t		*alarm_pool_handle;
 
+	lf_queue_t		di_queue;
+	di_realdata_t	*di_realdata;
+
 	struct timeval	last_record_time;
 	char			last_di_status[4];
 	di_param_t		di_param[4];
@@ -71,10 +77,12 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value,
 		*alarm_cnt = cnt + 1;
 		sprintf(alarm_desc, "%s%s", param->device_name,
 			(value == 1) ? param->high_desc : param->low_desc);
+		priv->di_realdata->data[index].alarm_type = 1;
 	} else {
 		*alarm_cnt = cnt - 1;
 		sprintf(alarm_desc, "%s%s", param->device_name,
 			(value == 1) ? param->high_desc : param->low_desc);
+		priv->di_realdata->data[index].alarm_type = 0;
 	}
 
     sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
@@ -193,6 +201,24 @@ static void update_di_param(priv_info_t *priv)
 	param = NULL;
 }
 
+static void update_di_realdata(priv_info_t *priv, element_data_t *di_data, int index, unsigned char value)
+{
+	di_param_t *param = &(priv->di_param[index]);
+
+	di_data->protocol_id = LOCAL_DI;
+	strcpy(di_data->protocol_name, "DI");
+	strcpy(di_data->protocol_desc, "干接点输入");
+	di_data->param_id = param->id;
+	strcpy(di_data->param_name, param->di_name);
+	strcpy(di_data->param_desc, param->device_name);
+	strcpy(di_data->param_unit, "");
+	di_data->param_type = PARAM_TYPE_ENUM;
+	di_data->analog_value = 0.0;
+	di_data->enum_value = value;
+	strcpy(di_data->enum_cn_desc, (value == 1) ? param->high_desc : param->low_desc);
+	strcpy(di_data->enum_en_desc, "");
+}
+
 static void *di_process(void *arg)
 {
 	di_thread_param_t *thread_param = (di_thread_param_t *)arg;
@@ -229,9 +255,15 @@ static void *di_process(void *arg)
 	}
 	gettimeofday(&(priv->last_record_time), NULL);
 
+	if (lf_queue_init(&(priv->di_queue), DI_SHM_KEY, sizeof(di_realdata_t), 5) < 0) {
+		printf("create RS232 share memory queue failed\n");
+		return (void *)0;
+	}
+
 	unsigned char value = 0;
 	struct timeval current_time;
 	int timeout_record_flag = 0;
+	element_data_t *di_data = NULL;
 	while (thiz->thread_status) {
 		if (update_di_param_flag) {
 			update_di_param(priv);
@@ -247,18 +279,24 @@ static void *di_process(void *arg)
 		for (index = 0; index < MAX_DI_NUMBER; index++) {
 			param = &(priv->di_param[index]);
 			drv_gpio_read(index, &value);
+			di_data = &(priv->di_realdata->data[index]);
 			if ((priv->last_di_status[index] != value)
 			 	&& (param->enable)) {
 				printf("line %d, func %s, last %d, now %d\n",
 				__LINE__, __func__, priv->last_di_status[index], value);
 				alarm_data_record(priv, index, value, alarm_cnt);
+			} else {
+				di_data->alarm_type = 0;
 			}
+			update_di_realdata(priv, di_data, index, value);
 
 			if (timeout_record_flag && param->enable) {
 				history_data_record(priv, index, value);
 			}
 			priv->last_di_status[index] = value;
 		}
+		priv->di_realdata->cnt = 4;
+		lf_queue_push(priv->di_queue, priv->di_realdata);
 
 		if (update_di_param_flag) {
 			update_di_param_flag = 0;
@@ -268,6 +306,7 @@ static void *di_process(void *arg)
 		}
 		sleep(1);
 	}
+	lf_queue_fini(&(priv->di_queue));
 
 	for (index = 0; index < MAX_DI_NUMBER; index++) {
 		drv_gpio_close(index);
@@ -280,6 +319,10 @@ static void di_thread_destroy(thread_t *thiz)
 {
     if (thiz != NULL) {
         priv_info_t *priv = (priv_info_t *)thiz->priv;
+		if (priv->di_realdata) {
+			memset(priv->di_realdata, 0, sizeof(di_realdata_t));
+			priv->di_realdata = NULL;
+		}
 
         memset(thiz, 0, sizeof(thread_t) + sizeof(priv_info_t));
         free(thiz);
@@ -301,6 +344,13 @@ thread_t *di_thread_create(void)
         thiz->start		= thread_start;
         thiz->join		= thread_join;
         thiz->destroy	= di_thread_destroy;
+
+		priv_info_t *priv = (priv_info_t *)thiz->priv;
+		priv->di_realdata = calloc(1, sizeof(di_realdata_t));
+		if (priv->di_realdata == NULL) {
+			di_thread_destroy(thiz);
+			thiz = NULL;
+		}
 	}
 
 	return thiz;

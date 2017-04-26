@@ -8,16 +8,14 @@ OBJS   := $(patsubst %.c,%.o,$(wildcard *.c))
 DEPS    := $(OBJS:.o=.d)
 
 INC_FLAGS += -I.
+INC_FLAGS += -I/usr/local/ssl/include
 
-#LD_FLAGS += -L/usr/local/lib
-#LD_FLAGS += -lm
 LD_FLAGS += -lpthread
-LD_FLAGS += -L. -lprotocol
+LD_FLAGS += -L./libs -lprotocol -lssl -lcrypto
 
-#CC = arm-linux-gcc
-CC = gcc
-#LD_FLAGS += -L/opt/work/web/cgi-bin/cgi_common/arm-lib -lsqlite3
-LD_FLAGS += -L/opt/work/web/cgi-bin/cgi_common/x86-lib -lsqlite3
+CC = arm-linux-gcc
+LD_FLAGS += -L/opt/work/web/cgi-bin/cgi_common/arm-lib -lsqlite3
+#LD_FLAGS += -L/opt/work/web/cgi-bin/cgi_common/x86-lib -lsqlite3
 
 %.o : %.c
 	$(CC) $(CFLAGS) $(INC_FLAGS) -c $< -o $@

@@ -17,6 +17,9 @@
 #include "ring_buffer.h"
 #include "mem_pool.h"
 
+#include "lf_queue.h"
+#include "common_type.h"
+
 typedef struct {
 	db_access_t		*sys_db_handle;
 	ring_buffer_t	*rb_handle;
@@ -27,6 +30,9 @@ typedef struct {
 	ring_buffer_t	*sms_rb_handle;
 	ring_buffer_t	*email_rb_handle;
 	mem_pool_t		*alarm_pool_handle;
+
+	lf_queue_t		rs232_queue;
+	uart_realdata_t *rs232_realdata;
 
 	uart_param_t	uart_param;
 	int 			protocol_id;
@@ -65,23 +71,29 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	param_value_t *current_value = NULL;
 	int list_size = valid_value->get_list_size(valid_value);
 
-    /* 确认实时数据表中是否有相应协议库的数据 */
-    int init_flag = 1;
-	char error_msg[512] = {0};
-	char sql[512] = {0};
-	sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d", "real_data", priv->protocol->protocol_id);
-
-	query_result_t query_result;
-	memset(&query_result, 0, sizeof(query_result_t));
-	data_db_handle->query(data_db_handle, sql, &query_result);
-
-	if (query_result.row > 0) {
-		init_flag = 0;
-	}
-	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
-
 	int i = 0;
 	msg_t *msg = NULL;
+	for (i = 0; i < list_size; i++) {
+		current_value = valid_value->get_index_value(valid_value, i);
+		param_desc = desc_list->get_index_value(desc_list, i);
+
+		priv->rs232_realdata->data[i].protocol_id = priv->protocol->protocol_id;
+		strcpy(priv->rs232_realdata->data[i].protocol_name, priv->protocol->protocol_name);
+		strcpy(priv->rs232_realdata->data[i].protocol_desc, priv->protocol->protocol_desc);
+		priv->rs232_realdata->data[i].param_id = current_value->param_id;
+		strcpy(priv->rs232_realdata->data[i].param_name, param_desc->param_name);
+		strcpy(priv->rs232_realdata->data[i].param_desc, param_desc->param_desc);
+		priv->rs232_realdata->data[i].param_type = param_desc->param_type;
+		priv->rs232_realdata->data[i].analog_value = current_value->param_value;
+		strcpy(priv->rs232_realdata->data[i].param_unit, param_desc->param_unit);
+		priv->rs232_realdata->data[i].enum_value = current_value->enum_value;
+		strcpy(priv->rs232_realdata->data[i].enum_en_desc, param_desc->param_enum[current_value->enum_value].en_desc);
+		strcpy(priv->rs232_realdata->data[i].enum_cn_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
+		priv->rs232_realdata->data[i].alarm_type = 0;
+	}
+	priv->rs232_realdata->cnt = list_size;
+	lf_queue_push(priv->rs232_queue, priv->rs232_realdata);
+
 	for (i = 0; i < list_size; i++) {
 		memset(&last_value, 0, sizeof(param_value_t));
 		current_value = valid_value->get_index_value(valid_value, i);
@@ -90,37 +102,6 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		last_value.param_value = current_value->param_value;
 		last_value.enum_value = current_value->enum_value;
 		last_value_list->push_back(last_value_list, &last_value);
-
-		msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
-		if (msg == NULL) {
-			printf("memory pool is empty\n");
-			continue;
-		}
-
-		unsigned int status = 0;
-		if (init_flag == 1) {
-            sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, \
-					param_id, param_name, param_desc, param_type, analog_value, \
-	            	unit, enum_value, enum_en_desc, enum_cn_desc, alarm_type) \
-					VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d)",
-	                "real_data", priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
-	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
-                    current_value->param_value, param_desc->param_unit, current_value->enum_value,
-                    param_desc->param_enum[current_value->enum_value].en_desc,
-					param_desc->param_enum[current_value->enum_value].cn_desc, status);
-        } else {
-	        sprintf(msg->buf, "UPDATE %s SET analog_value=%.1f, enum_value=%d, \
-						enum_en_desc='%s', enum_cn_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
-	            		"real_data", current_value->param_value, current_value->enum_value,
-		                param_desc->param_enum[current_value->enum_value].en_desc,
-						param_desc->param_enum[current_value->enum_value].cn_desc, status,
-						priv->protocol->protocol_id, current_value->param_id);
-		}
-		if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
-			printf("ring buffer is full\n");
-			priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
-		}
-		msg = NULL;
 
 		msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
 		if (msg == NULL) {
@@ -347,23 +328,22 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			msg = NULL;
 		}
 
-		msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
-		if (msg == NULL) {
-			printf("memory pool is empty\n");
-			continue;
-		}
-        sprintf(msg->buf, "UPDATE %s SET analog_value=%.1f, enum_value=%d, \
-					enum_en_desc='%s', enum_cn_desc='%s', alarm_type=%d WHERE protocol_id=%d and param_id=%d",
-            		"real_data", current_value->param_value, current_value->enum_value,
-	                param_desc->param_enum[current_value->enum_value].en_desc,
-					param_desc->param_enum[current_value->enum_value].en_desc, alarm_status,
-                    priv->protocol->protocol_id, current_value->param_id);
-		if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
-			printf("ring buffer is full\n");
-			priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
-		}
-		msg = NULL;
+		priv->rs232_realdata->data[i].protocol_id = priv->protocol->protocol_id;
+		strcpy(priv->rs232_realdata->data[i].protocol_name, priv->protocol->protocol_name);
+		strcpy(priv->rs232_realdata->data[i].protocol_desc, priv->protocol->protocol_desc);
+		priv->rs232_realdata->data[i].param_id = current_value->param_id;
+		strcpy(priv->rs232_realdata->data[i].param_name, param_desc->param_name);
+		strcpy(priv->rs232_realdata->data[i].param_desc, param_desc->param_desc);
+		priv->rs232_realdata->data[i].param_type = param_desc->param_type;
+		priv->rs232_realdata->data[i].analog_value = current_value->param_value;
+		strcpy(priv->rs232_realdata->data[i].param_unit, param_desc->param_unit);
+		priv->rs232_realdata->data[i].enum_value = current_value->enum_value;
+		strcpy(priv->rs232_realdata->data[i].enum_en_desc, param_desc->param_enum[current_value->enum_value].en_desc);
+		strcpy(priv->rs232_realdata->data[i].enum_cn_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
+		priv->rs232_realdata->data[i].alarm_type = 0;
 	}
+	priv->rs232_realdata->cnt = list_size;
+	lf_queue_push(priv->rs232_queue, priv->rs232_realdata);
 }
 
 static void update_alarm_param(priv_info_t *priv, property_t *property)
@@ -412,41 +392,43 @@ static void *rs232_process(void *arg)
 	priv->email_rb_handle = (ring_buffer_t *)thread_param->email_rb_handle;
 	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
-	int *alarm_cnt = (int *)thread_param->alarm_cnt;
+	char sql[256] = {0};
+	query_result_t query_result;
+	sprintf(sql, "SELECT * FROM %s WHERE port=2", "uart_cfg");
+	memset(&query_result, 0, sizeof(query_result_t));
+	priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
+	if (query_result.row <= 0) {
+		priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
+		return (void *)0;
+	}
+
+	priv->protocol_id = atoi(query_result.result[query_result.column + 1]);
+	priv->uart_param.baud = atoi(query_result.result[query_result.column + 2]);
+	priv->uart_param.bits = atoi(query_result.result[query_result.column + 3]);
+	priv->uart_param.stops = atoi(query_result.result[query_result.column + 4]);
+	priv->uart_param.parity = atoi(query_result.result[query_result.column + 5]);
+	priv->rs232_enable = atoi(query_result.result[query_result.column + 6]);
+	printf("protocol_id %d, baud %d, bits %d, stops %d, parity %d, enable %d\n",
+		priv->protocol_id, priv->uart_param.baud, priv->uart_param.bits,
+		priv->uart_param.stops, priv->uart_param.parity, priv->rs232_enable);
+	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 
     list_t *protocol_list = list_create(sizeof(protocol_t));
     init_protocol_lib(protocol_list);
     protocol_t *protocol = NULL;
-
-	char sql[256] = {0};
-	query_result_t query_result;
-	sprintf(sql, "SELECT * FROM %s WHERE port=2", "uart_cfg");
-
-	while (1) {
-		memset(&query_result, 0, sizeof(query_result_t));
-		priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
-		if (query_result.row > 0) {
-			priv->protocol_id = atoi(query_result.result[query_result.column + 1]);
-		    priv->uart_param.baud = atoi(query_result.result[query_result.column + 2]);
-		    priv->uart_param.bits = atoi(query_result.result[query_result.column + 3]);
-		    priv->uart_param.stops = atoi(query_result.result[query_result.column + 4]);
-		    priv->uart_param.parity = atoi(query_result.result[query_result.column + 5]);
-			priv->rs232_enable = atoi(query_result.result[query_result.column + 6]);
-			printf("protocol_id %d, baud %d, bits %d, stops %d, parity %d, enable %d\n",
-				priv->protocol_id, priv->uart_param.baud, priv->uart_param.bits,
-				priv->uart_param.stops, priv->uart_param.parity, priv->rs232_enable);
-		}
-		priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
-
-		protocol = get_protocol_handle(protocol_list, priv->protocol_id);
-		if ((protocol != NULL) && (priv->rs232_enable)) {
-			break;
-		}
-		sleep(5);
+	protocol = get_protocol_handle(protocol_list, priv->protocol_id);
+	if ((protocol != NULL) && (priv->rs232_enable)) {
+		return (void *)0;
 	}
 
 	priv->protocol = protocol;
     print_snmp_protocol(protocol);
+
+	int *alarm_cnt = (int *)thread_param->alarm_cnt;
+	if (lf_queue_init(&(priv->rs232_queue), RS232_SHM_KEY, sizeof(uart_realdata_t), 5) < 0) {
+		printf("create RS232 share memory queue failed\n");
+		return (void *)0;
+	}
 
     uart_t *uart = uart_create(&(priv->uart_param));
     uart->open(uart);
@@ -513,6 +495,8 @@ static void *rs232_process(void *arg)
 	thiz = NULL;
 	thread_param = NULL;
 
+	lf_queue_fini(&(priv->rs232_queue));
+
 	return (void *)0;
 }
 
@@ -520,6 +504,10 @@ static void rs232_thread_destroy(thread_t *thiz)
 {
     if (thiz != NULL) {
         priv_info_t *priv = (priv_info_t *)thiz->priv;
+		if (priv->rs232_realdata) {
+			memset(priv->rs232_realdata, 0, sizeof(uart_realdata_t));
+			priv->rs232_realdata = NULL;
+		}
 
         memset(thiz, 0, sizeof(thread_t) + sizeof(priv_info_t));
         free(thiz);
@@ -541,6 +529,13 @@ thread_t *rs232_thread_create(void)
         thiz->start		= thread_start;
         thiz->join		= thread_join;
         thiz->destroy	= rs232_thread_destroy;
+
+		priv_info_t *priv = (priv_info_t *)thiz->priv;
+		priv->rs232_realdata = calloc(1, sizeof(uart_realdata_t));
+		if (priv->rs232_realdata == NULL) {
+			rs232_thread_destroy(thiz);
+			thiz = NULL;
+		}
 	}
 
 	return thiz;
