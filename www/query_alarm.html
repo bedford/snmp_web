@@ -179,6 +179,11 @@
 	<script src="js/query_history.js"></script>
 	<script src="js/WdatePicker.js"></script>
 	<script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
 		function device_type_change() {
 			var device_type = $('#device_name').val();
 			if (device_type == '全部设备') {

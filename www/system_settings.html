@@ -23,6 +23,11 @@
     <script src="js/jquery-1.12.0.js"></script>
     <script src="js/tabs.js"></script>
     <script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
         $(document).ready(function () {
             $( '#tabs' ).h_tab({
                 open : 'li:first-child' //如果不配置此项，默认打开第一项；

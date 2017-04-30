@@ -180,6 +180,11 @@
 	<script src="js/query_history.js"></script>
 	<script src="js/WdatePicker.js"></script>
 	<script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
 		function traverse_sms_record(data_list) {
 			$("#sms_table").empty();
 			var html="";

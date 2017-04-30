@@ -121,6 +121,11 @@
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
 		window.array_data = null;
 
 		function set_di_alarm() {
@@ -163,9 +168,6 @@
 					buttons: {
 						"确定": function() {
 							$(this).dialog("close");
-						},
-						取消: function() {
-							$(this).dialog("close");
 						}
 					}
 				});
@@ -192,9 +194,6 @@
 								modal: true,
 								buttons: {
 									"确定": function() {
-										$(this).dialog("close");
-									},
-									取消: function() {
 										$(this).dialog("close");
 									}
 								}
