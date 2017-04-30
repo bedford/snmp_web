@@ -164,7 +164,7 @@
 		<form>
 			<fieldset>
 				<label for="name">名字</label>
-				<input type="text" name="modify_name" id="modify_name" disabled="true">
+				<input type="text" name="modify_name" id="modify_name">
 				<label for="name">手机号码</label>
 				<input type="text" name="modify_phone" id="modify_phone">
 			</fieldset>
@@ -179,6 +179,28 @@
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
+		function phone_number_valid_check(phone_number) {
+			var myreg = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1}))+\d{8})$/; 
+			if (phone_number.length == 0) {
+				return false;
+			}
+
+			if (phone_number.length != 11) { 
+				return false; 
+			}
+
+			if (!myreg.test(phone_number)) { 
+				return false;
+			}
+
+			return true;
+		}
+
 		function load_sms_rule() {
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
@@ -215,11 +237,24 @@
 		                data    : data,
 		                success : function(msg) {
 		                    $('#set_btn').removeAttr("disabled");
+							var html = '';
 							if (msg.status == 1) {
-								alert("设置成功");
+								html = '设置成功';
 							} else {
-								alert("设置失败");
+								html = '设置失败';
 							}
+							$('#delete_detail').html(html);
+							$('#confirm_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								title: "提示信息",
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 		                },
 					});
 		}
@@ -298,25 +333,62 @@
 			});
 		}
 
-		function edit_phone_user(index, valuestring) {
+		function edit_phone_user(index) {
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "modify_phone_user";
 			json.id = $('#phone_table').find('tr').eq(index).find('td').eq(0).html();
 			json.name = $('#modify_name').val();
 			json.phone = $('#modify_phone').val();
-		    var data = $.toJSON(json);
-		    $.ajax({
-		                url     : "/cgi-bin/common.cgi",
-		                type    : "POST",
-		                dataType: "json",
-		                data    : data,
-		                success : function() {
-							var td =  $('#phone_table').find('tr').eq(index).find('td').eq(2);
-							td.empty();
-							td.html(valuestring);
-		                },
-		            });
+
+			if (json.name.length == 0) {
+				var html = '短信用户不能为空';
+				$('#delete_detail').html(html);
+				$('#confirm_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					title: "错误提示",
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+				return;
+			}
+
+			if (!phone_number_valid_check(json.phone)) {
+				var html = '短信用户:' + json.name + '  的手机号码无效';
+				$('#delete_detail').html(html);
+				$('#confirm_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					title: "错误提示",
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+			} else {
+				var data = $.toJSON(json);
+				$.ajax({
+							url     : "/cgi-bin/common.cgi",
+							type    : "POST",
+							dataType: "json",
+							data    : data,
+							success : function() {
+								var td =  $('#phone_table').find('tr').eq(index).find('td').eq(2);
+								td.empty();
+								td.html(json.phone);
+								td =  $('#phone_table').find('tr').eq(index).find('td').eq(1);
+								td.empty();
+								td.html(json.name);
+							},
+						});
+			}
 		}
 
         function edit_item(index) {
@@ -330,8 +402,8 @@
 				modal: true,
 				buttons: {
 					"确定": function() {
-						edit_phone_user(index, $('#modify_phone').val());
 						$(this).dialog("close");
+						edit_phone_user(inde);
 					},
 					取消: function() {
 						$(this).dialog("close");
@@ -346,16 +418,50 @@
 		    json.cmd_type = "add_phone_user";
 			json.name = $('#new_name').val();
 			json.phone = $('#new_phone').val();
-		    var data = $.toJSON(json);
-		    $.ajax({
-		                url     : "/cgi-bin/common.cgi",
-		                type    : "POST",
-		                dataType: "json",
-		                data    : data,
-		                success : function(msg) {
-							show_phone_user_list(msg);
-		                },
-		            });
+
+			if (json.name.length == 0) {
+				var html = '短信用户不能为空';
+				$('#delete_detail').html(html);
+				$('#confirm_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					title: "错误提示",
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+				return;
+			}
+
+			if (!phone_number_valid_check(json.phone)) {
+				var html = '短信用户:' + json.name + '  的手机号码无效';
+				$('#delete_detail').html(html);
+				$('#confirm_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					title: "错误提示",
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+			} else {
+				var data = $.toJSON(json);
+				$.ajax({
+							url     : "/cgi-bin/common.cgi",
+							type    : "POST",
+							dataType: "json",
+							data    : data,
+							success : function(msg) {
+								show_phone_user_list(msg);
+							},
+						});
+			}
 		}
 
 		function add_sms_contact() {
@@ -365,8 +471,8 @@
 				modal: true,
 				buttons: {
 					"确定": function() {
-						add_phone_user();
 						$(this).dialog("close");
+						add_phone_user();
 					},
 					取消: function() {
 						$(this).dialog("close");
