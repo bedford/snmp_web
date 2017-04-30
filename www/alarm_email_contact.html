@@ -158,7 +158,7 @@
 		<form>
 			<fieldset>
 				<label for="name">名字</label>
-				<input type="text" name="modify_name" id="modify_name" disabled="true">
+				<input type="text" name="modify_name" id="modify_name">
 				<label for="name">E-Mail</label>
 				<input type="text" name="modify_email" id="modify_email">
 			</fieldset>
@@ -173,6 +173,24 @@
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
+		function email_valid_check(email) {
+			if (email.length == 0) {
+				return false;
+			}
+
+			//对电子邮件的验证
+			var myreg = /^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/;
+			if (!myreg.test(email)) {
+				return false;
+			}
+            return true;
+		}
+
 		function load_email_rule() {
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
@@ -213,11 +231,24 @@
 		                data    : data,
 		                success : function(msg) {
 		                    $('#set_btn').removeAttr("disabled");
+							var html = '';
 							if (msg.status == 1) {
-								alert("设置成功");
+								html = '设置成功';
 							} else {
-								alert("设置失败");
+								html = '设置失败';
 							}
+							$('#delete_detail').html(html);
+							$('#confirm_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								title: "提示信息",
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 		                },
 					});
 		}
@@ -286,8 +317,8 @@
 				modal: true,
 				buttons: {
 					"确定": function() {
-						delete_email_user(index);
 						$(this).dialog("close");
+						delete_email_user(index);
 					},
 					取消: function() {
 						$(this).dialog("close");
@@ -296,25 +327,62 @@
 			});
 		}
 
-        function edit_email_user(index, valuestring) {
+        function edit_email_user(index) {
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "modify_email_user";
 			json.id = $('#email_table').find('tr').eq(index).find('td').eq(0).html();
 			json.name = $('#modify_name').val();
 			json.email = $('#modify_email').val();
-		    var data = $.toJSON(json);
-		    $.ajax({
-		                url     : "/cgi-bin/common.cgi",
-		                type    : "POST",
-		                dataType: "json",
-		                data    : data,
-		                success : function() {
-							var td =  $('#email_table').find('tr').eq(index).find('td').eq(2);
-							td.empty();
-							td.html(valuestring);
-		                },
-		            });
+
+            if (json.name.length == 0) {
+				var html = '邮件用户不能为空';
+				$('#delete_detail').html(html);
+				$('#confirm_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					title: "错误提示",
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+				return;
+			}
+
+            if (!email_valid_check(json.email)) {
+				var html = '邮件用户:' + json.email + '  的邮箱地址无效';
+				$('#delete_detail').html(html);
+				$('#confirm_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					title: "错误提示",
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+            } else {
+                var data = $.toJSON(json);
+                $.ajax({
+                    url     : "/cgi-bin/common.cgi",
+                    type    : "POST",
+                    dataType: "json",
+                    data    : data,
+                    success : function() {
+                        var td =  $('#email_table').find('tr').eq(index).find('td').eq(2);
+                        td.empty();
+                        td.html(json.email);
+                        td =  $('#email_table').find('tr').eq(index).find('td').eq(1);
+                        td.empty();
+                        td.html(json.name);
+                    },
+                });
+            }
 		}
 
         function edit_item(index) {
@@ -328,8 +396,8 @@
 				modal: true,
 				buttons: {
 					"确定": function() {
-						edit_email_user(index, $('#modify_email').val());
 						$(this).dialog("close");
+						edit_email_user(index);
 					},
 					取消: function() {
 						$(this).dialog("close");
@@ -344,16 +412,50 @@
 		    json.cmd_type = "add_email_user";
 			json.name = $('#new_name').val();
 			json.email = $('#new_email').val();
-		    var data = $.toJSON(json);
-		    $.ajax({
-		                url     : "/cgi-bin/common.cgi",
-		                type    : "POST",
-		                dataType: "json",
-		                data    : data,
-		                success : function(msg) {
-							show_email_user_list(msg);
-		                },
-		            });
+
+            if (json.name.length == 0) {
+				var html = '邮件用户不能为空';
+				$('#delete_detail').html(html);
+				$('#confirm_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					title: "错误提示",
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+				return;
+			}
+
+            if (!email_valid_check(json.email)) {
+				var html = '邮件用户:' + json.name + '  的邮箱地址无效';
+				$('#delete_detail').html(html);
+				$('#confirm_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					title: "错误提示",
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+            } else {
+                var data = $.toJSON(json);
+                $.ajax({
+                    url     : "/cgi-bin/common.cgi",
+                    type    : "POST",
+                    dataType: "json",
+                    data    : data,
+                    success : function(msg) {
+                        show_email_user_list(msg);
+                    },
+                });
+            }
 		}
 
 		function add_email_contact() {
@@ -363,8 +465,8 @@
 				modal: true,
 				buttons: {
 					"确定": function() {
-						add_email_user();
 						$(this).dialog("close");
+						add_email_user();
 					},
 					取消: function() {
 						$(this).dialog("close");
