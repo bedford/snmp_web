@@ -10,29 +10,29 @@
 /**
  * @brief 数据格式类型
  */
-typedef enum
+enum
 {
     CMD_FORMAT_ASCII    = 1,    /* ASCII格式 */
     CMD_FORMAT_HEX      = 2,    /* HEX格式   */
-} cmd_format_t;
+};
 
 /**
  * @brief 数据校验方式
  */
-typedef enum
+enum
 {
     VERIFY_TYPE_NONE    = 1,	/* 无数据校验 */
     VERIFY_TYPE_CRC,			/* CRC校验 */
-} verify_type_t;
+};
 
 /**
  * @brief 参数类型
  */
-typedef enum
+enum
 {
     PARAM_TYPE_ANALOG   = 1,	/* 模拟量 */
     PARAM_TYPE_ENUM,			/* 枚举量 */
-} param_type_t;
+};
 
 /**
  * @brief 指令类型声明
@@ -45,10 +45,10 @@ typedef struct
     unsigned char   end_code[MIN_CMD_LEN];	/* 指令结束符 */
     unsigned int    cmd_len;                /* 指令数据长度 */
     unsigned int    end_len;                /* 结束符长度 */
-    cmd_format_t    cmd_format;				/* 指令数据格式类型 */
+    unsigned int    cmd_format;				/* 指令数据格式类型 */
     unsigned int    read_timeout;			/* 读取返回数据超时时间 */
     unsigned int    check_len;				/* 指令返回数据长度 */
-    verify_type_t   verify_type;			/* 指令返回数据校验方式 */
+    unsigned int    verify_type;			/* 指令返回数据校验方式 */
     unsigned int    record_interval;		/* 入库最大时间间隔 */
 } cmd_t;
 
@@ -91,7 +91,7 @@ typedef struct
     float           low_limit;					/* 下限 */
     float           low_free;					/* 下限解除 */
 
-    param_type_t    param_type;					/* 参数类型(模拟量还是数字枚举量?) */
+    unsigned int    param_type;					/* 参数类型(模拟量还是数字枚举量?) */
 
     //unsigned int    alarm_delay;				/* 告警延时时间 */
     //unsigned int    record_enable;			/* 参数是否入库 */
