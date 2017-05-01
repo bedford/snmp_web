@@ -140,13 +140,10 @@
 			<input class="Wdate" type="text" id="end_time" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})">
 		</div>
 		<label>设备名称</label>
-		<select id="device_name" name="device_name" style="width:130px; height:25px;" onchange="device_type_change()">
+		<select id="device_name" name="device_name" style="width:130px; height:25px;">
 		<option value="全部设备">全部设备</option>
 		</select>
 
-		<label>参数名称</label>
-		<select id="param_name" name="param_name" style="width:130px; height:25px;">
-		</select>
 		<div id="add_user_box">
 			<input type="button" id="query_btn" value="查询" onclick="alarm_query()">
 			<input type="button" id="export_btn" value="导出数据" onclick="export_data()">
@@ -183,36 +180,6 @@
             || window.sessionStorage.getItem("user_information") == null) {
             window.location.href = "/index.html";
         }
-
-		function device_type_change() {
-			var device_type = $('#device_name').val();
-			if (device_type == '全部设备') {
-				$('#param_name option').remove();
-			} else {
-				$('#param_name option').remove();
-				var json = new Object();
-				json.msg_type = "query_data";
-				json.cmd_type = "query_support_param";
-
-				var cfg = new Object();
-				cfg.device_id = $('#device_name').val();
-				json.cfg = cfg;
-				var data = $.toJSON(json);
-				$.ajax({
-				            url     : "/cgi-bin/common.cgi",
-				            type    : "POST",
-				            dataType: "json",
-				            data    : data,
-				            success : function(msg) {
-								$('#param_name').append('<option value="全部参数">全部参数</option>');
-								for (var i in msg.param_list) {
-								    $('#param_name').append('<option value="'+ msg.param_list[i].param_id
-										+ '">' + msg.param_list[i].param_desc + '</option>');
-								}
-				            },
-				        });
-			}
-		}
 
 		function traverse_alarm_record(data_list) {
 			$("#alarm_table").empty();
@@ -255,12 +222,9 @@
 			if ($('#device_name').val() == '全部设备') {
 				cfg.device_id = "all";
 				cfg.param_id = "all";
-			} else if ($('#param_name').val() == '全部参数') {
-				cfg.device_id = $('#device_name').val();
-				cfg.param_id = "all";
 			} else {
 				cfg.device_id = $('#device_name').val();
-				cfg.param_id = $('#param_name').val();
+				cfg.param_id = "all";
 			}
 
 			json.cfg = cfg;
