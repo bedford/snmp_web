@@ -19,8 +19,8 @@
             <div class="header">
                 <h1>snmp适配器</h1>
                 <ul class="user-box">
-                    <li class="login">登录</li>
-                    <li class="exit">退出</li>
+                    <li class="login" id="login_user"></li>
+                    <li class="exit" onclick="exit_sys()">退出</li>
                 </ul>
             </div>
             <div class="page-iframe-box">
@@ -31,11 +31,25 @@
     <script src="js/jquery-1.12.0.js"></script>
     <script src="js/nav.js"></script>
     <script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        } else {
+            $('#login_user').html(window.sessionStorage.getItem("user_information"));
+        }
+
         $(document).ready(function () {
             $( '.nav-side' ).h_nav( {
                 open : ".state-item" //如果不配置此项，默认打开第一项；
             } );
         })
+
+        function exit_sys() {
+            window.sessionStorage.removeItem("user_information");
+            window.sessionStorage.removeItem("authority_information");
+            window.sessionStorage.removeItem("timeout"); 
+            window.location.href = "/main.html";
+        }
     </script>
 </body>
 </html>
