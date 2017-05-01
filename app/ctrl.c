@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/reboot.h>
 
 #include "db_access.h"
 #include "debug.h"
@@ -712,6 +713,8 @@ int main(void)
 	int power_off_cnt = 0;
 	int alarm_flag = 0;
 	unsigned char watchdog = 0;
+
+	int reboot_flag = 0;
     while (runnable) {
 		if (watchdog == 0) {
 			watchdog = 1;
@@ -752,6 +755,13 @@ int main(void)
 		if (cnt > 5) {
 			priv->pref_handle->reload(priv->pref_handle);
 			cnt = 0;
+
+			FILE *fp = fopen("/tmp/reboot", "rb");
+			if (fp != NULL) {
+				fclose(fp);
+				reboot_flag = 1;
+				break;
+			}
 		}
     }
 	drv_gpio_close(DIGITAL_OUT_0);
@@ -835,6 +845,10 @@ int main(void)
     for (i = 0; i < 8; i++) {
 		drv_gpio_close(i);
     }
+
+	if (reboot_flag == 1) {
+		reboot(RB_AUTOBOOT);
+	}
 
     return 0;
 }
