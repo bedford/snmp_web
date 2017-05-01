@@ -419,18 +419,23 @@ static void *rs485_process(void *arg)
     init_protocol_lib(protocol_list);
     protocol_t *protocol = NULL;
     protocol = get_protocol_handle(protocol_list, priv->protocol_id);
-    if ((protocol != NULL) && (priv->rs485_enable)) {
-        return (void *)0;
+	int ret = lf_queue_init(&(priv->rs485_queue), RS485_SHM_KEY, sizeof(uart_realdata_t), 5);
+	if (ret < 0) {
+		printf("create RS485 share memory queue failed\n");
+	}
+	while ((protocol == NULL) || (priv->rs485_enable == 0)
+			|| (ret < 0)) {
+		sleep(1);
+
+		if (thiz->thread_status == 0) {
+			return (void *)0;
+		}
 	}
 
 	priv->protocol = protocol;
     print_snmp_protocol(protocol);
 
 	int *alarm_cnt = (int *)thread_param->alarm_cnt;
-	if (lf_queue_init(&(priv->rs485_queue), RS485_SHM_KEY, sizeof(uart_realdata_t), 5) < 0) {
-		printf("create RS485 share memory queue failed\n");
-		return (void *)0;
-	}
 
     uart_t *uart = uart_create(&(priv->uart_param));
     uart->open(uart);
