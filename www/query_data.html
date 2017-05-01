@@ -190,7 +190,7 @@
 				html+="<td>"+item.created_time+"</td>";
 				html+="<td>"+item.protocol_desc+"</td>";
 				html+="<td>"+item.param_desc+"</td>";
-				html+="<td>"+item.analog_value+item.unit+"</td>";
+				html+="<td>"+item.analog_value+"</td>";
 				html+="<td>"+item.enum_value+"</td>";
 				html+="<td>"+item.enum_cn_desc+"</td>";
 				html+="</tr>"
@@ -208,7 +208,7 @@
 		function export_data() {
 			var collection = window.localStorage.getItem("data_record");
 			var data = JSON.parse(collection);
-			var title = new Array("时间", "设备编号", "设备名称", "参数名称", "模拟量", "开关量");
+			var title = new Array("时间", "设备名称", "参数名称", "模拟量", "开关量", "开关量描述");
 			JSONToExcelConvertor(data, "data_record", title);
 		}
 

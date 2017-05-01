@@ -1109,23 +1109,27 @@ static int query_data_record(cJSON *root, priv_info_t *priv)
 		for (i = 1; i < (query_result.row + 1); i++) {
 	    	child = cJSON_CreateObject();
     		cJSON_AddStringToObject(child, "created_time", query_result.result[i * query_result.column + 1]);
-    		cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
+    		//cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
+			//cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
 			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 4]);
-			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
+			//cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
+			//cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
 			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 7]);
 			if (strcmp(query_result.result[i * query_result.column + 8], "1") == 0) {
-				cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
-				cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 10]);
+				char tmp[64] = {0};
+				sprintf(tmp, "%s%s", query_result.result[i * query_result.column + 9],
+					query_result.result[i * query_result.column + 10]);
+				cJSON_AddStringToObject(child, "analog_value", tmp);
+				//cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
+				//cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 10]);
 				cJSON_AddStringToObject(child, "enum_value", "-");
-				cJSON_AddStringToObject(child, "enum_en_desc", "-");
+				//cJSON_AddStringToObject(child, "enum_en_desc", "-");
 				cJSON_AddStringToObject(child, "enum_cn_desc", "-");
 			} else {
 				cJSON_AddStringToObject(child, "analog_value", "-");
-				cJSON_AddStringToObject(child, "unit", "");
+				//cJSON_AddStringToObject(child, "unit", "");
 				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 11]);
-				cJSON_AddStringToObject(child, "enum_en_desc", query_result.result[i * query_result.column + 12]);
+				//cJSON_AddStringToObject(child, "enum_en_desc", query_result.result[i * query_result.column + 12]);
 				cJSON_AddStringToObject(child, "enum_cn_desc", query_result.result[i * query_result.column + 13]);
 			}
     		cJSON_AddItemToArray(sub_dir, child);
@@ -1187,24 +1191,28 @@ static int query_alarm_record(cJSON *root, priv_info_t *priv)
 		for (i = 1; i < (query_result.row + 1); i++) {
 	    	child = cJSON_CreateObject();
     		cJSON_AddStringToObject(child, "created_time", query_result.result[i * query_result.column + 1]);
-    		cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
+    		//cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
+			//cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
 			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 4]);
-			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
+			//cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
+			//cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
 			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 7]);
 			if (strcmp(query_result.result[i * query_result.column + 8], "1") == 0) {
-				cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
-				cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 10]);
+				char tmp[64] = {0};
+				sprintf(tmp, "%s%s", query_result.result[i * query_result.column + 9],
+					query_result.result[i * query_result.column + 10]);
+				cJSON_AddStringToObject(child, "analog_value", tmp);
+				//cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
+				//cJSON_AddStringToObject(child, "unit", query_result.result[i * query_result.column + 10]);
 				cJSON_AddStringToObject(child, "enum_value", "-");
-				cJSON_AddStringToObject(child, "enum_en_desc", "-");
-				cJSON_AddStringToObject(child, "enum_cn_desc", "-");
+				//cJSON_AddStringToObject(child, "enum_en_desc", "-");
+				//cJSON_AddStringToObject(child, "enum_cn_desc", "-");
 			} else {
 				cJSON_AddStringToObject(child, "analog_value", "-");
-				cJSON_AddStringToObject(child, "unit", "");
+				//cJSON_AddStringToObject(child, "unit", "");
 				cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 11]);
-				cJSON_AddStringToObject(child, "enum_en_desc", query_result.result[i * query_result.column + 12]);
-				cJSON_AddStringToObject(child, "enum_cn_desc", query_result.result[i * query_result.column + 13]);
+				//cJSON_AddStringToObject(child, "enum_en_desc", query_result.result[i * query_result.column + 12]);
+				//cJSON_AddStringToObject(child, "enum_cn_desc", query_result.result[i * query_result.column + 13]);
 			}
 			cJSON_AddStringToObject(child, "alarm_desc", query_result.result[i * query_result.column + 14]);
     		cJSON_AddItemToArray(sub_dir, child);
@@ -1287,18 +1295,18 @@ static int query_sms_record(cJSON *root, priv_info_t *priv)
 		for (i = 1; i < (query_result.row + 1); i++) {
 	    	child = cJSON_CreateObject();
     		cJSON_AddStringToObject(child, "send_time", query_result.result[i * query_result.column + 1]);
-			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
+			//cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
+			//cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
 			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 4]);
-			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
+			//cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
+			//cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
 			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 7]);
-			cJSON_AddStringToObject(child, "param_type", query_result.result[i * query_result.column + 8]);
-			cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
-			cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 10]);
-			cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
+			//cJSON_AddStringToObject(child, "param_type", query_result.result[i * query_result.column + 8]);
+			//cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
+			//cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 10]);
+			//cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
 			cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 12]);
-			cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 13]);
+			//cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 13]);
 			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 14]);
 			cJSON_AddStringToObject(child, "sms_content", query_result.result[i * query_result.column + 15]);
     		cJSON_AddItemToArray(sub_dir, child);
@@ -1381,18 +1389,18 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
 		for (i = 1; i < (query_result.row + 1); i++) {
 	    	child = cJSON_CreateObject();
     		cJSON_AddStringToObject(child, "send_time", query_result.result[i * query_result.column + 1]);
-			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
-			cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
+			//cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 2]);
+			//cJSON_AddStringToObject(child, "protocol_name", query_result.result[i * query_result.column + 3]);
 			cJSON_AddStringToObject(child, "protocol_desc", query_result.result[i * query_result.column + 4]);
-			cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
-			cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
+			//cJSON_AddStringToObject(child, "param_id", query_result.result[i * query_result.column + 5]);
+			//cJSON_AddStringToObject(child, "param_name", query_result.result[i * query_result.column + 6]);
 			cJSON_AddStringToObject(child, "param_desc", query_result.result[i * query_result.column + 7]);
-			cJSON_AddStringToObject(child, "param_type", query_result.result[i * query_result.column + 8]);
-			cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
-			cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 10]);
-			cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
+			//cJSON_AddStringToObject(child, "param_type", query_result.result[i * query_result.column + 8]);
+			//cJSON_AddStringToObject(child, "analog_value", query_result.result[i * query_result.column + 9]);
+			//cJSON_AddStringToObject(child, "enum_value", query_result.result[i * query_result.column + 10]);
+			//cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
 			cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 12]);
-			cJSON_AddStringToObject(child, "email", query_result.result[i * query_result.column + 13]);
+			//cJSON_AddStringToObject(child, "email", query_result.result[i * query_result.column + 13]);
 			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 14]);
 			cJSON_AddStringToObject(child, "email_content", query_result.result[i * query_result.column + 15]);
     		cJSON_AddItemToArray(sub_dir, child);

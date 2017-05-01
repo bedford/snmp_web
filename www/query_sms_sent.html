@@ -217,7 +217,7 @@
 		function export_data() {
 			var collection = window.localStorage.getItem("sms_record");
 			var data = JSON.parse(collection);
-			var title = new Array("时间", "设备名称", "参数名称", "报警描述", "电话号码", "状态", "短信内容");
+			var title = new Array("时间", "设备名称", "参数名称", "接收人", "状态", "短信内容");
 			JSONToExcelConvertor(data, "sms_record", title);
 		}
 
