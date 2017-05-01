@@ -145,6 +145,21 @@
 								}
 							});
 		                },
+						error : function(msg) {
+		                    $('#reboot_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						},
 					});
 		}
 
@@ -180,6 +195,21 @@
 								}
 							});
 		                },
+						error : function(msg) {
+		                    $('#recovery_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						},
 					});
 		}
 
@@ -196,6 +226,7 @@
 						contentType: false,
 						processData: false,
 		                success : function(msg) {
+		                    $('#update_btn').removeAttr("disabled");
 							var html = '';
 							if (msg.status == 1) {
 								html = '更新成功';
@@ -214,6 +245,21 @@
 								}
 							});
 		                },
+						error : function(msg) {
+		                    $('#update_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						},
 		            });
 		}
 

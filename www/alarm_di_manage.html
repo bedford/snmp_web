@@ -180,12 +180,15 @@
 			json.cmd_type = "set_di_param";
 			json.cfg = newArray;
 			var data = $.toJSON(json);
+
+			$('#confirm_btn').attr("disabled", "disabled");
 			$.ajax({
 			            url     : "/cgi-bin/common.cgi",
 			            type    : "POST",
 			            dataType: "json",
 			            data    : data,
 			            success : function(msg) {
+		                    $('#confirm_btn').removeAttr("disabled");
 							var html = '更新数据成功';
 							$('#update_detail').html(html);
 							$('#update_success_dialog').dialog({
@@ -199,6 +202,21 @@
 								}
 							});
 			            },
+						error : function(msg) {
+		                    $('#confirm_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						},
 			        });
 		}
 

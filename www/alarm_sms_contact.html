@@ -171,8 +171,8 @@
 		</form>
 	</div>
 
-	<div class="jq-dialog" id="confirm_dialog" title="删除短信联系人">
-		<label id="delete_detail"></label>
+	<div class="jq-dialog" id="hint_dialog" title="提示信息">
+		<label id="hint_detail"></label>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
@@ -243,8 +243,8 @@
 							} else {
 								html = '设置失败';
 							}
-							$('#delete_detail').html(html);
-							$('#confirm_dialog').dialog({
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
 								resizable: false,
 								height: 160,
 								modal: true,
@@ -256,6 +256,21 @@
 								}
 							});
 		                },
+						error : function(msg) {
+		                    $('#set_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						},
 					});
 		}
 
@@ -316,11 +331,12 @@
 			var name = $('#phone_table').find('tr').eq(index).find('td').eq(1).html();
 			var phone = $('#phone_table').find('tr').eq(index).find('td').eq(2).html();
 			var html = '确认要删除联系人：  '+name+'  吗？';
-			$('#delete_detail').html(html);
-			$('#confirm_dialog').dialog({
+			$('#hint_detail').html(html);
+			$('#hint_dialog').dialog({
 				resizable: false,
 				height: 160,
 				modal: true,
+				title: "删除联系人",
 				buttons: {
 					"确定": function() {
 						delete_phone_user(index);
@@ -343,8 +359,8 @@
 
 			if (json.name.length == 0) {
 				var html = '短信用户不能为空';
-				$('#delete_detail').html(html);
-				$('#confirm_dialog').dialog({
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
 					resizable: false,
 					height: 160,
 					modal: true,
@@ -360,8 +376,8 @@
 
 			if (!phone_number_valid_check(json.phone)) {
 				var html = '短信用户:' + json.name + '  的手机号码无效';
-				$('#delete_detail').html(html);
-				$('#confirm_dialog').dialog({
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
 					resizable: false,
 					height: 160,
 					modal: true,
@@ -403,7 +419,7 @@
 				buttons: {
 					"确定": function() {
 						$(this).dialog("close");
-						edit_phone_user(inde);
+						edit_phone_user(index);
 					},
 					取消: function() {
 						$(this).dialog("close");
@@ -421,8 +437,8 @@
 
 			if (json.name.length == 0) {
 				var html = '短信用户不能为空';
-				$('#delete_detail').html(html);
-				$('#confirm_dialog').dialog({
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
 					resizable: false,
 					height: 160,
 					modal: true,
@@ -438,8 +454,8 @@
 
 			if (!phone_number_valid_check(json.phone)) {
 				var html = '短信用户:' + json.name + '  的手机号码无效';
-				$('#delete_detail').html(html);
-				$('#confirm_dialog').dialog({
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
 					resizable: false,
 					height: 160,
 					modal: true,

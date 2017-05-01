@@ -113,12 +113,8 @@
         <input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_alarm_param()">
 	</div>
 
-	<div class="jq-dialog" id="update_success_dialog" title="提示信息">
-		<label id="update_detail"></label>
-	</div>
-
-	<div class="jq-dialog" id="no_update_dialog" title="提示信息">
-		<label id="nothing_detail"></label>
+	<div class="jq-dialog" id="hint_dialog" title="提示信息">
+		<label id="hint_detail"></label>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
@@ -165,8 +161,8 @@
 
 			if (newArray.length == 0) {
 				var html = '没有需要更新的数据';
-				$('#nothing_detail').html(html);
-				$('#no_update_dialog').dialog({
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
 					resizable: false,
 					height: 160,
 					modal: true,
@@ -185,15 +181,18 @@
 			json.cmd_type = "set_protocol_alarm_param";
 			json.cfg = newArray;
 			var data = $.toJSON(json);
+
+		    $('#confirm_btn').removeAttr("disabled");
 			$.ajax({
 			            url     : "/cgi-bin/common.cgi",
 			            type    : "POST",
 			            dataType: "json",
 			            data    : data,
 			            success : function(msg) {
+		                    $('#confirm_btn').removeAttr("disabled");
 							var html = '更新数据成功';
-							$('#update_detail').html(html);
-							$('#update_success_dialog').dialog({
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
 								resizable: false,
 								height: 160,
 								modal: true,
@@ -204,6 +203,21 @@
 								}
 							});
 			            },
+						error : function(msg) {
+		                    $('#confirm_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						},
 			        });
 		}
 

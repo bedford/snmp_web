@@ -162,6 +162,21 @@
 								}
 							});
 		                },
+						error : function(msg) {
+		                    $('#set_snmp_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						},
 					});
 		}
 
