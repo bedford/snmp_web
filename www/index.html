@@ -1,44 +1,186 @@
 <!DOCTYPE html>
-<html>
-<head lang="en">
-<meta charset="gb2312">
-<title>登录界面</title>
-<link type="text/css" rel="stylesheet" href="css/login.css" />
-<script src="js/jquery-1.11.3.min.js"></script>
-<script src="js/jquery.json-2.3.min.js"></script>
-</head>
-<body onload="SecurityCode()" >
-	<div id="body">
-		<div id="bg">
-			
-<div id="alertBGDiv" style="display: none" style="z-index: 50;">
-</div>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录页</title>
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
+<style>
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-style: sans-serif;
+}
 
-			<div id="tuan_1"></div>
-		<!--  	<div id="shadow"></div> -->
-			<div id="logo"></div>
-			<div id="main">
-				<div id="alertDiv" style="width: 400px;height: 165px;position:absolute; left:40%; top:30%; z-index:1;background-color: #FFFFFF;display: none;border: 1px solid black;">
-    <div style="height: 30px;background-color: #1c568c">
-        <div style="width: 80px;height: 40px;margin-left: 3px" >
-            <label style="font-size: 12pt;color: white;line-height: 40px;">提示信息</label>
-        </div>
+body {
+    width: 100%;
+    height: 100%;
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    background-color: #4A374A;
+}
+
+#login {
+    position: absolute;
+    top: 50%;
+    left:50%;
+    margin: -150px 0 0 -150px;
+    width: 300px;
+    height: 300px;
+}
+
+#login h1 {
+    color: #fff;
+    text-shadow:0 0 10px;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 2em;
+    margin: 0.67em 0;
+}
+
+input {
+    width: 278px;
+    height: 18px;
+    margin-bottom: 10px;
+    outline: none;
+    padding: 10px;
+    font-size: 13px;
+    color: #fff;
+    text-shadow:1px 1px 1px;
+    border-top: 1px solid #312E3D;
+    border-left: 1px solid #312E3D;
+    border-right: 1px solid #312E3D;
+    border-bottom: 1px solid #56536A;
+    border-radius: 4px;
+    background-color: #2D2D3F;
+}
+
+.but {
+    width: 300px;
+    min-height: 40px;
+    display: block;
+    background-color: #4a77d4;
+    border: 1px solid #3762bc;
+    color: #fff;
+    padding: 9px 14px;
+    font-size: 15px;
+    line-height: normal;
+    border-radius: 5px;
+    margin: 0;
+}
+</style>
+</head>
+
+<body>
+    <div id="login">
+        <h1>SNMP网页客户端</h1>
+        <form id="login_form">
+            <input type="text" required="required" placeholder="用户名" id="user">
+            <input type="password" required="required" placeholder="密码" id="password">
+			<input type="button" class="but" id="login_btn" value="登录" onclick="login_snmp()">
+        </form>
     </div>
-    <div style="margin-left: 50px;margin-top:20px">
-        <label style="color: #000000" id="alertWord"></label><br/><br/><br/>
-        <button style="width: 80px;height: 23px;border: solid 1px  #429fe5;background-color:#0076d0;text-align: center;float: right;margin-right: 20px;" onclick="download_OnClick()">确定</button>
-    </div>
-</div>
-					<table>
-						<tr height="40px"><td >用户名</td><td ><input type="text" id="user" /></td></tr>
-						<tr height="40px"><td  >密<span style="margin-left: 10px;"></span>码</td><td ><input type="password" id="password"/></td></tr>
-						<tr height="40px"><td  >验证码</td><td class="yan"><input type="text" id="securityCode"/><input type="button" id="diplaySecurityCode" value="获取验证码" onClick="SecurityCode();"/></td></tr>
-						<tr height="30px"><td  colspan="2" align="center"  class="two"><p id="forgotPassword">如果忘记密码，请联系管理员</p></td></tr>
-						<tr height="40px"><td ></td><td ><input id="input1" class="login_button" type="button" value="登录" onClick="Login()"/></td></tr>
-					</table>
-				
-			</div>
-		</div>
+
+	<div class="jq-dialog" id="hint_dialog" title="提示信息">
+		<label id="hint_detail"></label>
 	</div>
+
+	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
+	<script src="js/jquery.json-2.3.min.js"></script>
+    <script>
+		function login_snmp() {
+			var user = $('#user').val();
+        	var password = $('#password').val();
+			if (user.length == 0) {
+				var html = '用户名不能为空';
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+				return;
+			}
+
+			if (password.length == 0) {
+				var html = '密码不能为空';
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
+					resizable: false,
+					height: 160,
+					modal: true,
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+				return;	
+			}
+
+			var json = new Object();
+			json.msg_type = "system_setting";
+			json.cmd_type = "login";
+
+			var cfg = new Object();
+			cfg.user = user;
+			cfg.password = password;
+			json.cfg = cfg;
+
+			$('#login_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#login_btn').removeAttr("disabled");
+							var html = '';
+							if (msg.status == 1) {
+								window.location.href = "/main.html";
+								window.sessionStorage.setItem("user_information", user);
+								window.sessionStorage.setItem("authority_information", msg.desc);
+								window.sessionStorage.setItem("timeout", msg.exit);
+							} else { 
+								$('#hint_detail').html('密码错误');
+								$('#hint_dialog').dialog({
+									resizable: false,
+									height: 160,
+									modal: true,
+									buttons: {
+										"确定": function() {
+											$(this).dialog("close");
+										}
+									}
+								});
+							}
+		                },
+						error : function(msg) {
+		                    $('#login_btn').removeAttr("disabled");
+							$('#hint_detail').html("连接服务器异常");
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						}
+					});
+		}
+	</script>
 </body>
-</hmtl>
+</html>
