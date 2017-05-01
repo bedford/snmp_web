@@ -52,16 +52,22 @@
     color: #555;
 }
 
-.di_alarm_on {
+.di-status-alarm-on {
     background-color: #f30707;
+}
+
+.di-status-alarm-off {
+    background-color: #d7d7d7;
 }
 
 .di-status-off {
     background: url("../images/di_off.png") center 30px no-repeat;
 }
+
 .di-status-on {
     background: url("../images/di_on.png") center 30px no-repeat;
 }
+
 </style>
 </head>
 <body onbeforeunload="leave_page()">
@@ -69,29 +75,42 @@
         <div class="di-status">
             <h3>干接点输入DI状态</h3>
             <ul class="clear-fix">
-                <li class="di-status-off"><span>输入1</span></li>
-                <li class="di-status-off"><span>输入2</span></li>
-                <li class="di-status-off"><span>输入3</span></li>
-                <li class="di-status-off"><span>输入4</span></li>
+                <li class="di-status-off"><span id="di-1">输入1</span></li>
+                <li class="di-status-off"><span id="di-2">输入2</span></li>
+                <li class="di-status-off"><span  class="di_alarm_on" id="di-3">输入3</span></li>
+                <li class="di-status-off"><span id="di-4">输入4</span></li>
             </ul>
         </div>
     </div>
     <script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
 		function leave_page() {
 			clearInterval(interval_handle);
 		}
 
 		function display_io(msg) {
 			$('.di-status li').each(function(i) {
-				if (msg.io_status[i].value) {
+				if (msg.real_data_di[i].enum_value) {
 		            $(this).removeClass('di-status-off');
 					$(this).addClass('di-status-on');
 				} else {
 		            $(this).removeClass('di-status-on');
 					$(this).addClass('di-status-off');
 				}
+
+                if (msg.real_data_di[i].param_desc.length != 0) {
+                    $('#di-'+(i+1)).html(msg.real_data_di[i].param_desc);
+                }
+
+                if (msg.real_data_di[i].alarm_type != 0) {
+                    $('#di-'+(i+1)).css({color:"red"});
+                }
 			});
 		}
 
@@ -113,11 +132,6 @@
 
 		var interval_handle;
         $(document).ready(function () {
-            //当table-content出现滚动条时，设置table-title的padding-right为17px
-            if ($(".table-content table").height() > $(".table-content").height()){
-                $(".table-title").css("padding-right", "17px");
-            }
-
 			load_real_status();
 			interval_handle = setInterval("load_real_status()", 5000);
         })

@@ -8,7 +8,7 @@
 <style>
 	#table-box {
 		width: 90%;
-		height: 90%;
+		height: 100%;
 		position: relative;
 		box-sizing: border-box;
 		margin-top: 20px;
@@ -112,18 +112,19 @@
 		</form>
 	</div>
 
-	<div class="jq-dialog" id="warn_dialog" title="密码不匹配">
-		<label>两次输入密码不一致，请重新输入</label>
-	</div>
-
-	<div class="jq-dialog" id="success_dialog" title="密码修改成功">
-		<label id="delete_detail"></label>
+	<div class="jq-dialog" id="hint_dialog" title="密码修改成功">
+		<label id="hint_detail"></label>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
         function edit_password(index, password) {
 		    var json = new Object();
 		    json.msg_type = "system_setting";
@@ -139,19 +140,14 @@
 		                data    : data,
 		                success : function() {
 							var html='修改用户: '+json.user+' 密码 -- 成功';
-							$('#delete_detail').html(html);
-							$('#success_dialog').dialog({
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
 								resizable: false,
 								height: 160,
 								modal: true,
 								buttons: {
 									"确定": function() {
 										$(this).dialog("close");
-										$('#user_dialog').dialog("close");
-									},
-									取消: function() {
-										$(this).dialog("close");
-										$('#user_dialog').dialog("close");
 									}
 								}
 							});
@@ -160,7 +156,9 @@
 		}
 
 		function password_unmatch(index) {
-			$('#warn_dialog').dialog({
+			var html='两次输入密码不一致，请重新输入';
+			$('#hint_detail').html(html);
+			$('#hint_dialog').dialog({
 				resizable: false,
 				height: 160,
 				modal: true,
@@ -179,7 +177,8 @@
         function edit_item(index) {
 			var name = $('#user_table').find('tr').eq(index).find('td').eq(1).html();
 			$('#modify_user').val(name);
-			$('#modify_password').val("");
+			$('#modify_password').val('');
+			$('#confirm_password').val('');
 			$('#user_dialog').dialog({
 				width: 300,
 				height: 360,
@@ -189,6 +188,7 @@
 						var password = $('#modify_password').val();
 						var confirm_password = $('#confirm_password').val();
 						if (password === confirm_password) {
+							$(this).dialog("close");
 							edit_password(index, password);
 						} else {
 							$(this).dialog("close");

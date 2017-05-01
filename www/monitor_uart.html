@@ -95,6 +95,11 @@
     <script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
 		function leave_page() {
 			clearInterval(interval_handle);
 			window.localStorage.removeItem("real_data");
@@ -125,57 +130,73 @@
 
 		function display_real_data(msg, device_type, status) {
 			$('#real_data').empty();
-			$.each(msg.real_data_rs232, function(i, item) {
-				if ((device_type != '全部') && (device_type != item.device_id)) {
-					return true;
-				}
-
-				if (status != '全部') {
-					if (((status == '0') && (item.alarm_type != '0'))
-						|| ((status != '0') && (item.alarm_type == '0'))) {
+			if (msg.rs232_count > 0) {
+				$.each(msg.real_data_rs232, function(i, item) {
+					if ((device_type != '全部') && (device_type != item.protocol_id)) {
 						return true;
 					}
-				}
 
-				var html="";
-				if (item.alarm_type == '0') {
-					var html = '<tr><td>' + item.protocol_desc + '</td><td>'
-					+ item.param_desc + '</td><td>' + item.analog_value + item.param_unit + '</td><td>'
-					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>正常</td></tr>';
-				} else {
-					var html = '<tr class="warning"><td>' + item.protocol_desc + '</td><td>'
-					+ item.param_desc + '</td><td>' + item.analog_value + item.param_unit + '</td><td>'
-					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>报警</td></tr>';
-				}
+					if (status != '全部') {
+						if (((status == '0') && (item.alarm_type != '0'))
+							|| ((status != '0') && (item.alarm_type == '0'))) {
+							return true;
+						}
+					}
 
-				$("#real_data").append(html);
-			});
+					var html="";
+					if (item.alarm_type == '0') {
+						var html = '<tr><td style="width:25%;">' + item.protocol_desc + '</td>'
+						+ '<td style="width:15%;">' + item.param_desc + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + item.param_unit + '</td>'
+						+ '<td style="width:15%;">' + item.enum_value + '</td>'
+						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+						+ '<td style="width:15%;">正常</td></tr>';
+					} else {
+						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+						+ '<td style="width:15%;">' + item.param_desc + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + item.param_unit + '</td>'
+						+ '<td style="width:15%;">' + item.enum_value + '</td>'
+						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+						+ '<td style="width:15%;">报警</td></tr>';
+					}
 
-			$.each(msg.real_data_rs485, function(i, item) {
-				if ((device_type != '全部') && (device_type != item.device_id)) {
-					return true;
-				}
+					$("#real_data").append(html);
+				});
+			}
 
-				if (status != '全部') {
-					if (((status == '0') && (item.alarm_type != '0'))
-						|| ((status != '0') && (item.alarm_type == '0'))) {
+			if (msg.rs485_count > 0) {
+				$.each(msg.real_data_rs485, function(i, item) {
+					if ((device_type != '全部') && (device_type != item.protocol_id)) {
 						return true;
 					}
-				}
 
-				var html="";
-				if (item.alarm_type == '0') {
-					var html = '<tr><td>' + item.protocol_desc + '</td><td>'
-					+ item.param_desc + '</td><td>' + item.analog_value + item.param_unit + '</td><td>'
-					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>正常</td></tr>';
-				} else {
-					var html = '<tr class="warning"><td>' + item.protocol_desc + '</td><td>'
-					+ item.param_desc + '</td><td>' + item.analog_value + item.param_unit + '</td><td>'
-					+ item.enum_value + '</td><td>'+ item.enum_cn_desc + '</td><td>报警</td></tr>';
-				}
+					if (status != '全部') {
+						if (((status == '0') && (item.alarm_type != '0'))
+							|| ((status != '0') && (item.alarm_type == '0'))) {
+							return true;
+						}
+					}
 
-				$("#real_data").append(html);
-			});
+					var html="";
+					if (item.alarm_type == '0') {
+						var html = '<tr><td style="width:25%;">' + item.protocol_desc + '</td>'
+						+ '<td style="width:15%;">' + item.param_desc + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + item.param_unit + '</td>'
+						+ '<td style="width:15%;">' + item.enum_value + '</td>'
+						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+						+ '<td style="width:15%;">正常</td></tr>';
+					} else {
+						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+						+ '<td style="width:15%;">' + item.param_desc + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + item.param_unit + '</td>'
+						+ '<td style="width:15%;">' + item.enum_value + '</td>'
+						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+						+ '<td style="width:15%;">报警</td></tr>';
+					}
+
+					$("#real_data").append(html);
+				});
+			}
 		}
 
 		function device_type_change() {
@@ -206,8 +227,8 @@
 			                data    : data,
 			                success : function(msg) {
 								display_real_data(msg, '全部', '全部');
-								//window.localStorage.removeItem("real_data");
-								//window.localStorage.setItem("real_data", JSON.stringify(msg));
+								window.localStorage.removeItem("real_data");
+								window.localStorage.setItem("real_data", JSON.stringify(msg));
 			                },
 			            });
 		}

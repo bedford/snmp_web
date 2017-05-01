@@ -4,6 +4,7 @@
     <title>系统参数设置</title>
     <meta http-equiv="Content-Type" content-type="text/html"; charset="utf-8">
 	<link rel="stylesheet" href="css/cssReset.css">
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
 	.system_param_box {
 		margin-top: 20px;
@@ -101,10 +102,19 @@
 		</div>
 	</div>
 
+	<div class="jq-dialog" id="hint_dialog" title="提示信息">
+		<label id="hint_detail"></label>
+	</div>
+
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/system_setting.js"></script>
 	<script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
 		/* 系统时间设置相关js */
 		function addzero(v) {
 			if (v < 10) return '0' + v;
@@ -169,11 +179,23 @@
 		                data    : data,
 		                success : function(msg) {
 		                    $('#set_ntp_btn').removeAttr("disabled");
+							var html = '';
 							if (msg.status == 1) {
-								alert("设置成功");
+								html = '设置成功';
 							} else {
-								alert("设置失败");
+								html = '设置失败';
 							}
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 		                },
 					});
 		}
@@ -196,11 +218,23 @@
 		                data    : data,
 		                success : function(msg) {
 		                    $('#calibration_btn').removeAttr("disabled");
+							var html = '';
 							if (msg.status == 1) {
-								alert("设置成功");
+								html = '设置成功';
 							} else {
-								alert("设置失败");
+								html = '设置失败';
 							}
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 		                },
 					});
 		}
@@ -242,11 +276,23 @@
 		                data    : data,
 		                success : function(msg) {
 		                    $('#set_system_btn').removeAttr("disabled");
+							var html = '';
 							if (msg.status == 1) {
-								alert("设置成功");
+								html = '设置成功';
 							} else {
-								alert("设置失败");
+								html = '设置失败';
 							}
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 		                },
 					});
 		}

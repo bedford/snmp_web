@@ -4,6 +4,7 @@
     <title>干接点输出设置</title>
     <meta http-equiv="Content-Type" content-type="text/html"; charset="utf-8">
 	<link rel="stylesheet" href="css/cssReset.css" type="text/css">
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
 		.horizental_split {
 			height: 2px;
@@ -123,9 +124,19 @@
     	<input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_do_param()">
 	</div>
 
+	<div class="jq-dialog" id="hint_dialog" title="提示信息">
+		<label id="hint_detail"></label>
+	</div>
+
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
 		/* 串口及IO口状态及设置相关 */
 		$(function() {
 			$('.do-status li').click(function() {
@@ -178,11 +189,23 @@
 		                data    : data,
 		                success : function(msg) {
 		                    $('#confirm_btn').removeAttr("disabled");
+							var html = '';
 							if (msg.status == 1) {
-								alert("设置成功");
+								html = '设置成功';
 							} else {
-								alert("设置失败");
+								html = '设置失败';
 							}
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 		                },
 					});
 		}

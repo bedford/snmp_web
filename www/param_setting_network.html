@@ -4,6 +4,7 @@
     <title>网络参数设置</title>
     <meta http-equiv="Content-Type" content-type="text/html"; charset="utf-8">
 	<link rel="stylesheet" href="css/cssReset.css">
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
 	.network_box {
 		margin-top: 30px;
@@ -72,9 +73,19 @@
 		<input class="confirm_btn" type="button" id="set_network_btn" value="应用" onclick="set_network_param()">
 	</div>
 
+	<div class="jq-dialog" id="hint_dialog" title="提示信息">
+		<label id="hint_detail"></label>
+	</div>
+
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script>
+        if (window.sessionStorage.getItem("user_information") == ""
+            || window.sessionStorage.getItem("user_information") == null) {
+            window.location.href = "/index.html";
+        }
+
 		/* 网络参数设置相关js */
 		function display_network_param(network_param) {
 			$("#mac_addr").val(network_param.mac_addr);
@@ -123,12 +134,39 @@
 		                data    : data,
 		                success : function(msg) {
 		                    $('#set_network_btn').removeAttr("disabled");
+							var html = '';
 							if (msg.status == 1) {
-								alert("设置成功");
+								html = '设置成功';
 							} else {
-								alert("设置失败");
+								html = '设置失败';
 							}
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 		                },
+						error : function(msg) {
+		                    $('#set_network_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						}
 					});
 		}
 
