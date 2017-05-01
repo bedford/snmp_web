@@ -309,7 +309,6 @@ static int set_network_param(cJSON *root, priv_info_t *priv)
 	fclose(fp);
 	fp = NULL;
 
-
     cJSON_AddNumberToObject(response, "status", 1);
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -730,8 +729,9 @@ static int modify_phone_user(cJSON *root, priv_info_t *priv)
 
 	char sql[256] = {0};
 	char error_msg[256] = {0};
-	sprintf(sql, "UPDATE %s SET phone='%s' WHERE id='%d'",
-		"phone_user", cJSON_GetObjectItem(root, "phone")->valuestring,
+	sprintf(sql, "UPDATE %s SET name='%s', phone='%s' WHERE id='%d'",
+		"phone_user", cJSON_GetObjectItem(root, "name")->valuestring,
+		cJSON_GetObjectItem(root, "phone")->valuestring,
 		atoi(cJSON_GetObjectItem(root, "id")->valuestring));
 	int ret = db_handle->action(db_handle, sql, error_msg);
     cJSON_AddNumberToObject(response, "status", ret);
@@ -852,8 +852,9 @@ static int modify_email_user(cJSON *root, priv_info_t *priv)
 
 	char sql[256] = {0};
 	char error_msg[256] = {0};
-	sprintf(sql, "UPDATE %s SET email='%s' WHERE id='%d'",
-		"email_user", cJSON_GetObjectItem(root, "email")->valuestring,
+	sprintf(sql, "UPDATE %s SET name='%s', email='%s' WHERE id='%d'",
+		"email_user", cJSON_GetObjectItem(root, "name")->valuestring,
+		cJSON_GetObjectItem(root, "email")->valuestring,
 		atoi(cJSON_GetObjectItem(root, "id")->valuestring));
 	int ret = db_handle->action(db_handle, sql, error_msg);
     cJSON_AddNumberToObject(response, "status", ret);
@@ -1018,6 +1019,42 @@ static int update_password(cJSON *root, priv_info_t *priv)
 	int ret = db_handle->action(db_handle, sql, error_msg);
     cJSON_AddNumberToObject(response, "status", ret);
 	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int login(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+	char sql[512] = {0};
+	sprintf(sql, "SELECT * FROM %s WHERE user='%s'",
+		"user_manager", cJSON_GetObjectItem(cfg, "user")->valuestring);
+
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+	int ret = 0;
+    cJSON *response = cJSON_CreateObject();
+	char user[32] = {0};
+	char password[32] = {0};
+	if (query_result.row > 0) {
+    	memcpy(user, query_result.result[query_result.column + 1], sizeof(user));
+    	memcpy(password, query_result.result[query_result.column + 2], sizeof(password));
+		if ((strcmp(user, cJSON_GetObjectItem(cfg, "user")->valuestring) == 0)
+			&& (strcmp(password, cJSON_GetObjectItem(cfg, "password")->valuestring) == 0)) {
+			ret = 1;
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+    cJSON_AddNumberToObject(response, "status", ret);
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -1405,9 +1442,9 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 		cJSON_AddNumberToObject(response, "count", 1000);
 	} else {
 		if (lf_queue_pop(rs232_queue, (void *)uart_realdata) == 0) {
+			cJSON_AddNumberToObject(response, "rs232_count", uart_realdata->cnt);
 			sub_dir = cJSON_CreateArray();
 			cJSON_AddItemToObject(response, "real_data_rs232", sub_dir);
-			cJSON_AddNumberToObject(response, "rs232_count", uart_realdata->cnt);
 			for (i = 0; i < uart_realdata->cnt; i++) {
 				child = cJSON_CreateObject();
 				char tmp[32] = {0};
@@ -1432,9 +1469,9 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 		}
 
 		if (lf_queue_pop(rs485_queue, (void *)uart_realdata) == 0) {
+			cJSON_AddNumberToObject(response, "rs485_count", uart_realdata->cnt);
 			sub_dir = cJSON_CreateArray();
 			cJSON_AddItemToObject(response, "real_data_rs485", sub_dir);
-			cJSON_AddNumberToObject(response, "rs485_count", uart_realdata->cnt);
 			for (i = 0; i < uart_realdata->cnt; i++) {
 				child = cJSON_CreateObject();
 				char tmp[32] = {0};
@@ -1459,21 +1496,12 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 		}
 	}
 
-	free(uart_realdata);
-	uart_realdata = NULL;
+	if (uart_realdata) {
+		free(uart_realdata);
+		uart_realdata = NULL;
+	}
 	lf_queue_fini(&rs232_queue);
 	lf_queue_fini(&rs485_queue);
-
-    /*sub_dir = cJSON_CreateArray();
-    cJSON_AddItemToObject(response, "io_status", sub_dir);
-    for (i = 0; i < 8; i++) {
-		drv_gpio_open(i);
-        child = cJSON_CreateObject();
-		unsigned char io_value = 0;
-		drv_gpio_read(i, &io_value);
-    	cJSON_AddNumberToObject(child, "value", io_value);
-    	cJSON_AddItemToArray(sub_dir, child);
-    }*/
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -1495,7 +1523,7 @@ static int query_real_di_data(cJSON *root, priv_info_t *priv)
 			break;
 		}
 
-		di_realdata = calloc(1, sizeof(di_realdata));
+		di_realdata = calloc(1, sizeof(di_realdata_t));
 		if (di_realdata == NULL) {
 			ret = -1;
 			break;
@@ -1510,9 +1538,9 @@ static int query_real_di_data(cJSON *root, priv_info_t *priv)
 		cJSON_AddNumberToObject(response, "count", 1000);
 	} else {
 		if (lf_queue_pop(di_queue, (void *)di_realdata) == 0) {
+			cJSON_AddNumberToObject(response, "di_count", di_realdata->cnt);
 			sub_dir = cJSON_CreateArray();
 			cJSON_AddItemToObject(response, "real_data_di", sub_dir);
-			cJSON_AddNumberToObject(response, "di_count", di_realdata->cnt);
 			for (i = 0; i < di_realdata->cnt; i++) {
 				child = cJSON_CreateObject();
 				char tmp[32] = {0};
@@ -1537,8 +1565,10 @@ static int query_real_di_data(cJSON *root, priv_info_t *priv)
 		}
 	}
 
-	free(di_realdata);
-	di_realdata = NULL;
+	if (di_realdata) {
+		free(di_realdata);
+		di_realdata = NULL;
+	}
 	lf_queue_fini(&di_queue);
 
     req_buf->fb_buf = cJSON_Print(response);
@@ -1862,11 +1892,11 @@ cmd_fun_t cmd_system_setting[] = {
     {
         "calibration",
         set_device_time
-    /*},
+    },
 	{
-		"login"
+		"login",
 		login
-	*/},
+	},
 	{
 		"system_runtime_info",
 		system_runtime_info
