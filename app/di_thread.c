@@ -19,6 +19,8 @@
 
 #include "lf_queue.h"
 #include "common_type.h"
+#include "shm_object.h"
+#include "semaphore.h"
 
 #define MAX_DI_NUMBER	(4)
 #define MAX_PARAM_LEN	(128)
@@ -55,6 +57,9 @@ typedef struct {
 
 	lf_queue_t		di_queue;
 	di_realdata_t	*di_realdata;
+
+	int				sem_id;
+	shm_object_t	*shm_handle;
 
 	struct timeval	last_record_time;
 	char			last_di_status[4];
@@ -255,10 +260,18 @@ static void *di_process(void *arg)
 	}
 	gettimeofday(&(priv->last_record_time), NULL);
 
+#if 0
 	if (lf_queue_init(&(priv->di_queue), DI_SHM_KEY, sizeof(di_realdata_t), 5) < 0) {
 		printf("create RS232 share memory queue failed\n");
 		return (void *)0;
 	}
+#else
+	priv->shm_handle = shm_object_create(DI_SHM_KEY, sizeof(di_realdata_t));
+	int ret = 0;
+	if (priv->shm_handle == NULL) {
+		ret = -1;
+	}
+#endif
 
 	unsigned char value = 0;
 	struct timeval current_time;
@@ -296,7 +309,14 @@ static void *di_process(void *arg)
 			priv->last_di_status[index] = value;
 		}
 		priv->di_realdata->cnt = 4;
+
+#if 0
 		lf_queue_push(priv->di_queue, priv->di_realdata);
+#else
+		semaphore_p(priv->sem_id);
+		priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->di_realdata));
+		semaphore_v(priv->sem_id);
+#endif
 
 		if (update_di_param_flag) {
 			update_di_param_flag = 0;
@@ -306,7 +326,11 @@ static void *di_process(void *arg)
 		}
 		sleep(1);
 	}
+#if 0
 	lf_queue_fini(&(priv->di_queue));
+#else
+	priv->shm_handle->shm_destroy(priv->shm_handle);
+#endif
 
 	for (index = 0; index < MAX_DI_NUMBER; index++) {
 		drv_gpio_close(index);
@@ -351,6 +375,7 @@ thread_t *di_thread_create(void)
 			di_thread_destroy(thiz);
 			thiz = NULL;
 		}
+		priv->sem_id = semaphore_create(DI_KEY);
 	}
 
 	return thiz;

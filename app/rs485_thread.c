@@ -20,6 +20,8 @@
 
 #include "lf_queue.h"
 #include "common_type.h"
+#include "shm_object.h"
+#include "semaphore.h"
 
 typedef struct {
 	db_access_t		*sys_db_handle;
@@ -34,6 +36,9 @@ typedef struct {
 
 	lf_queue_t		rs485_queue;
 	uart_realdata_t *rs485_realdata;
+
+	int				sem_id;
+	shm_object_t	*shm_handle;
 
 	uart_param_t	uart_param;
 	int 			protocol_id;
@@ -93,7 +98,13 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		priv->rs485_realdata->data[i].alarm_type = 0;
 	}
 	priv->rs485_realdata->cnt = list_size;
+#if 0
 	lf_queue_push(priv->rs485_queue, priv->rs485_realdata);
+#else
+	semaphore_p(priv->sem_id);
+	priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs485_realdata));
+	semaphore_v(priv->sem_id);
+#endif
 
 	for (i = 0; i < list_size; i++) {
 		memset(&last_value, 0, sizeof(param_value_t));
@@ -344,7 +355,13 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 		priv->rs485_realdata->data[i].alarm_type = 0;
 	}
 	priv->rs485_realdata->cnt = list_size;
+#if 0
 	lf_queue_push(priv->rs485_queue, priv->rs485_realdata);
+#else
+	semaphore_p(priv->sem_id);
+	priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs485_realdata));
+	semaphore_v(priv->sem_id);
+#endif
 }
 
 static void update_alarm_param(priv_info_t *priv, property_t *property)
@@ -419,10 +436,19 @@ static void *rs485_process(void *arg)
     init_protocol_lib(protocol_list);
     protocol_t *protocol = NULL;
     protocol = get_protocol_handle(protocol_list, priv->protocol_id);
-	int ret = lf_queue_init(&(priv->rs485_queue), RS485_SHM_KEY, sizeof(uart_realdata_t), 5);
+#if 0
+    int ret = lf_queue_init(&(priv->rs485_queue), RS485_SHM_KEY, sizeof(uart_realdata_t), 5);
 	if (ret < 0) {
 		printf("create RS485 share memory queue failed\n");
 	}
+#else
+	priv->shm_handle = shm_object_create(RS485_SHM_KEY, sizeof(uart_realdata_t));
+	int ret = 0;
+	if (priv->shm_handle == NULL) {
+		ret = -1;
+	}
+#endif
+
 	while ((protocol == NULL) || (priv->rs485_enable == 0)
 			|| (ret < 0)) {
 		sleep(1);
@@ -494,8 +520,6 @@ static void *rs485_process(void *arg)
 	}
 	drv_gpio_close(RS485_ENABLE);
 
-	lf_queue_fini(&(priv->rs485_queue));
-
     property = NULL;
     protocol->release_property(property_list);
     property_list = NULL;
@@ -509,6 +533,12 @@ static void *rs485_process(void *arg)
 	priv = NULL;
 	thiz = NULL;
 	thread_param = NULL;
+
+#if 0
+	lf_queue_fini(&(priv->rs485_queue));
+#else
+	priv->shm_handle->shm_destroy(priv->shm_handle);
+#endif
 
 	return (void *)0;
 }
@@ -549,6 +579,7 @@ thread_t *rs485_thread_create(void)
 			rs485_thread_destroy(thiz);
 			thiz = NULL;
 		}
+		priv->sem_id = semaphore_create(RS485_KEY);
 	}
 
 	return thiz;
