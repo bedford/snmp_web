@@ -1408,30 +1408,13 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 	req_buf_t *req_buf	= &(priv->request);
 	int ret = 0;
 
-#if 0
-	lf_queue_t rs232_queue;
-	lf_queue_t rs485_queue;
-#else
 	shm_object_t *rs232_shm_handle;
 	shm_object_t *rs485_shm_handle;
 	int rs232_sem_id = semaphore_create(RS232_KEY);
 	int rs485_sem_id = semaphore_create(RS485_KEY);
-#endif
+
 	uart_realdata_t *uart_realdata = NULL;
 	do {
-#if 0
-		if (lf_queue_init(&rs232_queue, RS232_SHM_KEY, sizeof(uart_realdata_t), 5) < 0) {
-			printf("create RS232 share memory queue failed\n");
-			ret = -1;
-			break;
-		}
-
-		if (lf_queue_init(&rs485_queue, RS485_SHM_KEY, sizeof(uart_realdata_t), 5) < 0) {
-			printf("create RS232 share memory queue failed\n");
-			ret = -1;
-			break;
-		}
-#else
 		rs232_shm_handle = shm_object_create(RS232_SHM_KEY, sizeof(uart_realdata_t));
 		if (rs232_shm_handle == NULL) {
 			printf("create RS232 share memory queue failed\n");
@@ -1445,7 +1428,7 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 			ret = -1;
 			break;
 		}
-#endif
+
 		uart_realdata = calloc(1, sizeof(uart_realdata_t));
 		if (uart_realdata == NULL) {
 			printf("create uart realdata memory failed\n");
@@ -1461,14 +1444,10 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 	if (ret == -1) {
 		cJSON_AddNumberToObject(response, "count", 1000);
 	} else {
-#if 0
-		if (lf_queue_pop(rs232_queue, (void *)uart_realdata) == 0) {
-#else
 		semaphore_p(rs232_sem_id);
 		ret = rs232_shm_handle->shm_get(rs232_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs232_sem_id);
 		if (ret == 0) {
-#endif
 			cJSON_AddNumberToObject(response, "rs232_count", uart_realdata->cnt);
 			sub_dir = cJSON_CreateArray();
 			cJSON_AddItemToObject(response, "real_data_rs232", sub_dir);
@@ -1495,14 +1474,10 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 			cJSON_AddNumberToObject(response, "rs232_count", 0);
 		}
 
-#if 0
-		if (lf_queue_pop(rs485_queue, (void *)uart_realdata) == 0) {
-#else
 		semaphore_p(rs485_sem_id);
 		ret = rs485_shm_handle->shm_get(rs485_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs485_sem_id);
 		if (ret == 0) {
-#endif
 			cJSON_AddNumberToObject(response, "rs485_count", uart_realdata->cnt);
 			sub_dir = cJSON_CreateArray();
 			cJSON_AddItemToObject(response, "real_data_rs485", sub_dir);
@@ -1534,15 +1509,11 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 		free(uart_realdata);
 		uart_realdata = NULL;
 	}
-#if 0
-	lf_queue_fini(&rs232_queue);
-	lf_queue_fini(&rs485_queue);
-#else
+
 	rs232_shm_handle->shm_destroy(rs232_shm_handle);
 	rs485_shm_handle->shm_destroy(rs485_shm_handle);
 	rs232_shm_handle = NULL;
 	rs485_shm_handle = NULL;
-#endif
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -1555,29 +1526,17 @@ static int query_real_di_data(cJSON *root, priv_info_t *priv)
 	req_buf_t *req_buf	= &(priv->request);
 	int ret = 0;
 
-#if 0
-	lf_queue_t di_queue;
-#else
 	shm_object_t *di_shm_handle;
 	int di_sem_id = semaphore_create(DI_KEY);
-#endif
 
 	di_realdata_t *di_realdata = NULL;
 	do {
-#if 0
-		if (lf_queue_init(&di_queue, DI_SHM_KEY, sizeof(di_realdata_t), 5) < 0) {
-			printf("create RS232 share memory queue failed\n");
-			ret = -1;
-			break;
-		}
-#else
 		di_shm_handle = shm_object_create(DI_SHM_KEY, sizeof(di_realdata_t));
 		if (di_shm_handle == NULL) {
 			printf("create DI share memory queue failed\n");
 			ret = -1;
 			break;
 		}
-#endif
 
 		di_realdata = calloc(1, sizeof(di_realdata_t));
 		if (di_realdata == NULL) {
@@ -1593,14 +1552,10 @@ static int query_real_di_data(cJSON *root, priv_info_t *priv)
 	if (ret == -1) {
 		cJSON_AddNumberToObject(response, "count", 1000);
 	} else {
-#if 0
-		if (lf_queue_pop(di_queue, (void *)di_realdata) == 0) {
-#else
 		semaphore_p(di_sem_id);
 		ret = di_shm_handle->shm_get(di_shm_handle, (void *)di_realdata);
 		semaphore_v(di_sem_id);
 		if (ret == 0) {
-#endif
 			cJSON_AddNumberToObject(response, "di_count", di_realdata->cnt);
 			sub_dir = cJSON_CreateArray();
 			cJSON_AddItemToObject(response, "real_data_di", sub_dir);
@@ -1632,12 +1587,9 @@ static int query_real_di_data(cJSON *root, priv_info_t *priv)
 		free(di_realdata);
 		di_realdata = NULL;
 	}
-#if 0
-	lf_queue_fini(&di_queue);
-#else
+
 	di_shm_handle->shm_destroy(di_shm_handle);
 	di_shm_handle = NULL;
-#endif
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
