@@ -97,13 +97,10 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		priv->rs232_realdata->data[i].alarm_type = 0;
 	}
 	priv->rs232_realdata->cnt = list_size;
-#if 0
-	lf_queue_push(priv->rs232_queue, priv->rs232_realdata);
-#else
+
 	semaphore_p(priv->sem_id);
 	priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
 	semaphore_v(priv->sem_id);
-#endif
 
 	for (i = 0; i < list_size; i++) {
 		memset(&last_value, 0, sizeof(param_value_t));
@@ -354,13 +351,10 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 		priv->rs232_realdata->data[i].alarm_type = 0;
 	}
 	priv->rs232_realdata->cnt = list_size;
-#if 0
-	lf_queue_push(priv->rs232_queue, priv->rs232_realdata);
-#else
+
 	semaphore_p(priv->sem_id);
 	priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
 	semaphore_v(priv->sem_id);
-#endif
 }
 
 static void update_alarm_param(priv_info_t *priv, property_t *property)
@@ -435,18 +429,12 @@ static void *rs232_process(void *arg)
     protocol_t *protocol = NULL;
 	protocol = get_protocol_handle(protocol_list, priv->protocol_id);
 
-#if 0
-	int ret = lf_queue_init(&(priv->rs232_queue), RS232_SHM_KEY, sizeof(uart_realdata_t), 5);
-	if (ret < 0) {
-		printf("create RS232 share memory queue failed\n");
-	}
-#else
 	priv->shm_handle = shm_object_create(RS232_SHM_KEY, sizeof(uart_realdata_t));
 	int ret = 0;
 	if (priv->shm_handle == NULL) {
 		ret = -1;
 	}
-#endif
+
 	while ((protocol == NULL) || (priv->rs232_enable == 0)
 			|| (ret < 0)) {
 		sleep(1);
@@ -526,11 +514,7 @@ static void *rs232_process(void *arg)
 	thiz = NULL;
 	thread_param = NULL;
 
-#if 0
-	lf_queue_fini(&(priv->rs232_queue));
-#else
 	priv->shm_handle->shm_destroy(priv->shm_handle);
-#endif
 
 	return (void *)0;
 }
