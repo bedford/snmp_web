@@ -1453,21 +1453,22 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 			cJSON_AddItemToObject(response, "real_data_rs232", sub_dir);
 			for (i = 0; i < uart_realdata->cnt; i++) {
 				child = cJSON_CreateObject();
-				char tmp[32] = {0};
-				sprintf(tmp, "%.1f", uart_realdata->data[i].analog_value);
 				cJSON_AddNumberToObject(child, "protocol_id", uart_realdata->data[i].protocol_id);
-				cJSON_AddStringToObject(child, "protocol_name", uart_realdata->data[i].protocol_name);
 				cJSON_AddStringToObject(child, "protocol_desc", uart_realdata->data[i].protocol_desc);
-				cJSON_AddNumberToObject(child, "param_id", uart_realdata->data[i].param_id);
-				cJSON_AddStringToObject(child, "param_name", uart_realdata->data[i].param_name);
 				cJSON_AddStringToObject(child, "param_desc", uart_realdata->data[i].param_desc);
 				cJSON_AddNumberToObject(child, "param_type", uart_realdata->data[i].param_type);
-				cJSON_AddStringToObject(child, "analog_value", tmp);
-				cJSON_AddStringToObject(child, "param_unit", uart_realdata->data[i].param_unit);
-				cJSON_AddNumberToObject(child, "enum_value", uart_realdata->data[i].enum_value);
-				cJSON_AddStringToObject(child, "enum_en_desc", uart_realdata->data[i].enum_en_desc);
-				cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->data[i].enum_cn_desc);
 				cJSON_AddNumberToObject(child, "alarm_type", uart_realdata->data[i].alarm_type);
+				if (uart_realdata->data[i].param_type == 1) {
+					char tmp[64] = {0};
+					sprintf(tmp, "%.1f%s", uart_realdata->data[i].analog_value, uart_realdata->data[i].param_unit);
+					cJSON_AddStringToObject(child, "analog_value", tmp);
+					cJSON_AddStringToObject(child, "enum_value", "-");
+					cJSON_AddStringToObject(child, "enum_cn_desc", "-");
+				} else {
+					cJSON_AddStringToObject(child, "analog_value", "-");
+					cJSON_AddNumberToObject(child, "enum_value", uart_realdata->data[i].enum_value);
+					cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->data[i].enum_cn_desc);
+				}
 				cJSON_AddItemToArray(sub_dir, child);
 			}
 		} else {
@@ -1483,21 +1484,22 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 			cJSON_AddItemToObject(response, "real_data_rs485", sub_dir);
 			for (i = 0; i < uart_realdata->cnt; i++) {
 				child = cJSON_CreateObject();
-				char tmp[32] = {0};
-				sprintf(tmp, "%.1f", uart_realdata->data[i].analog_value);
 				cJSON_AddNumberToObject(child, "protocol_id", uart_realdata->data[i].protocol_id);
-				cJSON_AddStringToObject(child, "protocol_name", uart_realdata->data[i].protocol_name);
 				cJSON_AddStringToObject(child, "protocol_desc", uart_realdata->data[i].protocol_desc);
-				cJSON_AddNumberToObject(child, "param_id", uart_realdata->data[i].param_id);
-				cJSON_AddStringToObject(child, "param_name", uart_realdata->data[i].param_name);
 				cJSON_AddStringToObject(child, "param_desc", uart_realdata->data[i].param_desc);
 				cJSON_AddNumberToObject(child, "param_type", uart_realdata->data[i].param_type);
-				cJSON_AddStringToObject(child, "analog_value", tmp);
-				cJSON_AddStringToObject(child, "param_unit", uart_realdata->data[i].param_unit);
-				cJSON_AddNumberToObject(child, "enum_value", uart_realdata->data[i].enum_value);
-				cJSON_AddStringToObject(child, "enum_en_desc", uart_realdata->data[i].enum_en_desc);
-				cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->data[i].enum_cn_desc);
 				cJSON_AddNumberToObject(child, "alarm_type", uart_realdata->data[i].alarm_type);
+				if (uart_realdata->data[i].param_type == 1) {
+					char tmp[64] = {0};
+					sprintf(tmp, "%.1f%s", uart_realdata->data[i].analog_value, uart_realdata->data[i].param_unit);
+					cJSON_AddStringToObject(child, "analog_value", tmp);
+					cJSON_AddStringToObject(child, "enum_value", "-");
+					cJSON_AddStringToObject(child, "enum_cn_desc", "-");
+				} else {
+					cJSON_AddStringToObject(child, "analog_value", "-");
+					cJSON_AddNumberToObject(child, "enum_value", uart_realdata->data[i].enum_value);
+					cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->data[i].enum_cn_desc);
+				}
 				cJSON_AddItemToArray(sub_dir, child);
 			}
 		} else {
