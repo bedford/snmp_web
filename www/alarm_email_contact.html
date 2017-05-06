@@ -305,7 +305,7 @@
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "delete_email_user";
-			json.id = $('#email_table').find('tr').eq(index).find('td').eq(0).html();
+			json.id = $('#email_table').find('tr').eq(index).find('td').eq(0).text();
 			json.name = $('#modify_name').val();
 			json.email = $('#modify_email').val();
 		    var data = $.toJSON(json);
@@ -322,8 +322,8 @@
 		}
 
 		function delete_item(index) {
-			var name = $('#email_table').find('tr').eq(index).find('td').eq(1).html();
-			var email = $('#email_table').find('tr').eq(index).find('td').eq(2).html();
+			var name = $('#email_table').find('tr').eq(index).find('td').eq(1).text();
+			var email = $('#email_table').find('tr').eq(index).find('td').eq(2).text();
 			var html = '确认要删除联系人：  '+name+'  吗？';
 			$('#hint_detail').html(html);
 			$('#hint_dialog').dialog({
@@ -347,7 +347,7 @@
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
 		    json.cmd_type = "modify_email_user";
-			json.id = $('#email_table').find('tr').eq(index).find('td').eq(0).html();
+			json.id = $('#email_table').find('tr').eq(index).find('td').eq(0).text();
 			json.name = $('#modify_name').val();
 			json.email = $('#modify_email').val();
 
@@ -402,8 +402,8 @@
 		}
 
         function edit_item(index) {
-			var name = $('#email_table').find('tr').eq(index).find('td').eq(1).html();
-			var email = $('#email_table').find('tr').eq(index).find('td').eq(2).html();
+			var name = $('#email_table').find('tr').eq(index).find('td').eq(1).text();
+			var email = $('#email_table').find('tr').eq(index).find('td').eq(2).text();
 			$('#modify_name').val(name);
 			$('#modify_email').val(email);
 			$('#modify_dialog').dialog({
