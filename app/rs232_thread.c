@@ -348,7 +348,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 		priv->rs232_realdata->data[i].enum_value = current_value->enum_value;
 		strcpy(priv->rs232_realdata->data[i].enum_en_desc, param_desc->param_enum[current_value->enum_value].en_desc);
 		strcpy(priv->rs232_realdata->data[i].enum_cn_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
-		priv->rs232_realdata->data[i].alarm_type = 0;
+		priv->rs232_realdata->data[i].alarm_type = alarm_status;
 	}
 	priv->rs232_realdata->cnt = list_size;
 
@@ -406,14 +406,14 @@ static void *rs232_process(void *arg)
 	char sql[256] = {0};
 	query_result_t query_result;
 	sprintf(sql, "SELECT * FROM %s WHERE port=2", "uart_cfg");
-	memset(&query_result, 0, sizeof(query_result_t));
-	priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
-	if (query_result.row <= 0) {
+    memset(&query_result, 0, sizeof(query_result_t));
+    priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
+    if (query_result.row <= 0) {
 		priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 		return (void *)0;
-	}
+    }
 
-	priv->protocol_id = atoi(query_result.result[query_result.column + 1]);
+    priv->protocol_id = atoi(query_result.result[query_result.column + 1]);
 	priv->uart_param.baud = atoi(query_result.result[query_result.column + 2]);
 	priv->uart_param.bits = atoi(query_result.result[query_result.column + 3]);
 	priv->uart_param.stops = atoi(query_result.result[query_result.column + 4]);
@@ -427,11 +427,12 @@ static void *rs232_process(void *arg)
     list_t *protocol_list = list_create(sizeof(protocol_t));
     init_protocol_lib(protocol_list);
     protocol_t *protocol = NULL;
-	protocol = get_protocol_handle(protocol_list, priv->protocol_id);
+    protocol = get_protocol_handle(protocol_list, priv->protocol_id);
 
 	priv->shm_handle = shm_object_create(RS232_SHM_KEY, sizeof(uart_realdata_t));
 	int ret = 0;
 	if (priv->shm_handle == NULL) {
+		printf("create shm object failed\n");
 		ret = -1;
 	}
 
@@ -440,6 +441,10 @@ static void *rs232_process(void *arg)
 		sleep(1);
 
 		if (thiz->thread_status == 0) {
+			deinit_protocol_lib(protocol_list);
+			protocol_list = NULL;
+
+			priv->shm_handle->shm_destroy(priv->shm_handle);
 			return (void *)0;
 		}
 	}
@@ -464,17 +469,17 @@ static void *rs232_process(void *arg)
 		for (index = 0; index < property_list_size; index++) {
 			property = property_list->get_index_value(property_list, index);
 	        memset(buf, 0, sizeof(buf));
-    		print_buf(property->cmd.cmd_code, property->cmd.cmd_len);
+    		//print_buf(property->cmd.cmd_code, property->cmd.cmd_len);
 
 	        if (uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2)
                     == property->cmd.cmd_len) {
 	            int len = uart->read(uart, buf, property->cmd.check_len, 2);
 	            printf("read len %d\n", len);
-	            print_buf(buf, len);
+	            //print_buf(buf, len);
 	            if (len == property->cmd.check_len) {
 	                list_t *value_list = list_create(sizeof(param_value_t));
 	                protocol->calculate_data(property, buf, len, value_list);
-	                print_param_value(value_list);
+	                //print_param_value(value_list);
 					if (update_alarm_param_flag) {
 						update_alarm_param(priv, property);
 					}
@@ -491,12 +496,13 @@ static void *rs232_process(void *arg)
 	            printf("write cmd failed------------\n");
 	        }
 			sleep(1);
-			if (update_alarm_param_flag) {
-				update_alarm_param_flag = 0;
-				priv->pref_handle->set_rs232_alarm_flag(priv->pref_handle, 0);
-			} else {
-				update_alarm_param_flag = priv->pref_handle->get_rs232_alarm_flag(priv->pref_handle);
-			}
+		}
+
+		if (update_alarm_param_flag) {
+			update_alarm_param_flag = 0;
+			priv->pref_handle->set_rs232_alarm_flag(priv->pref_handle, 0);
+		} else {
+			update_alarm_param_flag = priv->pref_handle->get_rs232_alarm_flag(priv->pref_handle);
 		}
 	}
 
@@ -510,11 +516,11 @@ static void *rs232_process(void *arg)
     uart->destroy(uart);
     uart = NULL;
 
+	priv->shm_handle->shm_destroy(priv->shm_handle);
+
 	priv = NULL;
 	thiz = NULL;
 	thread_param = NULL;
-
-	priv->shm_handle->shm_destroy(priv->shm_handle);
 
 	return (void *)0;
 }

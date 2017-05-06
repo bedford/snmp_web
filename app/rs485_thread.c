@@ -349,7 +349,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 		priv->rs485_realdata->data[i].enum_value = current_value->enum_value;
 		strcpy(priv->rs485_realdata->data[i].enum_en_desc, param_desc->param_enum[current_value->enum_value].en_desc);
 		strcpy(priv->rs485_realdata->data[i].enum_cn_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
-		priv->rs485_realdata->data[i].alarm_type = 0;
+		priv->rs485_realdata->data[i].alarm_type = alarm_status;
 	}
 	priv->rs485_realdata->cnt = list_size;
 
@@ -434,6 +434,7 @@ static void *rs485_process(void *arg)
 	priv->shm_handle = shm_object_create(RS485_SHM_KEY, sizeof(uart_realdata_t));
 	int ret = 0;
 	if (priv->shm_handle == NULL) {
+		printf("create shm object failed\n");
 		ret = -1;
 	}
 
@@ -442,6 +443,10 @@ static void *rs485_process(void *arg)
 		sleep(1);
 
 		if (thiz->thread_status == 0) {
+			deinit_protocol_lib(protocol_list);
+			protocol_list = NULL;
+
+			priv->shm_handle->shm_destroy(priv->shm_handle);
 			return (void *)0;
 		}
 	}
@@ -467,7 +472,7 @@ static void *rs485_process(void *arg)
 		for (index = 0; index < property_list_size; index++) {
 			property = property_list->get_index_value(property_list, index);
 	        memset(buf, 0, sizeof(buf));
-    		print_buf(property->cmd.cmd_code, property->cmd.cmd_len);
+    		//print_buf(property->cmd.cmd_code, property->cmd.cmd_len);
 
 			drv_gpio_write(RS485_ENABLE, 1);
 	        if (uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2)
@@ -477,11 +482,11 @@ static void *rs485_process(void *arg)
 
 	            int len = uart->read(uart, buf, property->cmd.check_len, 2);
 	            printf("read len %d\n", len);
-	            print_buf(buf, len);
+	            //print_buf(buf, len);
 	            if (len == property->cmd.check_len) {
 	                list_t *value_list = list_create(sizeof(param_value_t));
 	                protocol->calculate_data(property, buf, len, value_list);
-	                print_param_value(value_list);
+	                //print_param_value(value_list);
 					if (update_alarm_param_flag) {
 						update_alarm_param(priv, property);
 					}
@@ -498,13 +503,14 @@ static void *rs485_process(void *arg)
 	            printf("write cmd failed------------\n");
 	        }
 			sleep(1);
-			if (update_alarm_param_flag) {
-				update_alarm_param_flag = 0;
-				priv->pref_handle->set_rs485_alarm_flag(priv->pref_handle, 0);
-			} else {
-				update_alarm_param_flag = priv->pref_handle->get_rs485_alarm_flag(priv->pref_handle);
-			}
 		}
+
+        if (update_alarm_param_flag) {
+            update_alarm_param_flag = 0;
+            priv->pref_handle->set_rs485_alarm_flag(priv->pref_handle, 0);
+        } else {
+            update_alarm_param_flag = priv->pref_handle->get_rs485_alarm_flag(priv->pref_handle);
+        }
 	}
 	drv_gpio_close(RS485_ENABLE);
 
@@ -518,11 +524,11 @@ static void *rs485_process(void *arg)
     uart->destroy(uart);
     uart = NULL;
 
+	priv->shm_handle->shm_destroy(priv->shm_handle);
+
 	priv = NULL;
 	thiz = NULL;
 	thread_param = NULL;
-
-	priv->shm_handle->shm_destroy(priv->shm_handle);
 
 	return (void *)0;
 }
