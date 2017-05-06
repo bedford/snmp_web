@@ -45,13 +45,17 @@
 		background-color: #e4eff5;
 	}
 
-	.table-body tr:nth-child(odd) {
+	.table-body table .warning {
+		background-color: #f01818;
+	}
+
+	/*.table-body tr:nth-child(odd) {
 		background-color: #dde6ea;
 	}
 
 	.table-body tr:nth-child(even) {
 		background-color: #fff;
-	}
+	}*/
 
 	.table-body table tr td {
 		/*width: 16%;*/
@@ -147,14 +151,14 @@
 					if (item.alarm_type == '0') {
 						var html = '<tr><td style="width:25%;">' + item.protocol_desc + '</td>'
 						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + item.param_unit + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
 						+ '<td style="width:15%;">正常</td></tr>';
 					} else {
 						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
 						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + item.param_unit + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
 						+ '<td style="width:15%;">报警</td></tr>';
@@ -181,14 +185,14 @@
 					if (item.alarm_type == '0') {
 						var html = '<tr><td style="width:25%;">' + item.protocol_desc + '</td>'
 						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + item.param_unit + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
 						+ '<td style="width:15%;">正常</td></tr>';
 					} else {
 						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
 						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + item.param_unit + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
 						+ '<td style="width:15%;">报警</td></tr>';
@@ -226,7 +230,9 @@
 			                dataType: "json",
 			                data    : data,
 			                success : function(msg) {
-								display_real_data(msg, '全部', '全部');
+								var device_type = $('#device_type').val();
+								var status = $('#status_type').val();
+								display_real_data(msg, device_type, status);
 								window.localStorage.removeItem("real_data");
 								window.localStorage.setItem("real_data", JSON.stringify(msg));
 			                },
