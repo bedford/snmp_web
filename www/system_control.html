@@ -89,9 +89,10 @@
 	<div class="system_repair_box">
 		<span style="width:150px;font-size:16px;">系统升级</span>
 		<div class="horizental_split"></div>
-		<form id="update_form" enctype="multipart/form-data">
-			<input id="update_file" type="file" name="update_file">
-			<input type="button" id="update_btn" value="更新固件" onclick="update_firmware()">
+
+        <form action="/cgi-bin/update.cgi" method="post" enctype="multipart/form-data">
+			<input type="file" name="filename" id="filename">
+			<input type="submit" name="submit" value="更新固件">
 		</form>
     </div>
 
@@ -102,6 +103,7 @@
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
+	<script src="js/jquery.form.js"></script>
     <script>
         if (window.sessionStorage.getItem("user_information") == ""
             || window.sessionStorage.getItem("user_information") == null) {
@@ -213,58 +215,30 @@
 					});
 		}
 
-		function update_firmware() {
-			var filename = $('#update_file').val();
-			var form_data = new FormData($('#update_form')[0]);
-
-		    $.ajax({
-		                url     : "/cgi-bin/update.cgi",
-		                type    : "POST",
-		                dataType: "json",
-		                data    : form_data,
-						cache	: false,
-						contentType: false,
-						processData: false,
-		                success : function(msg) {
-		                    $('#update_btn').removeAttr("disabled");
-							var html = '';
-							if (msg.status == 1) {
-								html = '更新成功';
-							} else {
-								html = '更新失败';
+		$(function() {
+			$('form').ajaxForm({
+				success: function(data) {
+					var responseData = JSON.parse(data);
+					var html = '';
+					if (responseData.status == 1) {
+						html = '更新成功';
+					} else {
+						html = '更新失败';
+					}
+					$('#hint_detail').html(html);
+					$('#hint_dialog').dialog({
+						resizable: false,
+						height: 160,
+						modal: true,
+						buttons: {
+							"确定": function() {
+								$(this).dialog("close");
 							}
-							$('#hint_detail').html(html);
-							$('#hint_dialog').dialog({
-								resizable: false,
-								height: 160,
-								modal: true,
-								buttons: {
-									"确定": function() {
-										$(this).dialog("close");
-									}
-								}
-							});
-		                },
-						error : function(msg) {
-		                    $('#update_btn').removeAttr("disabled");
-							var html = '操作失败';
-							$('#hint_detail').html(html);
-							$('#hint_dialog').dialog({
-								resizable: false,
-								height: 160,
-								modal: true,
-								buttons: {
-									"确定": function() {
-										$(this).dialog("close");
-									}
-								}
-							});
-						},
-		            });
-		}
-
-        $(document).ready(function () {
-        })
+						}
+					})
+				}
+			});
+		});
     </script>
 </body>
 </html>
