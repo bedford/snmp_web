@@ -43,6 +43,8 @@ typedef struct {
 	uart_param_t	uart_param;
 	int 			protocol_id;
 	int 			rs485_enable;
+
+	struct timeval	last_record_time;
 } priv_info_t;
 
 static void print_snmp_protocol(protocol_t *snmp_protocol)
@@ -119,7 +121,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		}
         sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
 			param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc) \
-			VALUES (%d, '%s', '%s', '%d', '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
+			VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
                 priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
                 current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
 				current_value->param_value, param_desc->param_unit, current_value->enum_value,
@@ -132,7 +134,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	}
 
 	property->last_param_value = last_value_list;
-	gettimeofday(&(property->last_record_time), NULL);
+	gettimeofday(&(priv->last_record_time), NULL);
 }
 
 static void compare_values(priv_info_t *priv, property_t *property, list_t *valid_value, int *alarm_cnt)
@@ -149,8 +151,8 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 	int list_size = valid_value->get_list_size(valid_value);
 	int i = 0;
 	int timeout_record_flag = 0;
-	if ((current_time.tv_sec - property->last_record_time.tv_sec) > (60 * 30)) {
-		property->last_record_time = current_time;
+	if ((current_time.tv_sec - priv->last_record_time.tv_sec) > (60 * 30)) {
+		priv->last_record_time = current_time;
 		timeout_record_flag = 1;
 	}
 
@@ -323,13 +325,13 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				printf("memory pool is empty\n");
 				continue;
 			}
-            sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
-				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_desc) \
+			sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
+				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc) \
 				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
-	                priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
-	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
-	                current_value->param_value, param_desc->param_unit, current_value->enum_value,
-	                param_desc->param_enum[current_value->enum_value].en_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
+					priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
+					current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
+					current_value->param_value, param_desc->param_unit, current_value->enum_value,
+					param_desc->param_enum[current_value->enum_value].en_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
 			if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 				printf("ring buffer is full\n");
 				priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
