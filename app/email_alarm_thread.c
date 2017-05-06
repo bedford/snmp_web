@@ -162,6 +162,7 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 	break;
 	}
 
+	email_param.email_receiver_cnt = priv->email_contact_cnt;
 	for (i = 0; i < priv->email_contact_cnt; i++) {
 		strcpy(email_param.email_receiver[i].receiver_mail, priv->email_user_array[i].email_addr);
 		strcpy(email_param.email_receiver[i].receiver_name, priv->email_user_array[i].name);
@@ -287,12 +288,12 @@ static void *email_alarm_process(void *arg)
 	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
 	update_email_contact(priv);
-	priv->smtp_handle = smtp_create();
 
 	alarm_msg_t *alarm_msg = NULL;
 	priv->send_times = 1;
 	priv->send_interval = 0;
 	while (thiz->thread_status) {
+		priv->smtp_handle = smtp_create();
 		if (priv->email_rb_handle->pop(priv->email_rb_handle, (void **)&alarm_msg) == 0) {
 			update_alarm_table(priv, alarm_msg);
 			priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
@@ -305,13 +306,13 @@ static void *email_alarm_process(void *arg)
 		}
 
 		send_alarm_email(priv);
+		priv->smtp_handle->destroy(priv->smtp_handle);
+		priv->smtp_handle = NULL;
 		alarm_msg = NULL;
 		sleep(1);
 	}
 
 	clear_ring_buffer(priv->email_alarm_db_handle, priv->rb_handle, priv->mpool_handle);
-	priv->smtp_handle->destroy(priv->smtp_handle);
-	priv->smtp_handle = NULL;
 
 	priv = NULL;
 	thiz = NULL;
