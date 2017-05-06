@@ -127,6 +127,11 @@ shm_object_t *shm_object_create(key_t shm_key, unsigned int size)
                 memset(memory, 0, size);
             }
         } while(0);
+
+        if (priv->memory == NULL) {
+            shm_object_destroy(thiz);
+            thiz = NULL;
+        }
     }
 
     return thiz;
