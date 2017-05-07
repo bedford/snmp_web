@@ -1077,16 +1077,16 @@ static int query_data_record(cJSON *root, priv_info_t *priv)
 	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
 	char *param_id_string = cJSON_GetObjectItem(cfg, "param_id")->valuestring;
 	if (strcmp(device_id_string, "all") == 0) {
-		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' ORDER BY id",
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' ORDER BY id DESC",
 			"data_record", start_time, end_time);
 	} else if (strcmp(param_id_string, "all") == 0) {
 		int device_id = atoi(device_id_string);
-		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND protocol_id=%d ORDER BY id",
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND protocol_id=%d ORDER BY id DESC",
 			"data_record", start_time, end_time, device_id);
 	} else {
 		int device_id = atoi(device_id_string);
 		int param_id = atoi(param_id_string);
-		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND param_id=%d ORDER BY id",
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND param_id=%d ORDER BY id DESC",
 			"data_record", start_time, end_time, device_id, param_id);
 	}
 	cfg = NULL;
@@ -1156,16 +1156,16 @@ static int query_alarm_record(cJSON *root, priv_info_t *priv)
 	char *device_id_string = cJSON_GetObjectItem(cfg, "device_id")->valuestring;
 	char *param_id_string = cJSON_GetObjectItem(cfg, "param_id")->valuestring;
 	if (strcmp(device_id_string, "all") == 0) {
-		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' ORDER BY id",
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' ORDER BY id DESC",
 			"alarm_record", start_time, end_time);
 	} else if (strcmp(param_id_string, "all") == 0) {
 		int device_id = atoi(device_id_string);
-		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND protocol_id=%d ORDER BY id",
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND protocol_id=%d ORDER BY id DESC",
 			"alarm_record", start_time, end_time, device_id);
 	} else {
 		int device_id = atoi(device_id_string);
 		int param_id = atoi(param_id_string);
-		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND param_id=%d ORDER BY id",
+		sprintf(sql, "SELECT * FROM %s WHERE created_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND param_id=%d ORDER BY id DESC",
 			"alarm_record", start_time, end_time, device_id, param_id);
 	}
 
@@ -1239,31 +1239,31 @@ static int query_sms_record(cJSON *root, priv_info_t *priv)
 	switch (send_status) {
 	case 0:
 		if (strcmp(device_id_string, "all") == 0) {
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND send_status=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND send_status=%d ORDER BY id DESC",
 				"sms_record", start_time, end_time, 0);
 		} else {
 			int device_id = atoi(device_id_string);
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND send_status=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND send_status=%d ORDER BY id DESC",
 				"sms_record", start_time, end_time, device_id, 0);
 		}
 		break;
 	case 1:
 		if (strcmp(device_id_string, "all") == 0) {
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND send_status=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND send_status=%d ORDER BY id DESC",
 				"sms_record", start_time, end_time, 1);
 		} else {
 			int device_id = atoi(device_id_string);
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND send_status=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND send_status=%d ORDER BY id DESC",
 				"sms_record", start_time, end_time, device_id, 1);
 		}
 		break;
 	default:
 		if (strcmp(device_id_string, "all") == 0) {
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' ORDER BY id DESC",
 				"sms_record", start_time, end_time);
 		} else {
 			int device_id = atoi(device_id_string);
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d ORDER BY id DESC",
 				"sms_record", start_time, end_time, device_id);
 		}
 		break;
@@ -1328,31 +1328,31 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
 	switch (send_status) {
 	case 0:
 		if (strcmp(device_id_string, "all") == 0) {
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND send_status=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND send_status=%d ORDER BY id DESC",
 				"email_record", start_time, end_time, 0);
 		} else {
 			int device_id = atoi(device_id_string);
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND send_status=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND send_status=%d ORDER BY id DESC",
 				"email_record", start_time, end_time, device_id, 0);
 		}
 		break;
 	case 1:
 		if (strcmp(device_id_string, "all") == 0) {
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND send_status=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND send_status=%d ORDER BY id DESC",
 				"email_record", start_time, end_time, 1);
 		} else {
 			int device_id = atoi(device_id_string);
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND send_status=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d AND send_status=%d ORDER BY id DESC",
 				"email_record", start_time, end_time, device_id, 1);
 		}
 		break;
 	default:
 		if (strcmp(device_id_string, "all") == 0) {
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' ORDER BY id DESC",
 				"email_record", start_time, end_time);
 		} else {
 			int device_id = atoi(device_id_string);
-			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d ORDER BY id",
+			sprintf(sql, "SELECT * FROM %s WHERE send_time BETWEEN '%s' AND '%s' AND protocol_id=%d ORDER BY id DESC",
 				"email_record", start_time, end_time, device_id);
 		}
 		break;
