@@ -34,7 +34,6 @@ int main(void)
     }
 
     cJSON *response = cJSON_CreateObject();
-    cJSON_AddNumberToObject(response, "status", 1);
 
     char boundary[256] = {0};
     boundary[0] = '\r';
@@ -72,7 +71,7 @@ int main(void)
             if (fp != NULL) {
                 int count = fread(tmp_buf, 1, sizeof(tmp_buf), stdin);
                 while (count > 0) {
-                    fwrite(tmp_buf, 1, count, fp);
+                    int res = fwrite(tmp_buf, 1, count, fp);
                     count = fread(tmp_buf, 1, sizeof(tmp_buf), stdin);
                 }
 
@@ -84,7 +83,7 @@ int main(void)
                 fseek(fp, -count, SEEK_END);
                 long total = ftell(fp);
                 memset(tmp_buf, 0, sizeof(tmp_buf));
-                fread(tmp_buf, 1, count, fp);
+                int res = fread(tmp_buf, 1, count, fp);
                 int i = 0;
                 for (i = 0; i < count; i++) {
                     if (tmp_buf[i] == boundary[0]) {
@@ -107,9 +106,29 @@ int main(void)
                     ftruncate(fd, total);
                     fflush(fp);
                     fclose(fp);
+
+                    char cmd[256] = {0};
+                    sprintf(cmd, "chmod +x %s", file_path);
+                    ret = system(cmd);
+                    cJSON_AddStringToObject(response, "cmd", file_path);
+                    ret = system(file_path);
+                    sync();
+                    sync();
+
+                    FILE *fp = fopen("/tmp/reboot", "wb");
+                    fclose(fp);
+                    fp = NULL;
+
+                    ret = 0;
                 }
             }
         }
+    }
+
+    if (ret == 0) {
+        cJSON_AddNumberToObject(response, "status", 1);
+    } else {
+        cJSON_AddNumberToObject(response, "status", 0);
     }
 
     char *fb_string = cJSON_Print(response);
