@@ -343,6 +343,40 @@
 			});
 		}
 
+		function new_dialog_show() {
+			$('#new_dialog').dialog({
+				width: 300,
+				height: 300,
+				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+						add_email_user();
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
+			});
+		}
+
+		function edit_dialog_show(index) {
+			$('#modify_dialog').dialog({
+				width: 300,
+				height: 300,
+				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+						edit_email_user(index);
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
+			});
+		}
+
         function edit_email_user(index) {
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
@@ -362,6 +396,7 @@
 					buttons: {
 						"确定": function() {
 							$(this).dialog("close");
+							edit_dialog_show(index);
 						}
 					}
 				});
@@ -379,6 +414,7 @@
 					buttons: {
 						"确定": function() {
 							$(this).dialog("close");
+							edit_dialog_show(index);
 						}
 					}
 				});
@@ -406,20 +442,8 @@
 			var email = $('#email_table').find('tr').eq(index).find('td').eq(2).text();
 			$('#modify_name').val(name);
 			$('#modify_email').val(email);
-			$('#modify_dialog').dialog({
-				width: 300,
-				height: 300,
-				modal: true,
-				buttons: {
-					"确定": function() {
-						$(this).dialog("close");
-						edit_email_user(index);
-					},
-					取消: function() {
-						$(this).dialog("close");
-					}
-				}
-			});
+
+            edit_dialog_show(index);
 		}
 
         function add_email_user() {
@@ -440,6 +464,7 @@
 					buttons: {
 						"确定": function() {
 							$(this).dialog("close");
+							new_dialog_show();
 						}
 					}
 				});
@@ -457,6 +482,7 @@
 					buttons: {
 						"确定": function() {
 							$(this).dialog("close");
+							new_dialog_show();
 						}
 					}
 				});
@@ -475,20 +501,9 @@
 		}
 
 		function add_email_contact() {
-			$('#new_dialog').dialog({
-				width: 300,
-				height: 300,
-				modal: true,
-				buttons: {
-					"确定": function() {
-						$(this).dialog("close");
-						add_email_user();
-					},
-					取消: function() {
-						$(this).dialog("close");
-					}
-				}
-			});
+			$('#new_name').val("");
+			$('#new_email').val("");
+            new_dialog_show();
 		}
     </script>
 </body>
