@@ -931,6 +931,43 @@ static int get_email_rule(cJSON *root, priv_info_t *priv)
     dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
     cJSON *response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "send_times",
+            iniparser_getint(dic, "EMAIL:send_times", 3));
+    cJSON_AddNumberToObject(response, "send_interval",
+            iniparser_getint(dic, "EMAIL:send_interval", 1));
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int set_email_rule(cJSON *root, priv_info_t *priv)
+{
+    dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+    write_profile(dic, "EMAIL", "send_times",
+            cJSON_GetObjectItem(cfg, "send_times")->valuestring);
+	write_profile(dic, "EMAIL", "send_interval",
+	        cJSON_GetObjectItem(cfg, "send_interval")->valuestring);
+
+    dump_profile(dic, INI_FILE_NAME);
+
+    cJSON *response;
+    response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int get_email_server(cJSON *root, priv_info_t *priv)
+{
+    dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+    cJSON *response = cJSON_CreateObject();
 
     cJSON_AddStringToObject(response, "smtp_server",
             iniparser_getstring(dic, "EMAIL:smtp_server", "smtp.163.com"));
@@ -947,7 +984,7 @@ static int get_email_rule(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
-static int set_email_rule(cJSON *root, priv_info_t *priv)
+static int set_email_server(cJSON *root, priv_info_t *priv)
 {
     dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
@@ -1992,6 +2029,14 @@ cmd_fun_t cmd_alarm_setting[] = {
 	{
 		"set_email_rule",
 		set_email_rule
+	},
+	{
+		"get_email_server",
+		get_email_server
+	},
+	{
+		"set_email_server",
+		set_email_server
 	}
 };
 
