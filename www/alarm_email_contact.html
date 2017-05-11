@@ -109,9 +109,35 @@
 		padding: .4em;
 	}
 
+	.horizental_split {
+		height: 2px;
+		width: 95%;
+		background: #e5e5e5;
+		overflow: hidden;
+		margin-top: 10px;
+	}
 	</style>
 </head>
 <body>
+	<div class="operation_box">
+		<span>告警邮件发送次数</span>
+		<select id="send_times" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+		</select>
+		<span>发送时间间隔（分钟）</span>
+		<select id="send_interval" style="margin-left:5px; margin-right:5px; width:50px; height:25px;">
+			<option value="1">5</option>
+			<option value="2">10</option>
+			<option value="3">15</option>
+			<option value="4">20</option>
+			<option value="5">25</option>
+			<option value="6">30</option>
+		</select>
+		<input type="button" id="set_btn" value="设置" onclick="set_email_rule()">
+	</div>
+	<div class="horizental_split"></div>
 	<div class="operation_box">
 		<span>邮件服务器</span>
 		<input type="text" style="width:150px; height:25px;" id="smtp_server_ip">
@@ -121,7 +147,7 @@
 		<input type="password" style="width:150px; height:25px;" id="email_password">
 		<span>端口</span>
 		<input type="text" style="width:40px; height:25px;" id="email_port">
-		<input type="button" id="set_btn" value="设置" onclick="set_email_rule()">
+		<input type="button" id="set_btn" value="设置" onclick="set_email_server()">
 		<input type="button" id="add_btn" value="新增" onclick="add_email_contact()">
 	</div>
 	<div id="table-box">
@@ -191,10 +217,10 @@
             return true;
 		}
 
-		function load_email_rule() {
+		function load_email_server() {
 		    var json = new Object();
 		    json.msg_type = "alarm_setting";
-		    json.cmd_type = "get_email_rule";
+		    json.cmd_type = "get_email_server";
 		    var data = $.toJSON(json);
 		    $.ajax({
 		                url     : "/cgi-bin/common.cgi",
@@ -210,16 +236,89 @@
 		            });
 		}
 
-		function set_email_rule() {
+		function load_email_rule() {
+		    var json = new Object();
+		    json.msg_type = "alarm_setting";
+		    json.cmd_type = "get_email_rule";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+							$("#send_times").val(msg.send_times);
+							$("#send_interval").val(msg.send_interval);
+		                },
+		            });
+		}
+
+		function set_email_server() {
 			var json = new Object();
 			json.msg_type = "alarm_setting";
-			json.cmd_type = "set_email_rule";
+			json.cmd_type = "set_email_server";
 
 			var cfg = new Object();
 			cfg.smtp_server = $("#smtp_server_ip").val();
 			cfg.email_addr = $("#email_account").val();
 			cfg.password = $("#email_password").val();
 			cfg.port = $('#email_port').val();
+			json.cfg = cfg;
+
+			$('#set_btn').attr("disabled", "disabled");
+			var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    $('#set_btn').removeAttr("disabled");
+							var html = '';
+							if (msg.status == 1) {
+								html = '设置成功';
+							} else {
+								html = '设置失败';
+							}
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								title: "提示信息",
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+		                },
+						error : function(msg) {
+		                    $('#set_btn').removeAttr("disabled");
+							var html = '操作失败';
+							$('#hint_detail').html(html);
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
+						},
+					});
+		}
+
+		function set_email_rule() {
+			var json = new Object();
+			json.msg_type = "alarm_setting";
+			json.cmd_type = "set_email_rule";
+
+			var cfg = new Object();
+			cfg.send_times = $("#send_times").val();
+			cfg.send_interval = $("#send_interval").val();
 			json.cfg = cfg;
 
 			$('#set_btn').attr("disabled", "disabled");
@@ -299,6 +398,7 @@
         $(document).ready(function () {
 			load_email_user();
 			load_email_rule();
+			load_email_server();
         })
 
         function delete_email_user(index) {
