@@ -326,6 +326,10 @@ static void send_alarm_sms(priv_info_t *priv)
 	alarm_msg_t *msg = NULL;
 	for (i = 0; i < MAX_QUEUE_NUMBER; i++) {
 		msg = priv->alarm_queue[i];
+		if (msg == NULL) {
+			continue;
+		}
+
 		if ((priv->last_send_timing[i].tv_sec == 0) && (priv->last_send_timing[i].tv_usec == 0)) {
 			send_to_contact(priv, msg);
 			msg->send_times--;
@@ -411,6 +415,9 @@ thread_t *sms_alarm_thread_create(void)
 
 		priv_info_t *priv = (priv_info_t *)thiz->priv;
 		priv->local_mpool_handle = mem_pool_create(sizeof(alarm_msg_t), MAX_QUEUE_NUMBER);
+		if (priv->local_mpool_handle == NULL) {
+			printf("create local mpool hanlde faile\n");
+		}
 	}
 
 	return thiz;
