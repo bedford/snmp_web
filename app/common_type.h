@@ -5,6 +5,8 @@
 #define RS485_SHM_KEY       (6781)
 #define DI_SHM_KEY          (6782)
 
+#define SHM_KEY_TRAP_ALARM  (6789)
+
 #define MIN_BUF_SIZE        (32)
 #define UART_DATA_MAX_NUM   (1000)
 

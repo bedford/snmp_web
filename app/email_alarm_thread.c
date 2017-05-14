@@ -13,6 +13,8 @@
 #include "types.h"
 #include "mem_pool.h"
 #include "ring_buffer.h"
+#include "lf_queue.h"
+#include "common_type.h"
 
 #include "smtp.h"
 
@@ -331,6 +333,10 @@ static void send_alarm_email(priv_info_t *priv)
 	alarm_msg_t *msg = NULL;
 	for (i = 0; i < MAX_QUEUE_NUMBER; i++) {
 		msg = priv->alarm_queue[i];
+		if (msg == NULL) {
+			continue;
+		}
+
 		if ((priv->last_send_timing[i].tv_sec == 0) && (priv->last_send_timing[i].tv_usec == 0)) {
 			send_to_contact(priv, msg);
 			msg->send_times--;
@@ -366,6 +372,12 @@ static void *email_alarm_process(void *arg)
 
 	update_email_contact(priv);
 
+	lf_queue_t	queue;
+	if (lf_queue_init(&queue, SHM_KEY_TRAP_ALARM, sizeof(alarm_msg_t), 3) < 0) {
+		printf("######################### create SHM_KEY_TRAP_ALARM failed ####################\n");
+		return (void *)-1;
+	}
+
 	alarm_msg_t *alarm_msg = NULL;
 	priv->send_times = 1;
 	priv->send_interval = 0;
@@ -373,6 +385,13 @@ static void *email_alarm_process(void *arg)
 		priv->smtp_handle = smtp_create();
 		if (priv->email_rb_handle->pop(priv->email_rb_handle, (void **)&alarm_msg) == 0) {
 			update_alarm_table(priv, alarm_msg);
+
+			if (lf_queue_push(queue, alarm_msg) < 0) {
+				printf("##############  push to lock-free queue failed ##############\n");
+			} else {
+				printf("##############  push to lock-free queue done ##############\n");	
+			}
+
 			priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
 			alarm_msg = NULL;
 		}
@@ -389,6 +408,7 @@ static void *email_alarm_process(void *arg)
 	}
 
 	clear_ring_buffer(priv->email_alarm_db_handle, priv->rb_handle, priv->mpool_handle);
+    lf_queue_fini(&queue);
 
 	priv = NULL;
 	thiz = NULL;
@@ -414,6 +434,9 @@ thread_t *email_alarm_thread_create(void)
 
 		priv_info_t *priv = (priv_info_t *)thiz->priv;
 		priv->local_mpool_handle = mem_pool_create(sizeof(alarm_msg_t), MAX_QUEUE_NUMBER);
+		if (priv->local_mpool_handle == NULL) {
+			printf("create local mpool hanlde faile\n");
+		}
 	}
 
 	return thiz;
