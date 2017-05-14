@@ -16,6 +16,9 @@
 
 #include "modem.h"
 
+#define MAX_QUEUE_NUMBER	(16)
+#define MAX_SMS_USER_NUM	(10)
+
 typedef struct {
 	char	name[32];
 	char	phone_num[16];
@@ -23,7 +26,7 @@ typedef struct {
 
 typedef struct {
 	int				sms_contact_cnt;
-	sms_contact_t	sms_user_array[10];
+	sms_contact_t	sms_user_array[MAX_SMS_USER_NUM];
 	modem_t			*modem;
 
 	int				send_times;
@@ -32,6 +35,10 @@ typedef struct {
 	preference_t	*pref_handle;
 	db_access_t 	*sms_alarm_db_handle;
 	db_access_t 	*sys_db_handle;
+
+	alarm_msg_t		*alarm_queue[MAX_QUEUE_NUMBER];
+	struct timeval	last_send_timing[MAX_QUEUE_NUMBER];
+	mem_pool_t		*local_mpool_handle;
 
 	ring_buffer_t 	*rb_handle;
 	mem_pool_t		*mpool_handle;
@@ -58,6 +65,7 @@ static void clear_ring_buffer(db_access_t	*sms_alarm_db_handle,
 	}
 }
 
+#if 0
 static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 {
 	char error_msg[512] = {0};
@@ -97,6 +105,51 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 	}
 	priv->sms_alarm_db_handle->action(priv->sms_alarm_db_handle, sql, error_msg);
 }
+#else
+static void update_queue(priv_info_t *priv, alarm_msg_t *msg)
+{
+	int i = 0;
+	for (i = 0; i < MAX_QUEUE_NUMBER; i++) {
+		if (priv->alarm_queue[i] == NULL) {
+			priv->alarm_queue[i] = msg;
+			priv->last_send_timing[i].tv_sec = 0;
+			priv->last_send_timing[i].tv_usec = 0;
+			break;
+		}
+	}
+}
+
+static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
+{
+	int i = 0;
+	alarm_msg_t *msg = NULL;
+	for (i = 0; i < MAX_QUEUE_NUMBER; i++) {
+		msg = priv->alarm_queue[i];
+		if (msg == NULL) {
+			continue;
+		}
+
+		if ((msg->protocol_id == alarm_msg->protocol_id)
+			&& (msg->param_id == alarm_msg->param_id)) {
+			memcpy(msg, alarm_msg, sizeof(alarm_msg_t));
+			priv->last_send_timing[i].tv_sec = 0;
+			priv->last_send_timing[i].tv_usec = 0;
+			break;
+		}
+	}
+
+	if (i == MAX_QUEUE_NUMBER) {
+		msg = (alarm_msg_t *)priv->local_mpool_handle->mpool_alloc(priv->local_mpool_handle);
+		if (msg == NULL) {
+			printf("function %s, line %d, memory pool is empty\n", __func__, __LINE__);
+		} else {
+			memcpy(msg, alarm_msg, sizeof(alarm_msg_t));
+			update_queue(priv, msg);
+			msg = NULL;
+		}
+	}
+}
+#endif
 
 static void update_sms_contact(priv_info_t *priv)
 {
@@ -202,6 +255,7 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 
 static void send_alarm_sms(priv_info_t *priv)
 {
+#if 0
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
 
@@ -264,6 +318,29 @@ static void send_alarm_sms(priv_info_t *priv)
 		}
 	}
 	priv->sms_alarm_db_handle->free_table(priv->sms_alarm_db_handle, query_result.result);
+#else
+    struct timeval current_time;
+	gettimeofday(&current_time, NULL);
+
+	int i = 0;
+	alarm_msg_t *msg = NULL;
+	for (i = 0; i < MAX_QUEUE_NUMBER; i++) {
+		msg = priv->alarm_queue[i];
+		if ((priv->last_send_timing[i].tv_sec == 0) && (priv->last_send_timing[i].tv_usec == 0)) {
+			send_to_contact(priv, msg);
+			msg->send_times--;
+		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) > (priv->send_interval * 60)) {
+			send_to_contact(priv, msg);
+			msg->send_times--;
+		}
+
+		if (msg->send_times == 0) {
+			priv->local_mpool_handle->mpool_free(priv->local_mpool_handle, (void *)msg);
+			msg = NULL;
+			priv->alarm_queue[i] = NULL;
+		}
+	}
+#endif
 }
 
 static void *sms_alarm_process(void *arg)
@@ -303,7 +380,6 @@ static void *sms_alarm_process(void *arg)
 
 		send_alarm_sms(priv);
 		alarm_msg = NULL;
-		sleep(1);
 	}
 
 	clear_ring_buffer(priv->sms_alarm_db_handle, priv->rb_handle, priv->mpool_handle);
@@ -332,6 +408,9 @@ thread_t *sms_alarm_thread_create(void)
         thiz->start		= thread_start;
         thiz->join		= thread_join;
         thiz->destroy	= thread_destroy;
+
+		priv_info_t *priv = (priv_info_t *)thiz->priv;
+		priv->local_mpool_handle = mem_pool_create(sizeof(alarm_msg_t), MAX_QUEUE_NUMBER);
 	}
 
 	return thiz;
