@@ -155,9 +155,9 @@
 		            });
 		}
 
-		function password_unmatch(index) {
-			var html='两次输入密码不一致，请重新输入';
-			$('#hint_detail').html(html);
+		/* 密码为空或密码校对错误提示 */
+		function password_unmatch(index, msg) {
+			$('#hint_detail').html(msg);
 			$('#hint_dialog').dialog({
 				resizable: false,
 				height: 160,
@@ -166,9 +166,6 @@
 					"确定": function() {
 						$(this).dialog("close");
 						edit_item(index);
-					},
-					取消: function() {
-						$(this).dialog("close");
 					}
 				}
 			});
@@ -187,12 +184,15 @@
 					"确定": function() {
 						var password = $('#modify_password').val();
 						var confirm_password = $('#confirm_password').val();
-						if (password === confirm_password) {
+						if ((password.length == 0) || (confirm_password.length == 0)) {
+							$(this).dialog("close");
+							password_unmatch(index, '不允许密码为空');
+						} else if (password === confirm_password) {
 							$(this).dialog("close");
 							edit_password(index, password);
 						} else {
 							$(this).dialog("close");
-							password_unmatch(index);
+							password_unmatch(index, '两次输入密码不一致，请重新输入');
 						}
 					},
 					取消: function() {
