@@ -9,7 +9,7 @@
 	.snmp_box {
 		margin-top: 20px;
 		width: 100%;
-		height: 40%;
+		height: 80%;
 	}
 
 	.horizental_split {
@@ -18,51 +18,6 @@
 		background: #e5e5e5;
 		overflow: hidden;
 		margin-top: 10px;
-	}
-
-	.snmp_content_box {
-		margin-top: 10px;
-		margin-left: 30px;
-	}
-
-	#left_side {
-		float: left;
-		width: 8%;
-		hight: 100%;
-	}
-	#right_side {
-		float: right;
-		width: 92%;
-		hight: 100%;
-	}
-
-	.snmp_item {
-		height: 40px;
-	}
-
-	.snmp_item .fix_span {
-		display:inline-block;
-		width:50px;
-	}
-
-	.snmp_item .fix_span > input[type="checkbox"] {
-		vertical-align:middle;
-		width: 25px;
-		height: 25px;
-	}
-
-	.snmp_item > input[type="text"] {
-		height: 30px;
-		width: 200px;
-	}
-
-	.other_content_box {
-		margin-top: 20px;
-	}
-
-	.other_content_box .item {
-		margin-top: 20px;
-		margin-left: 70px;
 	}
 
 	.confirm_btn {
@@ -74,7 +29,32 @@
 		font-weight:bold;
 		border: none;
 		margin-top: 50px;
-		margin-left: 30px;
+		margin-left: 100px;
+	}
+
+	#table{
+		width:100%;
+		height: 80%;
+	}
+
+	table {
+		margin-top:2%;
+		border: 1px solid #003D6B;
+		color: #fff;
+		background: #117daf;
+		font-size: 14px;
+		display: inline-block;
+		margin: 20px;
+	}
+
+	table tr.first{
+		background: #1666A2;
+		height:12%;
+	}
+
+	table tr td.t1{	
+		width: 40%;	
+		text-align: center;
 	}
 	</style>
 </head>
@@ -82,21 +62,26 @@
 	<div class="snmp_box">
 		<span style="width:150px;font-size:16px;">SNMP设置</span>
 		<div class="horizental_split"></div>
-		<ul class="snmp_content_box">
-			<div id="left_side">授权IP地址</div>
-			<div id="right_side"></div>
-		</ul>
-	</div>
-	<div class="other_content_box">
-		<span style="width:150px;font-size:16px;">TRAP设置</span>
-		<div class="horizental_split"></div>
-		<div class="item">
-			<span>TRAP服务器IP:</span>
-			<input style="height:30px;width:200px" type="text" id="trap_server_ip">
+
+   		<div id="table">
+			<table id="snmp_param">
+				<tr class="first" ><td colspan="2" style="text-align: center;">参数项</td></tr>
+				<tr><td class="t1">共同体</td><td><input id="snmp_community" type="text"></td></tr>
+				<tr><td class="t1">Trap目的地址</td><td><input id="trap_server_ip" type="text"></td></tr>
+				<tr><td class="t1">企业MIB代码</td><td><input id="mib_enterprise_code" type="text"></td></tr>
+				<tr><td class="t1">企业MIB名称</td><td><input id="mib_enterprise_name" type="text"></td></tr>
+			</table>
+
+			<table id="authority_ip">
+				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>授权IP地址</td></tr>
+				<tr><td style="text-align: center;width:20%;"><input type="checkbox" id="snmp_check_box_0"></td><td style="width:70%;"><input type="text" id="authority_ip_0"/></td></tr>
+				<tr><td style="text-align: center;width:20%;"><input type="checkbox" id="snmp_check_box_1"></td><td><input type="text" id="authority_ip_1"/></td></tr>
+				<tr><td style="text-align: center;width:20%;"><input type="checkbox" id="snmp_check_box_2"></td><td><input type="text" id="authority_ip_2"/></td></tr>
+				<tr><td style="text-align: center;width:20%;"><input type="checkbox" id="snmp_check_box_3"></td><td><input type="text" id="authority_ip_3"/></td></tr> 
+			</table>
+
+			<input type="button" class="confirm_btn" id="set_snmp_btn" value="应用" onclick="set_snmp_param()">
 		</div>
-	</div>
-	<div>
-		<input type="button" class="confirm_btn" id="set_snmp_btn" value="应用" onclick="set_snmp_param()">
 	</div>
 
 	<div class="jq-dialog" id="hint_dialog" title="提示信息">
@@ -131,8 +116,10 @@
 				newArray[i] = obj;
 			}
 			cfg.authority_ip = newArray;
-			cfg.snmp_union = $('#snmp_union').val();
+			cfg.snmp_union = $('#snmp_community').val();
 			cfg.trap_server_ip = $('#trap_server_ip').val();
+			cfg.enterprise_code	= $('#mib_enterprise_code').val();
+			cfg.enterprise_name = $('#mib_enterprise_name').val();
 			json.cfg = cfg;
 
 			$('#set_snmp_btn').attr("disabled", "disabled");
@@ -181,23 +168,19 @@
 		}
 
 		function display_snmp_param(snmp_param) {
-			var html = "";
 			for (var i in snmp_param.authority_ip) {
 				if (snmp_param.authority_ip[i].valid_flag == 1) {
-					html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" id="snmp_check_box_'
-						+i+'" checked="checked"></span>';
+					$('#snmp_check_box_'+i).attr("checked", true);
 				} else {
-					html += '<li class="snmp_item"><span class="fix_span"><input type="checkbox" id="snmp_check_box_'
-		                +i+'"></span>';
+					$('#snmp_check_box_'+i).attr("checked", false);
 				}
-				html += '<input type="text" id="authority_ip_'+i+'" value="'+snmp_param.authority_ip[i].ip+'"></li>';
+				$('#authority_ip_'+i).val(snmp_param.authority_ip[i].ip);
 			}
-			html += '<li class="snmp_item"><span class="fix_span">共同体</span><input type="text" id="snmp_union">';
-			//html += '<input type="button" class="confirm_btn" id="set_snmp_btn" value="应用" onclick="set_snmp_param()"></li>';
-			$('#right_side').append(html);
 
 			$('#trap_server_ip').val(snmp_param.trap_server_ip);
-			$('#snmp_union').val(snmp_param.snmp_union);
+			$('#snmp_community').val(snmp_param.snmp_union);
+			$('#mib_enterprise_code').val(snmp_param.enterprise_code);
+			$('#mib_enterprise_name').val(snmp_param.enterprise_name);
 		}
 
 		function load_snmp_param() {
