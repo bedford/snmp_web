@@ -7,16 +7,7 @@
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
 	.network_box {
-		margin-top: 30px;
-	}
-
-	.network_box .item {
-		margin-top: 10px;
-	}
-
-	.network_box .item > input[type="text"] {
-		height:30px;
-		width:200px;
+		margin-top: 20px;
 	}
 
 	.horizental_split {
@@ -25,12 +16,6 @@
 		background: #e5e5e5;
 		overflow: hidden;
 		margin-top: 10px;
-	}
-
-	.fix_span {
-		display:inline-block;
-		width:80px;
-		margin-left: 80px;
 	}
 
 	.confirm_btn {
@@ -44,32 +29,45 @@
 		margin-left: 50px;
 		margin-top: 30px;
 	}
+
+	#table{
+		width:100%;
+		height: 80%;
+	}
+
+	table {
+		border: 1px solid #003D6B;
+		color: #fff;
+		background: #117daf;
+		font-size: 14px;
+		display: inline-block;
+		margin: 20px;
+	}
+
+	table tr.first{
+		background: #1666A2;
+		height:12%;
+	}
+
+	table tr td.t1{
+		width: 40%;
+		text-align: center;
+	}
 	</style>
 </head>
 <body>
 	<div class="network_box">
 		<span style="width:150px;font-size:16px;">网络参数设置</span>
 		<div class="horizental_split"></div>
-		<div class="item">
-			<span class="fix_span">MAC</span><input type="text" id="mac_addr" disabled="true">
-		</div>
-		<div class="item">
-			<span class="fix_span">IP</span><input type="text" id="ip_addr">
-		</div>
-		<div class="item">
-			<span class="fix_span">网关</span><input type="text" id="gateway">
-		</div>
-		<div class="item">
-			<span class="fix_span">掩码</span><input type="text" id="netmask">
-		</div>
-		<div class="item">
-			<span class="fix_span">主DNS</span><input type="text" id="master_dns">
-		</div>
-		<div class="item">
-			<span class="fix_span">备用DNS</span><input type="text" id="slave_dns">
-		</div>
-	</div>
-	<div>
+		<table id="network_param">
+			<tr class="first" ><td colspan="2" style="text-align: center;">参数项</td></tr>
+			<tr><td class="t1">MAC</td><td><input id="mac_addr" type="text" disabled="true"></td></tr>
+			<tr><td class="t1">IP地址</td><td><input type="text" id="ip_addr"></td></tr>
+			<tr><td class="t1">网关</td><td><input type="text" id="gateway"></td></tr>
+			<tr><td class="t1">子网掩码</td><td><input type="text" id="netmask"></td></tr>
+			<tr><td class="t1">主DNS</td><td><input type="text" id="master_dns"></td></tr>
+			<tr><td class="t1">备用DNS</td><td><input type="text" id="slave_dns"></td></tr>
+		</table>
 		<input class="confirm_btn" type="button" id="set_network_btn" value="应用" onclick="set_network_param()">
 	</div>
 
@@ -176,7 +174,7 @@
 							$('#hint_detail').html(html);
 							$('#hint_dialog').dialog({
 								resizable: false,
-								height: 160,
+								height: 200,
 								modal: true,
 								buttons: {
 									"确定": function() {
