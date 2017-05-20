@@ -145,7 +145,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 	list_t *last_value_list = property->last_param_value;
 	list_t *desc_list = property->param_desc;
 
-	param_desc_t *param_desc = NULL;
+	param_desc_t *param_detail = NULL;
 	param_value_t *last_value = NULL;
 	param_value_t *current_value = NULL;
 	int list_size = valid_value->get_list_size(valid_value);
@@ -167,39 +167,39 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 		alarm_record_flag = 0;
 		current_value = valid_value->get_index_value(valid_value, i);
 		last_value = last_value_list->get_index_value(last_value_list, i);
-		param_desc = desc_list->get_index_value(desc_list, i);
+		param_detail = desc_list->get_index_value(desc_list, i);
 
 		alarm_status = last_value->status;
-		if (param_desc->param_type == PARAM_TYPE_ANALOG) {
+		if (param_detail->param_type == PARAM_TYPE_ANALOG) {
 			if (abs(current_value->param_value - last_value->param_value)
-						> param_desc->update_threshold) {
+						> param_detail->update_threshold) {
 				data_record_flag = 1;
 			}
 
 			if (last_value->status == UP_ALARM_ON) {
-				if (current_value->param_value < param_desc->up_free) {
+				if (current_value->param_value < param_detail->up_free) {
 					alarm_status = UP_ALARM_OFF;
 					alarm_record_flag = 1;
 				}
 			} else if (last_value->status == LOW_ALARM_ON) {
-				if (current_value->param_value > param_desc->low_free) {
+				if (current_value->param_value > param_detail->low_free) {
 					alarm_status = LOW_ALARM_OFF;
 					alarm_record_flag = 1;
 				}
 			} else {
-				if (current_value->param_value > param_desc->up_limit) {
-                    printf("up limit %f, current %f\n", param_desc->up_limit, current_value->param_value);
+				if (current_value->param_value > param_detail->up_limit) {
+                    printf("up limit %f, current %f\n", param_detail->up_limit, current_value->param_value);
 					alarm_status = UP_ALARM_ON;
 					alarm_record_flag = 1;
-				} else if (current_value->param_value < param_desc->low_limit) {
-                    printf("low limit %f, current %f\n", param_desc->low_limit, current_value->param_value);
+				} else if (current_value->param_value < param_detail->low_limit) {
+                    printf("low limit %f, current %f\n", param_detail->low_limit, current_value->param_value);
 					alarm_status = LOW_ALARM_ON;
 					alarm_record_flag = 1;
 				}
 			}
 		} else {
 			if (current_value->enum_value != last_value->enum_value) {
-				if (current_value->enum_value == param_desc->enum_alarm_value) {
+				if (current_value->enum_value == param_detail->enum_alarm_value) {
 					alarm_status = LEVEL_ALARM_ON;
 				} else {
 					alarm_status = LEVEL_ALARM_OFF;
@@ -220,13 +220,13 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			if (alarm_status & 0x10) {	//解除报警
 				switch (alarm_status & 0x0F) {
 				case 0x1:
-					sprintf(alarm_desc, "%s%s", param_desc->param_name, "上限报警解除");
+					sprintf(alarm_desc, "%s%s", param_detail->param_desc, "上限报警解除");
 					break;
 				case 0x2:
-					sprintf(alarm_desc, "%s%s", param_desc->param_name, "下限报警解除");
+					sprintf(alarm_desc, "%s%s", param_detail->param_desc, "下限报警解除");
 					break;
 				case 0x4:
-					sprintf(alarm_desc, "%s%s", param_desc->param_name, "恢复");
+					sprintf(alarm_desc, "%s%s", param_detail->param_desc, "恢复");
 					break;
 				default:
 					break;
@@ -237,16 +237,16 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				switch (alarm_status & 0x0F) {
 				case 0x1:
 					sprintf(alarm_desc, "%s%.1f%s%s",
-						param_desc->param_name, current_value->param_value,
-						param_desc->param_unit, ",超过阈值");
+						param_detail->param_desc, current_value->param_value,
+						param_detail->param_unit, ",超过阈值");
 					break;
 				case 0x2:
 					sprintf(alarm_desc, "%s%.1f%s%s",
-						param_desc->param_name, current_value->param_value,
-						param_desc->param_unit, ",低于阈值");
+						param_detail->param_desc, current_value->param_value,
+						param_detail->param_unit, ",低于阈值");
 					break;
 				case 0x4:
-					sprintf(alarm_desc, "%s%s", param_desc->param_name, "异常");
+					sprintf(alarm_desc, "%s%s", param_detail->param_desc, "异常");
 					break;
 				default:
 					break;
@@ -263,10 +263,10 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc, alarm_desc) \
 				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
 	                priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
-	                current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
-	                current_value->param_value, param_desc->param_unit, current_value->enum_value,
-	                param_desc->param_enum[current_value->enum_value].en_desc,
-					param_desc->param_enum[current_value->enum_value].cn_desc, alarm_desc);
+	                current_value->param_id, param_detail->param_name, param_detail->param_desc, param_detail->param_type,
+	                current_value->param_value, param_detail->param_unit, current_value->enum_value,
+	                param_detail->param_enum[current_value->enum_value].en_desc,
+					param_detail->param_enum[current_value->enum_value].cn_desc, alarm_desc);
 			if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 				printf("ring buffer is full\n");
 				priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
@@ -295,13 +295,13 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			strcpy(alarm_msg->protocol_name, priv->protocol->protocol_name);
 			strcpy(alarm_msg->protocol_desc, priv->protocol->protocol_desc);
 			alarm_msg->param_id = current_value->param_id;
-			strcpy(alarm_msg->param_name, param_desc->param_name);
-			strcpy(alarm_msg->param_desc, param_desc->param_desc);
-			strcpy(alarm_msg->param_unit, param_desc->param_unit);
-			alarm_msg->param_type = param_desc->param_type;
+			strcpy(alarm_msg->param_name, param_detail->param_name);
+			strcpy(alarm_msg->param_desc, param_detail->param_desc);
+			strcpy(alarm_msg->param_unit, param_detail->param_unit);
+			alarm_msg->param_type = param_detail->param_type;
 			alarm_msg->param_value = current_value->param_value;
 			alarm_msg->enum_value = current_value->enum_value;
-			strcpy(alarm_msg->enum_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
+			strcpy(alarm_msg->enum_desc, param_detail->param_enum[current_value->enum_value].cn_desc);
 			strcpy(alarm_msg->alarm_desc, alarm_desc);
 			memcpy(tmp_alarm_msg, alarm_msg, sizeof(alarm_msg_t));
 
@@ -329,9 +329,9 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc) \
 				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
 					priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
-					current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
-					current_value->param_value, param_desc->param_unit, current_value->enum_value,
-					param_desc->param_enum[current_value->enum_value].en_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
+					current_value->param_id, param_detail->param_name, param_detail->param_desc, param_detail->param_type,
+					current_value->param_value, param_detail->param_unit, current_value->enum_value,
+					param_detail->param_enum[current_value->enum_value].en_desc, param_detail->param_enum[current_value->enum_value].cn_desc);
 			if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
 				printf("ring buffer is full\n");
 				priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
@@ -343,14 +343,14 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 		strcpy(priv->rs485_realdata->data[i].protocol_name, priv->protocol->protocol_name);
 		strcpy(priv->rs485_realdata->data[i].protocol_desc, priv->protocol->protocol_desc);
 		priv->rs485_realdata->data[i].param_id = current_value->param_id;
-		strcpy(priv->rs485_realdata->data[i].param_name, param_desc->param_name);
-		strcpy(priv->rs485_realdata->data[i].param_desc, param_desc->param_desc);
-		priv->rs485_realdata->data[i].param_type = param_desc->param_type;
+		strcpy(priv->rs485_realdata->data[i].param_name, param_detail->param_name);
+		strcpy(priv->rs485_realdata->data[i].param_desc, param_detail->param_desc);
+		priv->rs485_realdata->data[i].param_type = param_detail->param_type;
 		priv->rs485_realdata->data[i].analog_value = current_value->param_value;
-		strcpy(priv->rs485_realdata->data[i].param_unit, param_desc->param_unit);
+		strcpy(priv->rs485_realdata->data[i].param_unit, param_detail->param_unit);
 		priv->rs485_realdata->data[i].enum_value = current_value->enum_value;
-		strcpy(priv->rs485_realdata->data[i].enum_en_desc, param_desc->param_enum[current_value->enum_value].en_desc);
-		strcpy(priv->rs485_realdata->data[i].enum_cn_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
+		strcpy(priv->rs485_realdata->data[i].enum_en_desc, param_detail->param_enum[current_value->enum_value].en_desc);
+		strcpy(priv->rs485_realdata->data[i].enum_cn_desc, param_detail->param_enum[current_value->enum_value].cn_desc);
 		priv->rs485_realdata->data[i].alarm_type = alarm_status;
 	}
 	priv->rs485_realdata->cnt = list_size;
