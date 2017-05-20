@@ -108,16 +108,14 @@ int main(void)
                     fclose(fp);
 
                     char cmd[256] = {0};
-                    sprintf(cmd, "chmod +x %s", file_path);
-                    ret = system(cmd);
-                    cJSON_AddStringToObject(response, "cmd", file_path);
-                    ret = system(file_path);
-                    sync();
-                    sync();
+                    sprintf(cmd, "chmod 755 %s", file_path);
+                    cJSON_AddStringToObject(response, "cmd1", cmd);
 
-                    FILE *fp = fopen("/tmp/reboot", "wb");
-                    fclose(fp);
-                    fp = NULL;
+                    memset(cmd, 0, sizeof(cmd));
+                    sprintf(cmd, "%s", file_path);
+                    cJSON_AddStringToObject(response, "cmd2", cmd);
+                    sync();
+                    sync();
 
                     ret = 0;
                 }

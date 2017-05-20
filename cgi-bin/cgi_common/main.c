@@ -69,6 +69,10 @@ static int get_snmp_param(cJSON *root, priv_info_t *priv)
             iniparser_getstring(dic, "SNMP:snmp_union", "public"));
     cJSON_AddStringToObject(response, "trap_server_ip",
             iniparser_getstring(dic, "SNMP:trap_server_ip", "192.168.0.100"));
+    cJSON_AddNumberToObject(response, "enterprise_code",
+            iniparser_getint(dic, "SNMP:enterprise_code", 999));
+    cJSON_AddStringToObject(response, "enterprise_name",
+            iniparser_getstring(dic, "SNMP:enterprise_name", "Jitong"));
     sub_dir = cJSON_CreateArray();
     cJSON_AddItemToObject(response, "authority_ip", sub_dir);
 
@@ -327,6 +331,10 @@ static int set_snmp_param(cJSON *root, priv_info_t *priv)
             cJSON_GetObjectItem(cfg, "snmp_union")->valuestring);
     write_profile(dic, "SNMP", "trap_server_ip",
             cJSON_GetObjectItem(cfg, "trap_server_ip")->valuestring);
+	write_profile(dic, "SNMP", "enterprise_code",
+			cJSON_GetObjectItem(cfg, "enterprise_code")->valuestring);
+	write_profile(dic, "SNMP", "enterprise_name",
+			cJSON_GetObjectItem(cfg, "enterprise_name")->valuestring);
 
     cJSON *array_item = cJSON_GetObjectItem(cfg, "authority_ip");
     if (array_item != NULL) {
@@ -568,6 +576,26 @@ static int system_reboot(cJSON *root, priv_info_t *priv)
 
     cJSON *response = cJSON_CreateObject();
     cJSON_AddNumberToObject(response, "status", 1);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int upgrade_apply(cJSON *root, priv_info_t *priv)
+{
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
+
+    cJSON *response = cJSON_CreateObject();
+	int ret = system(cJSON_GetObjectItem(cfg, "cmd1")->valuestring);
+    cJSON_AddNumberToObject(response, "status1", ret);
+
+	ret = system(cJSON_GetObjectItem(cfg, "cmd2")->valuestring);
+    cJSON_AddNumberToObject(response, "status", ret);
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -1033,7 +1061,7 @@ static int get_user_list(cJSON *root, priv_info_t *priv)
 	    	child = cJSON_CreateObject();
 			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
     		cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 1]);
-    		cJSON_AddStringToObject(child, "description", query_result.result[i * query_result.column + 4]);
+    		cJSON_AddStringToObject(child, "description", query_result.result[i * query_result.column + 4]);		
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
@@ -1962,6 +1990,10 @@ cmd_fun_t cmd_system_setting[] = {
 	{
 		"system_reboot",
 		system_reboot
+	},
+	{
+		"upgrade_apply",
+		upgrade_apply
 	}
 };
 
