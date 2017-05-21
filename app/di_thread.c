@@ -43,6 +43,7 @@ typedef struct {
 	unsigned int	enable;						/* 是否使能 */
 	unsigned int	alarm_level;				/* 报警电平 */
 	unsigned int	alarm_method;				/* 报警方式 */
+	unsigned int	alarm_status;				/* 状态 */
 } di_param_t;
 
 typedef struct {
@@ -62,7 +63,6 @@ typedef struct {
 	shm_object_t	*shm_handle;
 
 	struct timeval	last_record_time;
-	char			last_di_status[4];
 	di_param_t		di_param[4];
 } priv_info_t;
 
@@ -80,14 +80,16 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value,
 	int cnt = *alarm_cnt;
 	if (value == param->alarm_level) {
 		*alarm_cnt = cnt + 1;
-		sprintf(alarm_desc, "%s%s", param->device_name,
-			(value == 1) ? param->high_desc : param->low_desc);
+		sprintf(alarm_desc, "%s%s告警", param->device_name,
+			(value == 1) ? "高电平" : "低电平");
 		priv->di_realdata->data[index].alarm_type = 1;
+		param->alarm_status = 1;
 	} else {
 		*alarm_cnt = cnt - 1;
-		sprintf(alarm_desc, "%s%s", param->device_name,
-			(value == 1) ? param->high_desc : param->low_desc);
+		sprintf(alarm_desc, "%s%s告警解除", param->device_name,
+			(value == 1) ? "高电平" : "低电平");
 		priv->di_realdata->data[index].alarm_type = 0;
+		param->alarm_status = 0;
 	}
 
     sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
@@ -222,6 +224,11 @@ static void update_di_realdata(priv_info_t *priv, element_data_t *di_data, int i
 	di_data->enum_value = value;
 	strcpy(di_data->enum_cn_desc, (value == 1) ? param->high_desc : param->low_desc);
 	strcpy(di_data->enum_en_desc, "");
+	if (value == param->alarm_level) {
+		di_data->alarm_type = 1;
+	} else {
+		di_data->alarm_type = 0;
+	}
 }
 
 static void *di_process(void *arg)
@@ -250,12 +257,17 @@ static void *di_process(void *arg)
 
 	int index = 0;
 	di_param_t *param = NULL;
+	unsigned char value = 0;
 	for (index = 0; index < MAX_DI_NUMBER; index++) {
 		param = &(priv->di_param[index]);
 		drv_gpio_open(index);
-		drv_gpio_read(index, &(priv->last_di_status[index]));
+		drv_gpio_read(index, &value);
 		if (param->enable) {
-			history_data_record(priv, index, priv->last_di_status[index]);
+			history_data_record(priv, index, value);
+
+			if (value == param->alarm_level) {
+				alarm_data_record(priv, index, value, alarm_cnt);
+			}
 		}
 	}
 	gettimeofday(&(priv->last_record_time), NULL);
@@ -266,7 +278,6 @@ static void *di_process(void *arg)
 		ret = -1;
 	}
 
-	unsigned char value = 0;
 	struct timeval current_time;
 	int timeout_record_flag = 0;
 	element_data_t *di_data = NULL;
@@ -286,20 +297,21 @@ static void *di_process(void *arg)
 			param = &(priv->di_param[index]);
 			drv_gpio_read(index, &value);
 			di_data = &(priv->di_realdata->data[index]);
-			if ((priv->last_di_status[index] != value)
-			 	&& (param->enable)) {
-				printf("line %d, func %s, last %d, now %d\n",
-				__LINE__, __func__, priv->last_di_status[index], value);
-				alarm_data_record(priv, index, value, alarm_cnt);
-			} else {
-				di_data->alarm_type = 0;
+			if (param->enable) {
+				if ((value == param->alarm_level) && (param->alarm_status == 0)) {
+					alarm_data_record(priv, index, value, alarm_cnt);
+				}
+
+				if ((value != param->alarm_level) && (param->alarm_status == 1)) {
+					alarm_data_record(priv, index, value, alarm_cnt);
+				}
+				printf("line %d, func %s, now %d\n", __LINE__, __func__, value);
 			}
 			update_di_realdata(priv, di_data, index, value);
 
 			if (timeout_record_flag && param->enable) {
 				history_data_record(priv, index, value);
 			}
-			priv->last_di_status[index] = value;
 		}
 		priv->di_realdata->cnt = 4;
 
