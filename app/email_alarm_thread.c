@@ -135,6 +135,9 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 		if ((msg->protocol_id == alarm_msg->protocol_id)
 			&& (msg->param_id == alarm_msg->param_id)) {
 			memcpy(msg, alarm_msg, sizeof(alarm_msg_t));
+            if (alarm_msg->alarm_type == ALARM_DISCARD) {
+			    msg->send_times = 1;
+            }
 			priv->last_send_timing[i].tv_sec = 0;
 			priv->last_send_timing[i].tv_usec = 0;
 			break;
@@ -147,6 +150,12 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 			printf("function %s, line %d, memory pool is empty\n", __func__, __LINE__);
 		} else {
 			memcpy(msg, alarm_msg, sizeof(alarm_msg_t));
+            if (alarm_msg->alarm_type == ALARM_DISCARD) {
+			    msg->send_times = 1;
+            } else {
+			    msg->send_times = priv->send_times;
+            }
+
 			update_queue(priv, msg);
 			msg = NULL;
 		}
@@ -180,6 +189,7 @@ static void update_email_contact(priv_info_t *priv)
 
 static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 {
+	priv->smtp_handle = smtp_create();
 	char email_content[128] = {0};
 	sprintf(email_content, "%s, %s", alarm_msg->protocol_name, alarm_msg->alarm_desc);
 
@@ -258,6 +268,8 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 		}
 		msg = NULL;
 	}
+	priv->smtp_handle->destroy(priv->smtp_handle);
+	priv->smtp_handle = NULL;
 }
 
 static void send_alarm_email(priv_info_t *priv)
@@ -340,12 +352,15 @@ static void send_alarm_email(priv_info_t *priv)
 		if ((priv->last_send_timing[i].tv_sec == 0) && (priv->last_send_timing[i].tv_usec == 0)) {
 			send_to_contact(priv, msg);
 			msg->send_times--;
-		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) > (priv->send_interval * 60)) {
+			priv->last_send_timing[i] = current_time;
+		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) > (priv->send_interval * 5 * 60)) {
 			send_to_contact(priv, msg);
+			priv->last_send_timing[i] = current_time;
 			msg->send_times--;
 		}
 
-		if (msg->send_times == 0) {
+		printf("send time %d\n", msg->send_times);
+		if (msg->send_times <= 0) {
 			priv->local_mpool_handle->mpool_free(priv->local_mpool_handle, (void *)msg);
 			msg = NULL;
 			priv->alarm_queue[i] = NULL;
@@ -382,7 +397,9 @@ static void *email_alarm_process(void *arg)
 	priv->send_times = 1;
 	priv->send_interval = 0;
 	while (thiz->thread_status) {
-		priv->smtp_handle = smtp_create();
+        priv->send_times = priv->pref_handle->get_send_email_times(priv->pref_handle);
+		priv->send_interval = priv->pref_handle->get_send_email_interval(priv->pref_handle);
+
 		if (priv->email_rb_handle->pop(priv->email_rb_handle, (void **)&alarm_msg) == 0) {
 			update_alarm_table(priv, alarm_msg);
 
@@ -402,8 +419,6 @@ static void *email_alarm_process(void *arg)
 		}
 
 		send_alarm_email(priv);
-		priv->smtp_handle->destroy(priv->smtp_handle);
-		priv->smtp_handle = NULL;
 		alarm_msg = NULL;
 	}
 
