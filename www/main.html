@@ -8,12 +8,8 @@
 </head>
 <body>
     <div id="wrapper">
-        <ul class="nav-side">
+        <ul class="nav-side" id="ul-nav">
             <li><a class="state-item" href="device_monitor.html"><span>智能设备</span></a></li>
-            <li><a class="history-item" href="query_history.html"><span>历史记录</span></a></li>
-            <li><a class="warning-item" href="alarm_manage.html"><span>报警设置</span></a></li>
-            <li><a class="parameter-item" href="param_setting.html"><span>参数设置</span></a></li>
-            <li><a class="settings-item" href="system_settings.html"><span>系统设置</span></a></li>
         </ul>
         <div class="content">
             <div class="header">
@@ -35,7 +31,26 @@
             || window.sessionStorage.getItem("user_information") == null) {
             window.location.href = "/index.html";
         } else {
-            $('#login_user').html(window.sessionStorage.getItem("user_information"));
+            var user_name = window.sessionStorage.getItem("user_information");
+            $('#login_user').html(user_name);
+
+            var html = '';
+            if (user_name == 'ctrl') {
+                html = '<li><a class="history-item" href="query_history.html"><span>历史记录</span></a></li>'
+                    + '<li><a class="warning-item" href="alarm_manage.html"><span>报警设置</span></a></li>'
+                    + '<li><a class="parameter-item" href="param_setting.html"><span>参数设置</span></a></li>'
+                $('#ul-nav').append(html);
+            } else if (user_name == 'monitor') {
+                html = '<li><a class="history-item" href="query_history.html"><span>历史记录</span></a></li>'
+                    + '<li><a class="warning-item" href="alarm_manage.html"><span>报警设置</span></a></li>'
+                $('#ul-nav').append(html);
+            } else if (user_name == 'admin') {
+                html = '<li><a class="history-item" href="query_history.html"><span>历史记录</span></a></li>'
+                    + '<li><a class="warning-item" href="alarm_manage.html"><span>报警设置</span></a></li>'
+                    + '<li><a class="parameter-item" href="param_setting.html"><span>参数设置</span></a></li>'
+                    + '<li><a class="settings-item" href="system_settings.html"><span>系统设置</span></a></li>';
+                $('#ul-nav').append(html);
+            }
         }
 
         $(document).ready(function () {
