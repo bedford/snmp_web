@@ -22,8 +22,10 @@ typedef struct {
 	int				sms_contact_flag;
 	int				email_contact_flag;
 
-	int				send_times;
-	int				send_interval;
+	int				send_sms_times;
+	int				send_sms_interval;
+	int				send_email_times;
+	int				send_email_interval;
 
 	email_server_t	email_server_param;
 	do_param_t		do_param;
@@ -70,8 +72,10 @@ static int load_system_param(priv_info_t *priv)
 
 static void load_sms_send_param(priv_info_t *priv)
 {
-	priv->send_times = iniparser_getint(priv->dic, "SMS:send_times", 3);
-	priv->send_interval = iniparser_getint(priv->dic, "SMS:send_interval", 1);
+	priv->send_sms_times		= iniparser_getint(priv->dic, "SMS:send_times", 3);
+	priv->send_sms_interval 	= iniparser_getint(priv->dic, "SMS:send_interval", 1);
+	priv->send_email_times		= iniparser_getint(priv->dic, "EMAIL:send_times", 3);
+	priv->send_email_interval	= iniparser_getint(priv->dic, "EMAIL:send_interval", 1);
 }
 
 static void load_email_server_param(priv_info_t *priv)
@@ -126,25 +130,49 @@ static do_param_t get_do_preference(preference_t *thiz)
     return do_param;
 }
 
-static int get_send_times(preference_t *thiz)
+static int get_send_sms_times(preference_t *thiz)
 {
 	int send_times = 0;
 
 	if (thiz != 0) {
 		priv_info_t *priv =  (priv_info_t *)thiz->priv;
-		send_times = priv->send_times;
+		send_times = priv->send_sms_times;
 	}
 
 	return send_times;
 }
 
-static int get_send_interval(preference_t *thiz)
+static int get_send_sms_interval(preference_t *thiz)
 {
 	int send_interval = 0;
 
 	if (thiz != 0) {
 		priv_info_t *priv =  (priv_info_t *)thiz->priv;
-		send_interval = priv->send_interval;
+		send_interval = priv->send_sms_interval;
+	}
+
+	return send_interval;
+}
+
+static int get_send_email_times(preference_t *thiz)
+{
+	int send_times = 0;
+
+	if (thiz != 0) {
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
+		send_times = priv->send_email_times;
+	}
+
+	return send_times;
+}
+
+static int get_send_email_interval(preference_t *thiz)
+{
+	int send_interval = 0;
+
+	if (thiz != 0) {
+		priv_info_t *priv =  (priv_info_t *)thiz->priv;
+		send_interval = priv->send_email_interval;
 	}
 
 	return send_interval;
@@ -358,28 +386,30 @@ preference_t *preference_create(void)
     preference_t *thiz = NULL;
     thiz = (preference_t *)calloc(1, sizeof(preference_t) + sizeof(priv_info_t));
     if (thiz != NULL) {
-        thiz->destroy		= preference_destroy;
-        thiz->reload		= preference_reload;
+        thiz->destroy                   = preference_destroy;
+        thiz->reload                    = preference_reload;
 
-        thiz->get_init_flag	= get_init_flag_preference;
-        thiz->set_init_flag	= set_init_flag_preference;
+        thiz->get_init_flag             = get_init_flag_preference;
+        thiz->set_init_flag             = set_init_flag_preference;
 
-		thiz->get_rs232_alarm_flag	= get_rs232_alarm_flag_preference;
-		thiz->get_rs485_alarm_flag	= get_rs485_alarm_flag_preference;
-		thiz->get_di_alarm_flag 	= get_di_alarm_flag_preference;
+		thiz->get_rs232_alarm_flag      = get_rs232_alarm_flag_preference;
+		thiz->get_rs485_alarm_flag      = get_rs485_alarm_flag_preference;
+		thiz->get_di_alarm_flag         = get_di_alarm_flag_preference;
 
 		thiz->get_sms_contact_flag		= get_sms_contact_flag_preference;
 		thiz->get_email_contact_flag 	= get_email_contact_flag_preference;
 
-		thiz->set_rs232_alarm_flag	= set_rs232_alarm_flag_preference;
-		thiz->set_rs485_alarm_flag	= set_rs485_alarm_flag_preference;
-		thiz->set_di_alarm_flag		= set_di_alarm_flag_preference;
+		thiz->set_rs232_alarm_flag      = set_rs232_alarm_flag_preference;
+		thiz->set_rs485_alarm_flag      = set_rs485_alarm_flag_preference;
+		thiz->set_di_alarm_flag         = set_di_alarm_flag_preference;
 
 		thiz->set_sms_contact_flag		= set_sms_contact_flag_preference;
 		thiz->set_email_contact_flag 	= set_email_contact_flag_preference;
 
-		thiz->get_send_times	= get_send_times;
-		thiz->get_send_interval	= get_send_interval;
+		thiz->get_send_sms_times        = get_send_sms_times;
+		thiz->get_send_sms_interval     = get_send_sms_interval;
+		thiz->get_send_email_times      = get_send_email_times;
+		thiz->get_send_email_interval   = get_send_email_interval;
 
 		thiz->get_email_server_param	= get_email_server_preference;
 		thiz->get_do_param				= get_do_preference;

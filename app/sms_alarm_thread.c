@@ -332,9 +332,11 @@ static void send_alarm_sms(priv_info_t *priv)
 
 		if ((priv->last_send_timing[i].tv_sec == 0) && (priv->last_send_timing[i].tv_usec == 0)) {
 			send_to_contact(priv, msg);
+			priv->last_send_timing[i] = current_time;
 			msg->send_times--;
-		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) > (priv->send_interval * 60)) {
+		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) > (priv->send_interval * 5 * 60)) {
 			send_to_contact(priv, msg);
+			priv->last_send_timing[i] = current_time;
 			msg->send_times--;
 		}
 
@@ -368,8 +370,8 @@ static void *sms_alarm_process(void *arg)
 
 	alarm_msg_t *alarm_msg = NULL;
 	while (thiz->thread_status) {
-		priv->send_times = priv->pref_handle->get_send_times(priv->pref_handle);
-		priv->send_interval = priv->pref_handle->get_send_interval(priv->pref_handle);
+		priv->send_times = priv->pref_handle->get_send_sms_times(priv->pref_handle);
+		priv->send_interval = priv->pref_handle->get_send_sms_interval(priv->pref_handle);
 
 		if (priv->sms_rb_handle->pop(priv->sms_rb_handle, (void **)&alarm_msg) == 0) {
 			update_alarm_table(priv, alarm_msg);
