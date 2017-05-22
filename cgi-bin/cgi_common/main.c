@@ -1061,7 +1061,8 @@ static int get_user_list(cJSON *root, priv_info_t *priv)
 	    	child = cJSON_CreateObject();
 			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
     		cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 1]);
-    		cJSON_AddStringToObject(child, "description", query_result.result[i * query_result.column + 4]);		
+    		cJSON_AddStringToObject(child, "password", query_result.result[i * query_result.column + 2]);
+    		cJSON_AddStringToObject(child, "description", query_result.result[i * query_result.column + 4]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
 	}
