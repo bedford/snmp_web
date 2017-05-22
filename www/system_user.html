@@ -76,6 +76,12 @@
 		width: 95%;
 		padding: .4em;
 	}
+
+	.jq-dialog form fieldset > input[type="password"] {
+		margin-bottom: 12px;
+		width: 95%;
+		padding: .4em;
+	}
 </style>
 </head>
 
@@ -105,9 +111,9 @@
 				<label for="name">用户名称</label>
 				<input type="text" name="name" id="modify_user" disabled="true">
 				<label for="name">密码</label>
-				<input type="text" name="password" id="modify_password">
+				<input type="password" name="password" id="modify_password">
 				<label for="name">确认密码</label>
-				<input type="text" name="confirm_password" id="confirm_password">
+				<input type="password" name="confirm_password" id="confirm_password">
 			</fieldset>
 		</form>
 	</div>
@@ -120,6 +126,8 @@
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script>
+		var edit_index;
+
         if (window.sessionStorage.getItem("user_information") == ""
             || window.sessionStorage.getItem("user_information") == null) {
             window.location.href = "/index.html";
@@ -139,6 +147,7 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function() {
+							$('#user_table').find('tr').eq(index).attr("id", json.password);
 							var html='修改用户: '+json.user+' 密码 -- 成功';
 							$('#hint_detail').html(html);
 							$('#hint_dialog').dialog({
@@ -173,9 +182,11 @@
 
         function edit_item(index) {
 			var name = $('#user_table').find('tr').eq(index).find('td').eq(1).html();
+			var password = $('#user_table').find('tr').eq(index).attr("id");
 			$('#modify_user').val(name);
-			$('#modify_password').val('');
-			$('#confirm_password').val('');
+			$('#modify_password').val(password);
+			$('#confirm_password').val(password);
+			edit_index = index;
 			$('#user_dialog').dialog({
 				width: 300,
 				height: 360,
@@ -198,6 +209,9 @@
 					取消: function() {
 						$(this).dialog("close");
 					}
+				},
+				open: function(event, ui){
+					$(this).parent().focus();
 				}
 			});
 		}
@@ -207,7 +221,8 @@
 			if (response.count > 0) {
 				var html="";
 				$.each(response.user_list, function(i, item) {
-					html+='<tr><td>'+item.id+'</td><td>'+item.user+'</div></td><td>'+item.description+'</td>';
+					html+='<tr id="' + item.password + '">';
+					html+='<td>'+item.id+'</td><td>'+item.user+'</div></td><td>'+item.description+'</td>';
 					html+='<td><a href="javascript:edit_item('+i+')">编辑</a></td></tr>';
 				});
 				$('#user_table').append(html);
@@ -231,6 +246,24 @@
 		}
 
         $(document).ready(function () {
+			$('#modify_password').focus(function() {
+				$('#modify_password').attr("type", "text");
+				$('#modify_password').val($('#user_table').find('tr').eq(index).attr("id"));
+			});
+
+			$('#confirm_password').focus(function() {
+				$('#confirm_password').attr("type", "text");
+				$('#confirm_password').val($('#user_table').find('tr').eq(index).attr("id"));
+			});
+
+			$('#modify_password').blur(function() {
+				$('#modify_password').attr("type", "password");
+			});
+
+			$('#confirm_password').blur(function() {
+				$('#confirm_password').attr("type", "password");
+			});
+
 			load_user();
         })
     </script>
