@@ -34,7 +34,6 @@ typedef struct {
 	int				send_interval;
 
 	preference_t	*pref_handle;
-	db_access_t 	*email_alarm_db_handle;
 	db_access_t 	*sys_db_handle;
 
 	alarm_msg_t		*alarm_queue[MAX_QUEUE_NUMBER];
@@ -50,8 +49,7 @@ typedef struct {
 	smtp_t			*smtp_handle;
 } priv_info_t;
 
-static void clear_ring_buffer(db_access_t	*email_alarm_db_handle,
-							  ring_buffer_t *rb_handle,
+static void clear_ring_buffer(ring_buffer_t *rb_handle,
 							  mem_pool_t 	*mpool_handle)
 {
 	char error_msg[512] = {0};
@@ -59,7 +57,6 @@ static void clear_ring_buffer(db_access_t	*email_alarm_db_handle,
 	while (1) {
 		if (rb_handle->pop(rb_handle, (void **)&msg) == 0) {
 			memset(error_msg, 0, sizeof(error_msg));
-			//email_alarm_db_handle->action(email_alarm_db_handle, msg->buf, error_msg);
 			mpool_handle->mpool_free(mpool_handle, (void *)msg);
 			msg = NULL;
 		} else {
@@ -68,47 +65,6 @@ static void clear_ring_buffer(db_access_t	*email_alarm_db_handle,
 	}
 }
 
-#if 0
-static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
-{
-	char error_msg[512] = {0};
-	char sql[512] = {0};
-
-	query_result_t query_result;
-	sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d AND param_id=%d order by id",
-			"email_alarm_record", alarm_msg->protocol_id, alarm_msg->param_id);
-	memset(&query_result, 0, sizeof(query_result_t));
-	priv->email_alarm_db_handle->query(priv->email_alarm_db_handle, sql, &query_result);
-
-	if (query_result.row > 0) {
-		memset(sql, 0, sizeof(sql));
-        sprintf(sql, "DELETE FROM %s WHERE id=%d", "email_alarm_record",
-			atoi(query_result.result[query_result.column]));
-		priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
-	}
-	priv->email_alarm_db_handle->free_table(priv->email_alarm_db_handle, query_result.result);
-
-	memset(sql, 0, sizeof(sql));
-	if (alarm_msg->alarm_type == ALARM_DISCARD) {
-        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, protocol_desc, param_id, param_name, param_desc, \
-			param_type, analog_value, unit, enum_value, enum_desc, alarm_desc, alarm_type, send_cnt) \
-			VALUES ('%s', %d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
-			"email_alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name, alarm_msg->protocol_desc,
-			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
-			alarm_msg->param_value, alarm_msg->param_unit, alarm_msg->enum_value,
-			alarm_msg->enum_desc, alarm_msg->alarm_desc, alarm_msg->alarm_type, 1);
-	} else {
-        sprintf(sql, "INSERT INTO %s (sent_time, protocol_id, protocol_name, protocol_desc, param_id, param_name, param_desc, \
-			param_type, analog_value, unit, enum_value, enum_desc, alarm_desc, alarm_type, send_cnt) \
-			VALUES ('%s', %d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', %d, %d)",
-			"email_alarm_record", "", alarm_msg->protocol_id, alarm_msg->protocol_name, alarm_msg->protocol_desc,
-			alarm_msg->param_id, alarm_msg->param_name, alarm_msg->param_desc, alarm_msg->param_type,
-			alarm_msg->param_value, alarm_msg->param_unit, alarm_msg->enum_value,
-			alarm_msg->enum_desc, alarm_msg->alarm_desc, alarm_msg->alarm_type, priv->send_times);
-	}
-	priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
-}
-#else
 static void update_queue(priv_info_t *priv, alarm_msg_t *msg)
 {
 	int i = 0;
@@ -161,7 +117,6 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 		}
 	}
 }
-#endif
 
 static void update_email_contact(priv_info_t *priv)
 {
@@ -274,70 +229,6 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 
 static void send_alarm_email(priv_info_t *priv)
 {
-#if 0
-	struct timeval current_time;
-	gettimeofday(&current_time, NULL);
-
-	char time_in_sec[32] = {0};
-	struct tm *tm = localtime(&(current_time.tv_sec));
-	sprintf(time_in_sec, "%04d-%02d-%02d %02d:%02d:%02d",
-                        tm->tm_year + 1900, tm->tm_mon + 1,
-                        tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
-
-	current_time.tv_sec -= priv->send_interval * 300;
-	tm = localtime(&(current_time.tv_sec));
-
-	char dead_line[32] = {0};
-	sprintf(dead_line, "%04d-%02d-%02d %02d:%02d:%02d",
-                        tm->tm_year + 1900, tm->tm_mon + 1,
-                        tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
-
-	char sql[512] = {0};
-	char error_msg[512] = {0};
-	sprintf(sql, "SELECT * FROM %s WHERE sent_time='' or sent_time < '%s' order by id",
-		"email_alarm_record", dead_line);
-
-	query_result_t query_result;
-	memset(&query_result, 0, sizeof(query_result_t));
-	priv->email_alarm_db_handle->query(priv->email_alarm_db_handle, sql, &query_result);
-
-	if (query_result.row > 0) {
-		alarm_msg_t alarm_msg;
-		memset(&alarm_msg, 0, sizeof(alarm_msg_t));
-		int i = 0;
-		for (i = 1; i < (query_result.row + 1); i++) {
-			alarm_msg.protocol_id = atoi(query_result.result[i * query_result.column + 2]);
-			strcpy(alarm_msg.protocol_name, query_result.result[i * query_result.column + 3]);
-			strcpy(alarm_msg.protocol_desc, query_result.result[i * query_result.column + 4]);
-			alarm_msg.param_id = atoi(query_result.result[i * query_result.column + 5]);
-			strcpy(alarm_msg.param_name, query_result.result[i * query_result.column + 6]);
-			strcpy(alarm_msg.param_desc, query_result.result[i * query_result.column + 7]);
-			strcpy(alarm_msg.param_unit, query_result.result[i * query_result.column + 8]);
-			alarm_msg.param_type = atoi(query_result.result[i * query_result.column + 9]);
-			alarm_msg.param_value = atof(query_result.result[i * query_result.column + 10]);
-			alarm_msg.enum_value = atoi(query_result.result[i * query_result.column + 11]);
-			strcpy(alarm_msg.enum_desc, query_result.result[i * query_result.column + 12]);
-			strcpy(alarm_msg.alarm_desc, query_result.result[i * query_result.column + 13]);
-			alarm_msg.alarm_type = atoi(query_result.result[i * query_result.column + 14]);
-			alarm_msg.send_times = atoi(query_result.result[i * query_result.column + 15]);
-
-			send_to_contact(priv, &alarm_msg);
-			alarm_msg.send_times--;
-
-			memset(sql, 0, sizeof(sql));
-			if (alarm_msg.send_times == 0) {
-		        sprintf(sql, "DELETE FROM %s WHERE id=%d", "email_alarm_record",
-					atoi(query_result.result[i * query_result.column]));
-			} else {
-		        sprintf(sql, "UPDATE %s SET sent_time='%s', send_cnt=%d WHERE id=%d",
-					"email_alarm_record", time_in_sec, alarm_msg.send_times,
-					atoi(query_result.result[i * query_result.column]));
-			}
-			priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
-		}
-	}
-	priv->email_alarm_db_handle->free_table(priv->email_alarm_db_handle, query_result.result);
-#else
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
 
@@ -359,14 +250,12 @@ static void send_alarm_email(priv_info_t *priv)
 			msg->send_times--;
 		}
 
-		printf("send time %d\n", msg->send_times);
 		if (msg->send_times <= 0) {
 			priv->local_mpool_handle->mpool_free(priv->local_mpool_handle, (void *)msg);
 			msg = NULL;
 			priv->alarm_queue[i] = NULL;
 		}
 	}
-#endif
 }
 
 static void *email_alarm_process(void *arg)
@@ -375,7 +264,6 @@ static void *email_alarm_process(void *arg)
 	thread_t *thiz = thread_param->self;
 
 	priv_info_t *priv = (priv_info_t *)thiz->priv;
-	priv->email_alarm_db_handle = (db_access_t *)thread_param->email_alarm_db_handle;
 	priv->sys_db_handle	= (db_access_t *)thread_param->sys_db_handle;
 	priv->pref_handle = (preference_t *)thread_param->pref_handle;
 
@@ -422,7 +310,7 @@ static void *email_alarm_process(void *arg)
 		alarm_msg = NULL;
 	}
 
-	clear_ring_buffer(priv->email_alarm_db_handle, priv->rb_handle, priv->mpool_handle);
+	clear_ring_buffer(priv->rb_handle, priv->mpool_handle);
     lf_queue_fini(&queue);
 
 	priv = NULL;

@@ -10,7 +10,6 @@ extern "C" {
 typedef struct
 {
 	thread_t	*self;
-	void 		*email_alarm_db_handle;
 	void 		*sys_db_handle;
 	void 		*pref_handle;
 

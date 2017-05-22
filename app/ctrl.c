@@ -28,9 +28,6 @@ typedef struct {
 	db_access_t		*sys_db_handle;
 	db_access_t		*data_db_handle;
 
-	db_access_t		*sms_alarm_db_handle;
-	db_access_t		*email_alarm_db_handle;
-
 	preference_t	*pref_handle;
 } priv_info_t;
 
@@ -85,60 +82,6 @@ static void set_signal_handler(int signum, void func(int))
         sigaddset(&sigAction.sa_mask, SIGINT);
         sigAction.sa_handler = func;
         sigaction(signum, &sigAction, NULL);
-}
-
-void create_alarm_table(priv_info_t *priv)
-{
-	char error_msg[512] = {0};
-	char sql[1024] = {0};
-	sprintf(sql, "DROP TABLE IF EXISTS %s", "sms_alarm_record");
-	priv->sms_alarm_db_handle->action(priv->sms_alarm_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
-	sprintf(sql, "DROP TABLE IF EXISTS %s", "email_alarm_record");
-	priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
-    sprintf(sql, "create table if not exists %s \
-            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
-             sent_time TIMESTAMP, \
-             protocol_id INTEGER, \
-			 protocol_name VARCHAR(32), \
-			 protocol_desc VARCHAR(128), \
-			 param_id INTEGER, \
-             param_name VARCHAR(32), \
-			 param_desc	VARCHAR(128), \
-             param_type INTEGER, \
-             analog_value DOUBLE, \
-			 unit VARCHAR(32), \
-             enum_value INTEGER, \
-             enum_desc VARCHAR(32), \
-			 alarm_desc VARCHAR(64), \
-             alarm_type INTEGER, \
-		 	 send_cnt INTEGER, \
-             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')))", "sms_alarm_record");
-    priv->sms_alarm_db_handle->action(priv->sms_alarm_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
-    sprintf(sql, "create table if not exists %s \
-            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
-             sent_time TIMESTAMP, \
-             protocol_id INTEGER, \
-			 protocol_name VARCHAR(32), \
-			 protocol_desc VARCHAR(128), \
-			 param_id INTEGER, \
-             param_name VARCHAR(32), \
-			 param_desc	VARCHAR(128), \
-             param_type INTEGER, \
-             analog_value DOUBLE, \
-			 unit VARCHAR(32), \
-             enum_value INTEGER, \
-             enum_desc VARCHAR(32), \
-			 alarm_desc VARCHAR(64), \
-             alarm_type INTEGER, \
-		 	 send_cnt INTEGER, \
-             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')))", "email_alarm_record");
-    priv->email_alarm_db_handle->action(priv->email_alarm_db_handle, sql, error_msg);
 }
 
 void create_data_table(priv_info_t *priv)
@@ -570,9 +513,6 @@ int main(void)
 	priv->sys_db_handle = db_access_create("/opt/app/sys.db");
 	priv->data_db_handle = db_access_create("/opt/data/data.db");
 
-	priv->sms_alarm_db_handle = db_access_create("/opt/app/sms_alarm.db");
-	priv->email_alarm_db_handle = db_access_create("/opt/app/email_alarm.db");
-
 	creat_user(priv);
 	create_di_cfg(priv);
 	init_do_output(priv);
@@ -580,7 +520,6 @@ int main(void)
 	if (init_flag == 1) {
 		create_data_table(priv);
 		update_uart_cfg(priv);
-		create_alarm_table(priv);
 		priv->pref_handle->set_init_flag(priv->pref_handle, 0);
 	}
 
@@ -617,7 +556,6 @@ int main(void)
 	}
 	sms_alarm_thread_param_t sms_alarm_param;
 	sms_alarm_param.self				= sms_alarm_thread;
-	sms_alarm_param.sms_alarm_db_handle	= priv->sms_alarm_db_handle;
 	sms_alarm_param.sys_db_handle		= priv->sys_db_handle;
 	sms_alarm_param.pref_handle 		= priv->pref_handle;
 	sms_alarm_param.rb_handle			= rb_handle;
@@ -633,7 +571,6 @@ int main(void)
 	}
 	email_alarm_thread_param_t email_alarm_param;
 	email_alarm_param.self					= email_alarm_thread;
-	email_alarm_param.email_alarm_db_handle	= priv->email_alarm_db_handle;
 	email_alarm_param.sys_db_handle			= priv->sys_db_handle;
 	email_alarm_param.pref_handle 			= priv->pref_handle;
 	email_alarm_param.rb_handle				= rb_handle;
@@ -806,16 +743,6 @@ int main(void)
 	if (priv->data_db_handle) {
     	priv->data_db_handle->destroy(priv->data_db_handle);
 		priv->data_db_handle = NULL;
-	}
-
-	if (priv->sms_alarm_db_handle) {
-		priv->sms_alarm_db_handle->destroy(priv->sms_alarm_db_handle);
-		priv->sms_alarm_db_handle = NULL;
-	}
-
-	if (priv->email_alarm_db_handle) {
-		priv->email_alarm_db_handle->destroy(priv->email_alarm_db_handle);
-		priv->email_alarm_db_handle = NULL;
 	}
 
 	if (priv->pref_handle) {

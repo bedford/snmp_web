@@ -305,7 +305,7 @@ static void *di_process(void *arg)
 				if ((value != param->alarm_level) && (param->alarm_status == 1)) {
 					alarm_data_record(priv, index, value, alarm_cnt);
 				}
-				printf("line %d, func %s, now %d\n", __LINE__, __func__, value);
+				//printf("line %d, func %s, now %d\n", __LINE__, __func__, value);
 			}
 			update_di_realdata(priv, di_data, index, value);
 
