@@ -7,7 +7,7 @@
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 <style>
 	#table-box {
-		width: 90%;
+		width: 97%;
 		height: 100%;
 		position: relative;
 		box-sizing: border-box;
@@ -36,7 +36,7 @@
 	}
 
 	.table-head table tr th {
-		width: 24%;
+		width: 25%;
 		text-align: center;
 		color: #fff;
 	}
@@ -55,37 +55,64 @@
 	}
 
 	.table-body table tr td {
-		width: 24%;
+		width: 25%;
 		text-align: center;
 		color: #393c3d;
 		border: 1px solid #4faeda;
 	}
 
-	.jq-dialog form fieldset {
-		padding: 0;
-		border: 0;
-		margin-top: 25px;
+	.table-body table tr td select {
+		height: 25px;
+		width: 100px;
 	}
 
-	.jq-dialog form fieldset > label {
-		display: block;
+	.operation_box {
+		height: 50px;
+		box-sizing: border-box;
+		margin-top: 10px;
+		margin-left: 20px;
+		padding-top: 5px;
+		padding-left: 5px;
 	}
 
-	.jq-dialog form fieldset > input[type="text"] {
+	#add_btn {
+		background-color: #117daf;
+		color: #fff;
+		width: 100px;
+		height: 40px;
+		font-size: 14px;
+		font-weight:bold;
+		border-radius:5px;
+		border: none;
+		letter-spacing: 5px;
+		margin-right: 30px;
+		float: right;
+	}
+
+	.jq-dialog table tr td select {
 		margin-bottom: 12px;
-		width: 95%;
+		width: 156px;
 		padding: .4em;
 	}
 
-	.jq-dialog form fieldset > input[type="password"] {
+	.jq-dialog table tr td > input[type="password"] {
 		margin-bottom: 12px;
-		width: 95%;
+		width: 140px;
+		padding: .4em;
+	}
+
+	.jq-dialog table tr td > input[type="text"] {
+		margin-bottom: 12px;
+		width: 140px;
 		padding: .4em;
 	}
 </style>
 </head>
 
 <body>
+	<div class="operation_box">
+		<input type="button" id="add_btn" value="新增" onclick="add_system_user()">
+	</div>
 	<div id="table-box">
 		<div class="table-head">
 			<table>
@@ -105,17 +132,38 @@
 		</div>
 	</div>
 
+	<div class="jq-dialog" id="new_dialog" title="新增系统用户">
+		<table>
+			<tr>
+				<td>用户名称</td><td><input type="text" name="name" id="new_user"></td>
+			</tr>
+			<tr>
+				<td>密码</td><td><input type="password" name="password" id="new_password"></td>
+			</tr>
+			<tr>
+				<td>确认密码</td><td><input type="password" name="confirm_password" id="new_confirm_password"></td>
+			</tr>
+			<tr>
+				<td>权限</td><td><select id="new_permit"><option value="1">管理员</option><option value="2">控制权</option><option value="4">监看权</option><option value="8" selected="true">查看权</option></select></td>
+			</tr>
+		</table>
+	</div>
+
 	<div class="jq-dialog" id="user_dialog" title="修改用户密码">
-		<form>
-			<fieldset>
-				<label for="name">用户名称</label>
-				<input type="text" name="name" id="modify_user" disabled="true">
-				<label for="name">密码</label>
-				<input type="password" name="password" id="modify_password">
-				<label for="name">确认密码</label>
-				<input type="password" name="confirm_password" id="confirm_password">
-			</fieldset>
-		</form>
+		<table>
+			<tr>
+				<td>用户名称</td><td><input type="text" name="name" id="modify_user" disabled="true"></td>
+			</tr>
+			<tr>
+				<td>密码</td><td><input type="password" name="password" id="modify_password"></td>
+			</tr>
+			<tr>
+				<td>确认密码</td><td><input type="password" name="confirm_password" id="confirm_password"></td>
+			</tr>
+			<tr>
+				<td>权限</td><td><select id="modify_permit"><option value="1">管理员</option><option value="2">控制权</option><option value="4">监看权</option><option value="8">查看权</option></select></td>
+			</tr>
+		</table>
 	</div>
 
 	<div class="jq-dialog" id="hint_dialog" title="密码修改成功">
@@ -126,8 +174,6 @@
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script>
-		var edit_index;
-
         if (window.sessionStorage.getItem("user_information") == ""
             || window.sessionStorage.getItem("user_information") == null) {
             window.location.href = "/index.html";
@@ -137,9 +183,10 @@
 		    var json = new Object();
 		    json.msg_type = "system_setting";
 		    json.cmd_type = "update_password";
-			json.id = $('#user_table').find('tr').eq(index).find('td').eq(0).html();
-			json.user = $('#user_table').find('tr').eq(index).find('td').eq(1).html();
+			json.id = $('#user_table').find('tr').eq(index).find('td').eq(0).text();
+			json.user = $('#user_table').find('tr').eq(index).find('td').eq(1).text();
 			json.password = $('#modify_password').val();
+			json.permit = $('#modify_permit').val();
 		    var data = $.toJSON(json);
 		    $.ajax({
 		                url     : "/cgi-bin/common.cgi",
@@ -157,6 +204,8 @@
 								buttons: {
 									"确定": function() {
 										$(this).dialog("close");
+										$('#user_table').find('tr').eq(index).val(json.password);
+										$('#user_table').find('tr').eq(index).find('td').eq(2).children('select').val(json.permit);
 									}
 								}
 							});
@@ -174,22 +223,30 @@
 				buttons: {
 					"确定": function() {
 						$(this).dialog("close");
-						edit_item(index);
+						if (index != 999) {
+							edit_item(index);
+						} else {
+							new_dialog_show();
+						}
 					}
 				}
 			});
 		}
 
         function edit_item(index) {
-			var name = $('#user_table').find('tr').eq(index).find('td').eq(1).html();
+			var name = $('#user_table').find('tr').eq(index).find('td').eq(1).text();
 			var password = $('#user_table').find('tr').eq(index).attr("id");
+			var permit = $('#user_table').find('tr').eq(index).find('td').eq(2).children('select').val();
 			$('#modify_user').val(name);
 			$('#modify_password').val(password);
 			$('#confirm_password').val(password);
-			edit_index = index;
+			$('#modify_permit').val(permit);
+			if (name === 'admin') {
+				$('#modify_permit').attr('disabled', 'disabled');
+			}
 			$('#user_dialog').dialog({
-				width: 300,
-				height: 360,
+				width:280,
+				height: 320,
 				modal: true,
 				buttons: {
 					"确定": function() {
@@ -200,6 +257,7 @@
 							password_unmatch(index, '不允许密码为空');
 						} else if (password === confirm_password) {
 							$(this).dialog("close");
+							$('#modify_permit').removeAttr('disabled');
 							edit_password(index, password);
 						} else {
 							$(this).dialog("close");
@@ -208,10 +266,51 @@
 					},
 					取消: function() {
 						$(this).dialog("close");
+						$('#modify_permit').removeAttr('disabled');
 					}
 				},
 				open: function(event, ui){
 					$(this).parent().focus();
+				}
+			});
+		}
+
+		function delete_user(index) {
+		    var json = new Object();
+		    json.msg_type = "system_setting";
+		    json.cmd_type = "delete_system_user";
+			json.id = $('#user_table').find('tr').eq(index).find('td').eq(0).text();
+			json.name = $('#user_table').find('tr').eq(index).find('td').eq(1).text();
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function() {
+							var tr = $('#user_table').find('tr').eq(index);
+							tr.remove();
+		                }
+		            });
+		}
+
+        function delete_item(index) {
+			var name = $('#user_table').find('tr').eq(index).find('td').eq(1).text();
+			var html = '确认要删除用户：  '+name+'  吗？';
+			$('#hint_detail').html(html);
+			$('#hint_dialog').dialog({
+				resizable: false,
+				height: 160,
+				modal: true,
+				title: "删除用户",
+				buttons: {
+					"确定": function() {
+						delete_user(index);
+						$(this).dialog("close");
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
 				}
 			});
 		}
@@ -222,8 +321,22 @@
 				var html="";
 				$.each(response.user_list, function(i, item) {
 					html+='<tr id="' + item.password + '">';
-					html+='<td>'+item.id+'</td><td>'+item.user+'</div></td><td>'+item.description+'</td>';
-					html+='<td><a href="javascript:edit_item('+i+')">编辑</a></td></tr>';
+					html+='<td>'+item.id+'</td><td>'+item.user+'</div></td>';
+					if (item.permit == '1') {
+						html+='<td><select disabled="disable"><option value="1" selected>管理员</option><option value="2">控制权</option><option value="4">监查权</option><option value="8">查看权</option></select></td>'
+					} else if (item.permit == '2') {
+						html+='<td><select disabled="disable"><option value="1">管理员</option><option value="2" selected>控制权</option><option value="4">监查权</option><option value="8">查看权</option></select></td>'
+					} else if (item.permit == '4') {
+						html+='<td><select disabled="disable"><option value="1">管理员</option><option value="2">控制权</option><option value="4" selected>监查权</option><option value="8">查看权</option></select></td>'
+					} else if (item.permit == '8') {
+						html+='<td><select disabled="disable"><option value="1">管理员</option><option value="2">控制权</option><option value="4">监查权</option><option value="8" selected>查看权</option></select></td>'
+					}
+
+					if (item.user == 'admin') {
+						html+='<td><a href="javascript:edit_item('+i+')">编辑</a></td></tr>';
+					} else {
+						html+='<td><a href="javascript:edit_item('+i+')">编辑</a> <a href="javascript:delete_item('+i+')">删除</a></td></tr>';
+					}
 				});
 				$('#user_table').append(html);
 			}
@@ -248,12 +361,10 @@
         $(document).ready(function () {
 			$('#modify_password').focus(function() {
 				$('#modify_password').attr("type", "text");
-				$('#modify_password').val($('#user_table').find('tr').eq(index).attr("id"));
 			});
 
 			$('#confirm_password').focus(function() {
 				$('#confirm_password').attr("type", "text");
-				$('#confirm_password').val($('#user_table').find('tr').eq(index).attr("id"));
 			});
 
 			$('#modify_password').blur(function() {
@@ -264,8 +375,103 @@
 				$('#confirm_password').attr("type", "password");
 			});
 
+			$('#new_password').focus(function() {
+				$('#new_password').attr("type", "text");
+			});
+
+			$('#new_confirm_password').focus(function() {
+				$('#new_confirm_password').attr("type", "text");
+			});
+
+			$('#new_password').blur(function() {
+				$('#new_password').attr("type", "password");
+			});
+
+			$('#new_confirm_password').blur(function() {
+				$('#new_confirm_password').attr("type", "password");
+			});
+
 			load_user();
         })
+
+		function new_user() {
+			var json = new Object();
+		    json.msg_type = "system_setting";
+		    json.cmd_type = "add_system_user";
+			json.name = $('#new_user').val();
+			json.password = $('#new_password').val();
+			json.permit = $('#new_permit').val();
+
+			var data = $.toJSON(json);
+			$.ajax({
+						url     : "/cgi-bin/common.cgi",
+						type    : "POST",
+						dataType: "json",
+						data    : data,
+						success : function(msg) {
+							show_user_list(msg);
+						},
+					});
+		}
+
+		function check_input() {
+			var password = $('#new_password').val();
+			var confirm_password = $('#new_confirm_password').val();
+			var name = $('#new_user').val();
+
+			if (name.length == 0) {
+				password_unmatch(999, '不允许用户名为空');
+				return false;
+			}
+
+        	var exist_flag = false;
+			$("#user_table tr").each(function() {
+				var exist_name = $(this).children("td").eq(1).text();
+				if (exist_name === name) {
+					exist_flag = true;
+					return false;
+				}
+			});
+
+			if (exist_flag ) {
+				password_unmatch(999, '该用户已存在');
+				return false;
+			}
+
+			if ((password.length == 0) || (confirm_password.length == 0)) {
+				password_unmatch(999, '不允许密码为空');
+				return false;
+			} else if (password === confirm_password) {
+				new_user();
+			} else {
+				password_unmatch(999, '两次输入密码不一致，请重新输入');
+				return false;
+			}
+		}
+
+		function new_dialog_show() {
+			$('#new_dialog').dialog({
+				width: 280,
+				height: 320,
+				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+						check_input();
+					},
+					取消: function() {
+						$(this).dialog("close");
+					}
+				}
+			});
+		}
+
+		function add_system_user() {
+			$('#new_user').val("");
+			$('#new_password').val("");
+			$('#new_confirm_password').val("");
+			new_dialog_show();
+		}
     </script>
 </body>
 </html>

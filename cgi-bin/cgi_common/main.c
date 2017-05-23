@@ -1062,6 +1062,7 @@ static int get_user_list(cJSON *root, priv_info_t *priv)
 			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
     		cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 1]);
     		cJSON_AddStringToObject(child, "password", query_result.result[i * query_result.column + 2]);
+    		cJSON_AddStringToObject(child, "permit", query_result.result[i * query_result.column + 3]);
     		cJSON_AddStringToObject(child, "description", query_result.result[i * query_result.column + 4]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
@@ -1082,12 +1083,94 @@ static int update_password(cJSON *root, priv_info_t *priv)
 
 	char sql[256] = {0};
 	char error_msg[256] = {0};
-	sprintf(sql, "UPDATE %s SET password='%s' WHERE id='%d'",
+	sprintf(sql, "UPDATE %s SET password='%s', permit=%d WHERE id='%d'",
 		"user_manager", cJSON_GetObjectItem(root, "password")->valuestring,
+		atoi(cJSON_GetObjectItem(root, "permit")->valuestring),
 		atoi(cJSON_GetObjectItem(root, "id")->valuestring));
+
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddStringToObject(response, "sql", sql);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int delete_system_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "DELETE FROM %s WHERE id='%d'",
+		"user_manager", atoi(cJSON_GetObjectItem(root, "id")->valuestring));
 	int ret = db_handle->action(db_handle, sql, error_msg);
     cJSON_AddNumberToObject(response, "status", ret);
 	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
+static int add_system_user(cJSON *root, priv_info_t *priv)
+{
+	req_buf_t *req_buf	= &(priv->request);
+	db_access_t *db_handle = priv->sys_db_handle;
+    cJSON *response = cJSON_CreateObject();
+
+	char description[32] = {0};
+	int permit = atoi(cJSON_GetObjectItem(root, "permit")->valuestring);
+	if (permit == 1) {
+		sprintf(description, "%s", "管理员");
+	} else if (permit == 2) {
+		sprintf(description, "%s", "控制权");
+	} else if (permit == 4) {
+		sprintf(description, "%s", "监查权");
+	} else if (permit == 8) {
+		sprintf(description, "%s", "查看权");
+	}
+
+	char sql[256] = {0};
+	char error_msg[256] = {0};
+	sprintf(sql, "INSERT INTO %s (user, password, permit, description) VALUES ('%s', '%s', %d, '%s')",
+		"user_manager", cJSON_GetObjectItem(root, "name")->valuestring,
+		cJSON_GetObjectItem(root, "password")->valuestring, permit, description);
+	int ret = db_handle->action(db_handle, sql, error_msg);
+    cJSON_AddNumberToObject(response, "status", ret);
+	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s ORDER BY id", "user_manager");
+	query_result_t query_result;
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+
+	cJSON_AddNumberToObject(response, "count", query_result.row);
+
+	if (query_result.row > 0) {
+    	cJSON *sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "user_list", sub_dir);
+
+    	cJSON *child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+			cJSON_AddStringToObject(child, "id", query_result.result[i * query_result.column]);
+    		cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 1]);
+    		cJSON_AddStringToObject(child, "password", query_result.result[i * query_result.column + 2]);
+    		cJSON_AddStringToObject(child, "permit", query_result.result[i * query_result.column + 3]);
+    		cJSON_AddStringToObject(child, "description", query_result.result[i * query_result.column + 4]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -1118,6 +1201,7 @@ static int login(cJSON *root, priv_info_t *priv)
     	memcpy(password, query_result.result[query_result.column + 2], sizeof(password));
 		if ((strcmp(user, cJSON_GetObjectItem(cfg, "user")->valuestring) == 0)
 			&& (strcmp(password, cJSON_GetObjectItem(cfg, "password")->valuestring) == 0)) {
+			cJSON_AddStringToObject(response, "permit", query_result.result[query_result.column + 3]);
 			ret = 1;
 		}
 	}
@@ -1967,6 +2051,14 @@ cmd_fun_t cmd_system_setting[] = {
 	{
 		"update_password",
 		update_password
+	},
+	{
+		"delete_system_user",
+		delete_system_user
+	},
+	{
+		"add_system_user",
+		add_system_user
 	},
     {
         "get_ntp_param",
