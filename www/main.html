@@ -32,19 +32,20 @@
             window.location.href = "/index.html";
         } else {
             var user_name = window.sessionStorage.getItem("user_information");
+            var user_permit = window.sessionStorage.getItem("user_permit");
             $('#login_user').html(user_name);
 
             var html = '';
-            if (user_name == 'ctrl') {
+            if (user_permit == '2') {
                 html = '<li><a class="history-item" href="query_history.html"><span>历史记录</span></a></li>'
                     + '<li><a class="warning-item" href="alarm_manage.html"><span>报警设置</span></a></li>'
                     + '<li><a class="parameter-item" href="param_setting.html"><span>参数设置</span></a></li>'
                 $('#ul-nav').append(html);
-            } else if (user_name == 'monitor') {
+            } else if (user_permit == '4') {
                 html = '<li><a class="history-item" href="query_history.html"><span>历史记录</span></a></li>'
                     + '<li><a class="warning-item" href="alarm_manage.html"><span>报警设置</span></a></li>'
                 $('#ul-nav').append(html);
-            } else if (user_name == 'admin') {
+            } else if (user_permit == '1') {
                 html = '<li><a class="history-item" href="query_history.html"><span>历史记录</span></a></li>'
                     + '<li><a class="warning-item" href="alarm_manage.html"><span>报警设置</span></a></li>'
                     + '<li><a class="parameter-item" href="param_setting.html"><span>参数设置</span></a></li>'
