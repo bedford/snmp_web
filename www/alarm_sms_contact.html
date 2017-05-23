@@ -7,7 +7,7 @@
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
 	#table-box {
-		width: 90%;
+		width: 99%;
 		height: 90%;
 		position: relative;
 		box-sizing: border-box;
@@ -80,7 +80,8 @@
 		border-radius:5px;
 		border: none;
 		letter-spacing: 5px;
-		margin-left: 200px;
+		margin-right: 10px;
+		float:right;
 	}
 
 	#set_btn {
@@ -185,16 +186,16 @@
         }
 
 		function phone_number_valid_check(phone_number) {
-			var myreg = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1}))+\d{8})$/; 
+			var myreg = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1}))+\d{8})$/;
 			if (phone_number.length == 0) {
 				return false;
 			}
 
-			if (phone_number.length != 11) { 
-				return false; 
+			if (phone_number.length != 11) {
+				return false;
 			}
 
-			if (!myreg.test(phone_number)) { 
+			if (!myreg.test(phone_number)) {
 				return false;
 			}
 

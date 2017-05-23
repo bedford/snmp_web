@@ -36,6 +36,10 @@
 .tabs-items li+li {
     margin-left: 5px;
 }
+.tabs-items li:last-child {
+    width:26%;
+}
+
 .tabs-items .select {
     background-color: #4faeda;
     color: #fff;
