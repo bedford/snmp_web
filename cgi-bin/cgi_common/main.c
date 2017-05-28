@@ -603,6 +603,63 @@ static int upgrade_apply(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+static int system_recovery(cJSON *root, priv_info_t *priv)
+{
+	dictionary *dic		= priv->dic;
+	req_buf_t *req_buf	= &(priv->request);
+
+    write_profile(dic, "SYSTEM", "init_flag", "1");
+
+    write_profile(dic, "NETWORK", "ip_addr", "192.168.0.233");
+    write_profile(dic, "NETWORK", "gateway", "192.168.0.1");
+    write_profile(dic, "NETWORK", "netmask", "255.255.255.0");
+    write_profile(dic, "NETWORK", "master_dns", "114.114.114.114");
+    write_profile(dic, "NETWORK", "slave_dns", "8.8.8.8");
+
+    write_profile(dic, "SNMP", "trap_server_ip", "192.168.0.200");
+    write_profile(dic, "SNMP", "authority_ip_0", "192.168.0.200");
+    write_profile(dic, "SNMP", "authority_ip_1", "192.168.0.201");
+    write_profile(dic, "SNMP", "authority_ip_2", "192.168.0.202");
+    write_profile(dic, "SNMP", "authority_ip_3", "192.168.0.203");
+    write_profile(dic, "SNMP", "valid_flag_0", "0");
+    write_profile(dic, "SNMP", "valid_flag_1", "0");
+    write_profile(dic, "SNMP", "valid_flag_2", "0");
+    write_profile(dic, "SNMP", "valid_flag_3", "0");
+    write_profile(dic, "SNMP", "enterprise_code", "999");
+    write_profile(dic, "SNMP", "enterprise_name", "Jitong");
+
+    write_profile(dic, "NTP", "ntp_interval", "10");
+    write_profile(dic, "NTP", "ntp_server_ip", "202.120.2.101");
+
+    write_profile(dic, "SMS", "send_times", "3");
+    write_profile(dic, "SMS", "send_interval", "1");
+
+    write_profile(dic, "EMAIL", "send_times", "3");
+    write_profile(dic, "EMAIL", "send_interval", "1");
+    write_profile(dic, "EMAIL", "port", "25");
+    write_profile(dic, "EMAIL", "smtp_server", "");
+    write_profile(dic, "EMAIL", "email_addr", "");
+    write_profile(dic, "EMAIL", "password", "");
+
+    write_profile(dic, "DO", "beep_alarm_enable", "0");
+    write_profile(dic, "DO", "do2_name", "");
+    write_profile(dic, "DO", "do2_value", "1");
+    write_profile(dic, "DO", "do3_name", "");
+    write_profile(dic, "DO", "do3_value", "1");
+    write_profile(dic, "DO", "do4_name", "");
+    write_profile(dic, "DO", "do4_value", "1");
+
+    dump_profile(dic, INI_FILE_NAME);
+
+    cJSON *response;
+    response = cJSON_CreateObject();
+    cJSON_AddNumberToObject(response, "status", 1);
+    req_buf->fb_buf = cJSON_Print(response);
+    cJSON_Delete(response);
+
+    return 0;
+}
+
 static int system_runtime_info(cJSON *root, priv_info_t *priv)
 {
 	dictionary *dic		= priv->dic;
@@ -2087,6 +2144,10 @@ cmd_fun_t cmd_system_setting[] = {
 	{
 		"upgrade_apply",
 		upgrade_apply
+	},
+	{
+		"system_recovery",
+		system_recovery
 	}
 };
 

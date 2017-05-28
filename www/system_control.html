@@ -206,8 +206,8 @@
 
 		function recovery() {
 			var json = new Object();
-			json.msg_type = 3;
-			json.cmd_type = 3;
+			json.msg_type = "system_setting";
+			json.cmd_type = "system_recovery";
 
 			$('#recovery_btn').attr("disabled", "disabled");
 			var data = $.toJSON(json);
@@ -220,17 +220,21 @@
 		                    $('#recovery_btn').removeAttr("disabled");
 							var html = '';
 							if (msg.status == 1) {
-								html = '设置成功';
+								html = '恢复设置成功，重启设备后生效，需立即重启请按"确认"键';
 							} else {
-								html = '设置失败';
+								html = '恢复设置失败';
 							}
 							$('#hint_detail').html(html);
 							$('#hint_dialog').dialog({
 								resizable: false,
-								height: 160,
+								height: 200,
 								modal: true,
 								buttons: {
 									"确定": function() {
+										$(this).dialog("close");
+										reboot();
+									},
+									取消: function() {
 										$(this).dialog("close");
 									}
 								}
@@ -239,39 +243,6 @@
 						error : function(msg) {
 		                    $('#recovery_btn').removeAttr("disabled");
 							var html = '操作失败';
-							$('#hint_detail').html(html);
-							$('#hint_dialog').dialog({
-								resizable: false,
-								height: 160,
-								modal: true,
-								buttons: {
-									"确定": function() {
-										$(this).dialog("close");
-									}
-								}
-							});
-						},
-					});
-		}
-
-		function reboot() {
-			var json = new Object();
-			json.msg_type = "system_setting";
-			json.cmd_type = "system_reboot";
-
-			var data = $.toJSON(json);
-			$.ajax({
-						url     : "/cgi-bin/common.cgi",
-						type    : "POST",
-						dataType: "json",
-						data    : data,
-						success : function(msg) {
-							var html = '';
-							if (msg.status == 1) {
-								html = '重启成功，正在重启中，请稍后再连接设备';
-							} else {
-								html = '重启失败';
-							}
 							$('#hint_detail').html(html);
 							$('#hint_dialog').dialog({
 								resizable: false,
