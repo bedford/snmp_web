@@ -88,6 +88,9 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 		if ((msg->protocol_id == alarm_msg->protocol_id)
 			&& (msg->param_id == alarm_msg->param_id)) {
 			memcpy(msg, alarm_msg, sizeof(alarm_msg_t));
+            if (alarm_msg->alarm_type == ALARM_DISCARD) {
+			    msg->send_times = 1;
+            }
 			priv->last_send_timing[i].tv_sec = 0;
 			priv->last_send_timing[i].tv_usec = 0;
 			break;
@@ -100,6 +103,12 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 			printf("function %s, line %d, memory pool is empty\n", __func__, __LINE__);
 		} else {
 			memcpy(msg, alarm_msg, sizeof(alarm_msg_t));
+            if (alarm_msg->alarm_type == ALARM_DISCARD) {
+			    msg->send_times = 1;
+            } else {
+			    msg->send_times = priv->send_times;
+            }
+
 			update_queue(priv, msg);
 			msg = NULL;
 		}
@@ -158,7 +167,7 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 
 	int i = 0;
 	msg_t *msg = NULL;
-	char sms_content[128] = {0};
+	char sms_content[256] = {0};
 	sprintf(sms_content, "%s, %s", alarm_msg->protocol_name, alarm_msg->alarm_desc);
 	for (i = 0; i < priv->sms_contact_cnt; i++) {
 		msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
@@ -170,7 +179,7 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 		if (ret == 0) {
 			if (priv->modem->send_sms(priv->modem,
 									priv->sms_user_array[i].phone_num,
-									alarm_msg->alarm_desc) == 0) {
+									sms_content) == 0) {
 		        sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
 					param_name, param_desc, param_type, analog_value, enum_value, enum_desc, name, phone, send_status, sms_content) \
 					VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, %d, '%s', '%s', '%s', %d, '%s')", "sms_record",
@@ -231,7 +240,7 @@ static void send_alarm_sms(priv_info_t *priv)
 			msg->send_times--;
 		}
 
-		if (msg->send_times == 0) {
+		if (msg->send_times <= 0) {
 			priv->local_mpool_handle->mpool_free(priv->local_mpool_handle, (void *)msg);
 			msg = NULL;
 			priv->alarm_queue[i] = NULL;

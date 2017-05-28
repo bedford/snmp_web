@@ -60,12 +60,14 @@ static void utf8_string_convert(char *utf8_string, char *dst)
     char buf[1024] = {0};
     int step = 0;
     unsigned int unicode = 0;
+    char tmp[8] = {0};
     while (*p != '\0') {
         step = utf8_to_unicode(p, &unicode);
         if (step < 0) {
             break;
         } else {
-            sprintf(buf, "%s%04x", buf, unicode);
+            sprintf(tmp, "%04x", unicode);
+            strncat(buf, tmp, strlen(tmp));
         }
 
         p += step;
