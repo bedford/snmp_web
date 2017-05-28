@@ -16,7 +16,11 @@ function JSONToExcelConvertor(JSONData, FileName, Title) {
         var row = "<tr>";
         for (var index in arrData[i]) {
 			var value = arrData[i][index] === "." ? "" : arrData[i][index];
-            row += '<td>' + value + '</td>';
+            if (index === 'created_time') {
+                row += "<td>'" + value + "</td>";
+            } else {
+                row += '<td>' + value + '</td>';
+            }
         }
 
         excel += row + "</tr>";
