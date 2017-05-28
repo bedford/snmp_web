@@ -244,7 +244,6 @@ void update_uart_cfg(priv_info_t *priv)
             (port, protocol_id, baud, data_bits, stops_bits, parity, enable) \
 			VALUES (%d, %d, %d, %d, %d, %d, %d)",
 			"uart_cfg", 2, 0, 3, 8, 1, 0, 0);
-			//"uart_cfg", 2, 257, 3, 8, 1, 0, 1);
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
@@ -252,7 +251,6 @@ void update_uart_cfg(priv_info_t *priv)
             (port, protocol_id, baud, data_bits, stops_bits, parity, enable) \
 			VALUES (%d, %d, %d, %d, %d, %d, %d)",
 			"uart_cfg", 3, 0, 3, 8, 1, 0, 0);
-			//"uart_cfg", 3, 257, 3, 8, 1, 0, 1);
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
 	list_t *protocol_list = list_create(sizeof(protocol_t));
@@ -318,6 +316,9 @@ void create_di_cfg(priv_info_t *priv)
 	//初始化 di 配置表
 	char error_msg[512] = {0};
 	char sql[512] = {0};
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "di_cfg");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
     sprintf(sql, "create table if not exists %s \
 	    (id INTEGER PRIMARY KEY, \
 	     di_name VARCHAR(32), \
@@ -330,97 +331,89 @@ void create_di_cfg(priv_info_t *priv)
 	     alarm_method INTEGER)", "di_cfg");
     priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-	memset(sql, 0, sizeof(sql));
-	sprintf(sql, "SELECT * FROM %s", "di_cfg");
-
-	query_result_t query_result;
-	memset(&query_result, 0, sizeof(query_result_t));
-	priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
-
-	if (query_result.row == 0) {
-		int i = 0;
-		char di_name[32] = {0};
-		char di_desc[32] = {0};
-		for (i = 0; i < 4; i++) {
-			memset(sql, 0, sizeof(sql));
-			memset(di_desc, 0, sizeof(di_desc));
-			memset(di_name, 0, sizeof(di_name));
-			sprintf(di_desc, "干接点输入%d", i + 1);
-			sprintf(di_name, "di%d", i + 1);
-		    sprintf(sql, "INSERT INTO %s \
-		            (id, di_name, di_desc, device_name, low_desc, high_desc, alarm_level,\
-					enable, alarm_method) VALUES (%d, '%s', '%s', '%s', '%s', '%s', %d, %d, %d)",
-					"di_cfg", i + 1, di_name, di_desc, "", "", "", 0, 0, 0);
-			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
-		}
+	int i = 0;
+	char di_name[32] = {0};
+	char di_desc[32] = {0};
+	for (i = 0; i < 4; i++) {
+		memset(sql, 0, sizeof(sql));
+		memset(di_desc, 0, sizeof(di_desc));
+		memset(di_name, 0, sizeof(di_name));
+		sprintf(di_desc, "干接点输入%d", i + 1);
+		sprintf(di_name, "di%d", i + 1);
+		sprintf(sql, "INSERT INTO %s \
+				(id, di_name, di_desc, device_name, low_desc, high_desc, alarm_level,\
+				enable, alarm_method) VALUES (%d, '%s', '%s', '%s', '%s', '%s', %d, %d, %d)",
+				"di_cfg", i + 1, di_name, di_desc, "", "", "", 0, 0, 0);
+		priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 	}
-	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 }
 
 static void create_user(priv_info_t *priv)
 {
-		//初始化 用户表
-		char error_msg[512] = {0};
-		char sql[256] = {0};
-	    sprintf(sql, "create table if not exists %s \
-		    (id INTEGER PRIMARY KEY, \
-		     user VARCHAR(32), \
-			 password VARCHAR(32), \
-		     permit VARCHAR(32), \
-		     description VARCHAR(32))", "user_manager");
-	    priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	//初始化 用户表
+	char error_msg[512] = {0};
+	char sql[256] = {0};
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "user_manager");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-		memset(sql, 0, sizeof(sql));
-		sprintf(sql, "SELECT * FROM %s", "user_manager");
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "create table if not exists %s \
+		(id INTEGER PRIMARY KEY, \
+			user VARCHAR(32), \
+			password VARCHAR(32), \
+			permit VARCHAR(32), \
+			description VARCHAR(32))", "user_manager");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-		query_result_t query_result;
-		memset(&query_result, 0, sizeof(query_result_t));
-		priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "INSERT INTO %s \
+			(user, password, permit, description) \
+			VALUES ('%s', '%s', %d, '%s')", "user_manager",
+			"admin", "admin", 1, "管理员");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-		if (query_result.row == 0) {
-			memset(sql, 0, sizeof(sql));
-		    sprintf(sql, "INSERT INTO %s \
-		            (user, password, permit, description) \
-					VALUES ('%s', '%s', %d, '%s')", "user_manager",
-					"admin", "admin", 1, "管理员");
-			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "INSERT INTO %s \
+			(user, password, permit, description) \
+			VALUES ('%s', '%s', %d, '%s')", "user_manager",
+			"ctrl", "ctrl", 2, "控制操作员");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-			memset(sql, 0, sizeof(sql));
-		    sprintf(sql, "INSERT INTO %s \
-		            (user, password, permit, description) \
-					VALUES ('%s', '%s', %d, '%s')", "user_manager",
-					"ctrl", "ctrl", 2, "控制操作员");
-			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "INSERT INTO %s \
+			(user, password, permit, description) \
+			VALUES ('%s', '%s', %d, '%s')", "user_manager",
+			"monitor", "monitor", 4, "监查人员");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-			memset(sql, 0, sizeof(sql));
-		    sprintf(sql, "INSERT INTO %s \
-		            (user, password, permit, description) \
-					VALUES ('%s', '%s', %d, '%s')", "user_manager",
-					"monitor", "monitor", 4, "监查人员");
-			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "INSERT INTO %s \
+			(user, password, permit, description) \
+			VALUES ('%s', '%s', %d, '%s')", "user_manager",
+			"guest", "guest", 8, "访客");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-			memset(sql, 0, sizeof(sql));
-		    sprintf(sql, "INSERT INTO %s \
-		            (user, password, permit, description) \
-					VALUES ('%s', '%s', %d, '%s')", "user_manager",
-					"guest", "guest", 8, "访客");
-			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
-		}
-		priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "phone_user");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-		memset(sql, 0, sizeof(sql));
-		sprintf(sql, "create table if not exists %s \
-						(id INTEGER PRIMARY KEY AUTOINCREMENT, \
-						name VARCHAR(32), \
-						phone VARCHAR(32))", "phone_user");
-		priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "create table if not exists %s \
+					(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+					name VARCHAR(32), \
+					phone VARCHAR(32))", "phone_user");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
-		memset(sql, 0, sizeof(sql));
-		sprintf(sql, "create table if not exists %s \
-						(id INTEGER PRIMARY KEY AUTOINCREMENT, \
-						name VARCHAR(32), \
-						email VARCHAR(32))", "email_user");
-		priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "email_user");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "create table if not exists %s \
+					(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+					name VARCHAR(32), \
+					email VARCHAR(32))", "email_user");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 }
 
 static void init_do_output(priv_info_t *priv)
