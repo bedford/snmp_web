@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "thread_process.h"
 #include "data_write_thread.h"
@@ -30,6 +31,49 @@ static void clear_ring_buffer(db_access_t	*data_db_handle,
 	}
 }
 
+#define HISTORY_DATA_TIMEOUT	(7 * 24 * 60 * 60)
+#define ALARM_DATA_TIMEOUT		(15 * 24 * 60 * 60)
+static void clean_old_data(db_access_t *data_db_handle)
+{
+	char sql[1024] = {0};
+	char error_msg[512] = {0};
+
+	char timeout[32] = {0};
+	struct timeval now_time;
+	struct tm *tm = NULL;
+	gettimeofday(&now_time, NULL);
+
+	now_time.tv_sec -= HISTORY_DATA_TIMEOUT;
+    tm = localtime(&(now_time.tv_sec));
+	sprintf(timeout, "%04d-%02d-%02d %02d:%02d:%02d",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec);
+	sprintf(sql, "delete from %s where id in (select id from %s where created_time < '%s' ORDER BY id limit 5)",
+			"data_record", "data_record", timeout);
+	memset(error_msg, 0, sizeof(error_msg));
+	data_db_handle->action(data_db_handle, sql, error_msg);
+
+	now_time.tv_sec -= ALARM_DATA_TIMEOUT;
+    tm = localtime(&(now_time.tv_sec));
+	sprintf(timeout, "%04d-%02d-%02d %02d:%02d:%02d",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec);
+	sprintf(sql, "delete from %s where id in (select id from %s where created_time < '%s' ORDER BY id limit 5)",
+			"alarm_record", "alarm_record", timeout);
+	memset(error_msg, 0, sizeof(error_msg));
+	data_db_handle->action(data_db_handle, sql, error_msg);
+
+	sprintf(sql, "delete from %s where id in (select id from %s where send_time < '%s' ORDER BY id limit 5)",
+			"email_record", "email_record", timeout);
+	memset(error_msg, 0, sizeof(error_msg));
+	data_db_handle->action(data_db_handle, sql, error_msg);
+
+	sprintf(sql, "delete from %s where id in (select id from %s where send_time < '%s' ORDER BY id limit 5)",
+			"sms_record", "sms_record", timeout);
+	memset(error_msg, 0, sizeof(error_msg));
+	data_db_handle->action(data_db_handle, sql, error_msg);
+}
+
 static void *data_in_db_process(void *arg)
 {
 	data_write_thread_param_t *thread_param = (data_write_thread_param_t *)arg;
@@ -43,6 +87,7 @@ static void *data_in_db_process(void *arg)
 	char error_msg[512] = {0};
 	while (thiz->thread_status) {
 		if (rb_handle->pop(rb_handle, (void **)&msg)) {
+			clean_old_data(data_db_handle);
 			usleep(50000);
 			continue;
 		}
