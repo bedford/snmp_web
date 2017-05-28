@@ -92,10 +92,6 @@ void create_data_table(priv_info_t *priv)
 	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
-	sprintf(sql, "DROP TABLE IF EXISTS %s", "real_data");
-	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
 	sprintf(sql, "DROP TABLE IF EXISTS %s", "alarm_record");
 	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
@@ -106,25 +102,6 @@ void create_data_table(priv_info_t *priv)
     memset(sql, 0, sizeof(sql));
 	sprintf(sql, "DROP TABLE IF EXISTS %s", "email_record");
 	priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
-
-    memset(sql, 0, sizeof(sql));
-    sprintf(sql, "create table if not exists %s \
-            (id INTEGER PRIMARY KEY AUTOINCREMENT, \
-             created_time TIMESTAMP NOT NULL DEFAULT (datetime('now', 'localtime')), \
-             protocol_id INTEGER, \
-             protocol_name VARCHAR(32), \
-			 protocol_desc VARCHAR(128), \
-			 param_id INTEGER, \
-             param_name VARCHAR(32), \
-			 param_desc	VARCHAR(128), \
-             param_type INTEGER, \
-             analog_value DOUBLE, \
-			 unit VARCHAR(32), \
-             enum_value INTEGER, \
-             enum_en_desc VARCHAR(32), \
-             enum_cn_desc VARCHAR(32), \
-             alarm_type INTEGER)", "real_data");
-    priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
     sprintf(sql, "create table if not exists %s \
@@ -380,7 +357,7 @@ void create_di_cfg(priv_info_t *priv)
 	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 }
 
-static void creat_user(priv_info_t *priv)
+static void create_user(priv_info_t *priv)
 {
 		//初始化 用户表
 		char error_msg[512] = {0};
@@ -513,11 +490,11 @@ int main(void)
 	priv->sys_db_handle = db_access_create("/opt/app/sys.db");
 	priv->data_db_handle = db_access_create("/opt/data/data.db");
 
-	creat_user(priv);
-	create_di_cfg(priv);
 	init_do_output(priv);
 
 	if (init_flag == 1) {
+		create_user(priv);
+		create_di_cfg(priv);
 		create_data_table(priv);
 		update_uart_cfg(priv);
 		priv->pref_handle->set_init_flag(priv->pref_handle, 0);
