@@ -5,88 +5,164 @@
     <title>登录页</title>
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 <style>
-html {
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font-style: sans-serif;
-}
+	html, body {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+	}
 
-body {
-    width: 100%;
-    height: 100%;
-    font-family: 'Open Sans', sans-serif;
-    margin: 0;
-	background-color: #9dd7f2;
-}
+	body {
+	font: 13px/20px 'Lucida Grande', Tahoma, Verdana, sans-serif;
+	color: #404040;
+	background: #0ca3d2;
+	line-height: 1;
+	}
 
-#login {
-    position: absolute;
-    top: 50%;
-    left:50%;
-    margin: -150px 0 0 -150px;
-    width: 300px;
-    height: 300px;
-    background-color: #095c83;
-}
+	.container {
+	margin: 80px auto;
+	width: 640px;
+	}
 
-#login h1 {
-    color: #fff;
-    text-shadow:0 0 10px;
-    letter-spacing: 1px;
-    text-align: center;
-}
+	.login {
+	position: relative;
+	margin: 0 auto;
+	padding: 20px 20px 20px;
+	width: 310px;
+	background: white;
+	border-radius: 3px;
+	-webkit-box-shadow: 0 0 200px rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+	box-shadow: 0 0 200px rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+	}
 
-h1 {
-    font-size: 2em;
-    margin: 0.67em 0;
-}
+	.login:before {
+	content: '';
+	position: absolute;
+	top: -8px;
+	right: -8px;
+	bottom: -8px;
+	left: -8px;
+	z-index: -1;
+	background: rgba(0, 0, 0, 0.08);
+	border-radius: 4px;
+	}
 
-input {
-    width: 200px;
-    height: 18px;
-    margin-bottom: 10px;
-	margin-left: 35px;
-	margin-top: 10px;
-    outline: none;
-    padding: 10px;
-    font-size: 13px;
-    color: #fff;
-    text-shadow:1px 1px 1px;
-    border-top: 1px solid #312E3D;
-    border-left: 1px solid #312E3D;
-    border-right: 1px solid #312E3D;
-    border-bottom: 1px solid #56536A;
-    border-radius: 4px;
-    background-color: #2D2D3F;
-}
+	.login h1 {
+	margin: -20px -20px 21px;
+	line-height: 40px;
+	font-size: 15px;
+	font-weight: bold;
+	color: #555;
+	text-align: center;
+	text-shadow: 0 1px white;
+	background: #f3f3f3;
+	border-bottom: 1px solid #cfcfcf;
+	border-radius: 3px 3px 0 0;
+	background-image: -webkit-linear-gradient(top, whiteffd, #eef2f5);
+	background-image: -moz-linear-gradient(top, whiteffd, #eef2f5);
+	background-image: -o-linear-gradient(top, whiteffd, #eef2f5);
+	background-image: linear-gradient(to bottom, whiteffd, #eef2f5);
+	-webkit-box-shadow: 0 1px whitesmoke;
+	box-shadow: 0 1px whitesmoke;
+	}
 
-.but {
-    width: 220px;
-	margin-left: 35px;
-	margin-top: 10px;
-    min-height: 40px;
-    display: block;
-    background-color: #4a77d4;
-    border: 1px solid #3762bc;
-    color: #fff;
-    padding: 9px 14px;
-    font-size: 15px;
-    line-height: normal;
-    border-radius: 5px;
-}
+	.login p {
+	margin: 20px 0 0;
+	}
+	.login p:first-child {
+	margin-top: 0;
+	}
+	.login input[type=text], .login input[type=password] {
+	width: 278px;
+	}
+
+	.login p.submit {
+	text-align: right;
+	}
+
+	:-moz-placeholder {
+	color: #c9c9c9 !important;
+	font-size: 13px;
+	}
+
+	::-webkit-input-placeholder {
+	color: #ccc;
+	font-size: 13px;
+	}
+
+	input {
+	font-family: 'Lucida Grande', Tahoma, Verdana, sans-serif;
+	font-size: 14px;
+	}
+
+	input[type=text], input[type=password] {
+	margin: 5px;
+	padding: 0 10px;
+	width: 200px;
+	height: 34px;
+	color: #404040;
+	background: white;
+	border: 1px solid;
+	border-color: #c4c4c4 #d1d1d1 #d4d4d4;
+	border-radius: 2px;
+	outline: 5px solid #eff4f7;
+	-moz-outline-radius: 3px;
+	-webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+	}
+	input[type=text]:focus, input[type=password]:focus {
+	border-color: #7dc9e2;
+	outline-color: #dceefc;
+	outline-offset: 0;
+	}
+
+	input[type=submit] {
+	padding: 0 18px;
+	height: 29px;
+	font-size: 12px;
+	font-weight: bold;
+	color: #527881;
+	text-shadow: 0 1px #e3f1f1;
+	background: #cde5ef;
+	border: 1px solid;
+	border-color: #b4ccce #b3c0c8 #9eb9c2;
+	border-radius: 16px;
+	outline: 0;
+	-webkit-box-sizing: content-box;
+	-moz-box-sizing: content-box;
+	box-sizing: content-box;
+	background-image: -webkit-linear-gradient(top, #edf5f8, #cde5ef);
+	background-image: -moz-linear-gradient(top, #edf5f8, #cde5ef);
+	background-image: -o-linear-gradient(top, #edf5f8, #cde5ef);
+	background-image: linear-gradient(to bottom, #edf5f8, #cde5ef);
+	-webkit-box-shadow: inset 0 1px white, 0 1px 2px rgba(0, 0, 0, 0.15);
+	box-shadow: inset 0 1px white, 0 1px 2px rgba(0, 0, 0, 0.15);
+	}
+
+	input[type=submit]:active {
+	background: #cde5ef;
+	border-color: #9eb9c2 #b3c0c8 #b4ccce;
+	-webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
+	box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
+	}
+
+	.lt-ie9 input[type=text], .lt-ie9 input[type=password] {
+	line-height: 34px;
+	}
 </style>
 </head>
 
 <body>
-    <div id="login">
-        <h1>SNMP网页客户端</h1>
-        <form id="login_form">
-            <input type="text" required="required" placeholder="用户名" id="user">
-            <input type="password" required="required" placeholder="密码" id="password">
-			<input type="button" class="but" id="login_btn" value="登录" onclick="login_snmp()">
-        </form>
+  <section class="container">
+    <div class="login">
+      <h1>SNMP网页客户端登录</h1>
+        <p><input type="text" id="user" name="login" value="" placeholder="用户名"></p>
+        <p><input type="password" id="password" name="password" value="" placeholder="密码"></p>
+        <p class="submit"><input type="submit" id="login_btn" name="commit" value="登录" onclick="login_snmp()"></p>
     </div>
+  </section>
 
 	<div class="jq-dialog" id="hint_dialog" title="提示信息">
 		<label id="hint_detail"></label>
@@ -96,6 +172,16 @@ input {
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
+		document.onkeydown = function KeyAccess(e) {
+			if (!e) {
+				e = window.event;
+			}
+
+			if (e.keyCode == 13 || e.keyCode == 108) {
+				$('#login_btn').focus();
+			}
+		}
+
 		function login_snmp() {
 			var user = $('#user').val();
         	var password = $('#password').val();
