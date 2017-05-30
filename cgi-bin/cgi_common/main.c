@@ -190,7 +190,7 @@ static int get_do_param(cJSON *root, priv_info_t *priv)
 
     cJSON *sub_dir = cJSON_CreateArray();
 	cJSON *child = NULL;
-    cJSON_AddItemToObject(response, "io_status", sub_dir);
+    cJSON_AddItemToObject(response, "do_setting", sub_dir);
 	char value_item_name[16] = {0};
 	char item_name[16] = {0};
 	int i = 0;
@@ -199,10 +199,21 @@ static int get_do_param(cJSON *root, priv_info_t *priv)
 		sprintf(item_name, "DO:do%d_name", i + 2);
 
         child = cJSON_CreateObject();
-		cJSON_AddNumberToObject(child, "value",
+		cJSON_AddNumberToObject(child, "setting",
 			iniparser_getint(dic, value_item_name, 0));
 		cJSON_AddStringToObject(child, "name",
 			iniparser_getstring(dic, item_name, "干接点输出"));
+    	cJSON_AddItemToArray(sub_dir, child);
+    }
+
+    sub_dir = cJSON_CreateArray();
+	cJSON_AddItemToObject(response, "do_status", sub_dir);
+	unsigned char value = 0;
+    for (i = 0; i < 4; i++) {
+		drv_gpio_open(i + 4);
+		drv_gpio_read(i + 4, &value);
+        child = cJSON_CreateObject();
+		cJSON_AddNumberToObject(child, "value", value);
     	cJSON_AddItemToArray(sub_dir, child);
     }
 

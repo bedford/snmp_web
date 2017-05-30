@@ -6,123 +6,93 @@
 	<link rel="stylesheet" href="css/cssReset.css" type="text/css">
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 	<style>
-		.horizental_split {
-			height: 2px;
-			width: 95%;
-			background: #e5e5e5;
-			overflow: hidden;
-			margin-top: 10px;
-		}
+	#table{
+		width:100%;
+		height: 50%;
+	}
 
-		.do-status-box {
-		    height: 40%;
-			margin-top: 20px;
-		}
-		.do-status {
-		    width: 50%;
-		    height: 150px;
-		    box-sizing: border-box;
-		    padding-bottom: 10px;
-			padding-top: 10px;
-		    float: left;
-		}
+	table {
+		border: 1px solid #003D6B;
+		color: #fff;
+		background: #117daf;
+		font-size: 14px;
+		display: inline-block;
+		margin-right: 30px;
+		margin-top: 20px;
+	}
 
-		.do-status li {
-		    width: 33%;
-		    height: 100%;
-		    float: left;
-		    box-sizing: border-box;
-		    padding-top: 134px;
-		}
+	table tr.first{
+		background: #1666A2;
+		height:15%;
+	}
 
-		.do-status li span {
-		    display: block;
-		    width: 80px;
-		    height: 24px;
-		    margin: 0 auto;
-		    border-radius: 20px;
-		    background-color: #d7d7d7;
-		    text-align: center;
-		    color: #555;
-		}
+	table tr td.t1{
+		width: 30%;
+		text-align: center;
+	}
 
-		.do-status-label {
-		    width: 100%;
-		    height: 40px;
-		    padding-bottom: 10px;
-			padding-top: 10px;
-		    float: left;
-		}
+	table tr td > select {
+		width: 140px;
+	}
 
-		.do-status-label input[type="text"] {
-		    width: 14%;
-		    height: 30px;
-		    margin-left: 10px;
-			margin-right: 10px;
-		    border-radius: 20px;
-		    background-color: #d7d7d7;
-		    text-align: center;
-		    color: #555;
-		}
+	table tr td > input[type="text"] {
+		width: 136px;
+	}
 
-		.do_beep {
-			width: 100%;
-			height: 40px;
-			margin-left: 20px;
-			margin-top: 20px;
-		}
+	.do-status-off {
+		background: url("../images/do_off.png") center 30px no-repeat;
+		display: block;
+		height: 140px;
+	}
 
-		.do_beep > input[type="checkbox"] {
-			vertical-align:middle;
-			width: 25px;
-			height: 25px;
-		}
+	.do-status-on {
+		background: url("../images/do_on.png") center 30px no-repeat;
+		display: block;
+		height: 140px;
+	}
 
-		.confirm_btn {
-			background-color: #117daf;
-			color: #fff;
-			width: 100px;
-			height: 30px;
-			font-size: 14px;
-			font-weight:bold;
-			border: none;
-			margin-top: 30px;
-			margin-left:30px;
-		}
-
-		.do-status .do-status-off {
-			background: url("../images/do_off.png") center 30px no-repeat;
-		}
-
-		.do-status .do-status-on {
-			background: url("../images/do_on.png") center 30px no-repeat;
-		}
+	.confirm_btn {
+		background-color: #117daf;
+		color: #fff;
+		width: 100px;
+		height: 30px;
+		font-size: 14px;
+		font-weight:bold;
+		border: none;
+	}
 	</style>
 </head>
 <body>
-	<div class="do-status-box">
-		<span style="width:150px;font-size:16px;">继电器输出</span>
-		<div class="horizental_split"></div>
-		<div class="do_beep">
-			<input type="checkbox" id="do_beep">
-			<span style="width:25px; height:25px;">干接点输出1：蜂鸣器报警使能</span>
-		</div>
+   	<div id="table">
+		<table>
+			<tr class="first" ><td colspan="2" style="text-align: center;">干接点输出1</td></tr>
+			<tr><td class="t1">名称</td><td style="width:140px;">蜂鸣器报警</td></tr>
+			<tr><td class="t1">设置</td><td><input type="checkbox" id="do_beep">启用</td></tr>
+			<tr><td class="t1">状态</td><td><span class="do-status-off"></span></td></tr>
+		</table>
 
-			<ul class="do-status">
-				<li class="do-status-off"></li>
-				<li class="do-status-off"></li>
-				<li class="do-status-off"></li>
-			</ul>
+		<table>
+			<tr class="first" ><td colspan="2" style="text-align: center;">干接点输出2</td></tr>
+			<tr><td class="t1">名称</td><td><input type="text" id="do-2-name"></td></tr>
+			<tr><td class="t1">设置电平</td><td><select id="do-2-set"><option value='0'>低电平</option><option value='1'>高电平</option></select></td></tr>
+			<tr><td class="t1">状态</td><td><span class="do-status-off"></span></td></tr>
+		</table>
 
-		<div class="do-status-label">
-			<input type="text" id="do-2" value="干接点输出2">
-			<input type="text" id="do-3" value="干接点输出3">
-			<input type="text" id="do-4" value="干接点输出4">
-		</div>
-    </div>
-	<div>
-    	<input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_do_param()">
+		<table>
+			<tr class="first" ><td colspan="2" style="text-align: center;">干接点输出3</td></tr>
+			<tr><td class="t1">名称</td><td><input type="text" id="do-3-name"></td></tr>
+			<tr><td class="t1">设置电平</td><td><select id="do-3-set"><option value='0'>低电平</option><option value='1'>高电平</option></select></td></tr>
+			<tr><td class="t1">状态</td><td><span class="do-status-off"></span></td></tr>
+		</table>
+
+		<table>
+			<tr class="first" ><td colspan="2" style="text-align: center;">干接点输出4</td></tr>
+			<tr><td class="t1">名称</td><td><input type="text" id="do-4-name"></td></tr>
+			<tr><td class="t1">设置电平</td><td><select id="do-4-set"><option value='0'>低电平</option><option value='1'>高电平</option></select></td></tr>
+			<tr><td class="t1">状态</td><td><span class="do-status-off"></span></td></tr>
+		</table>
 	</div>
+    <input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_do_param()">
 
 	<div class="jq-dialog" id="hint_dialog" title="提示信息">
 		<label id="hint_detail"></label>
@@ -137,20 +107,6 @@
             window.location.href = "/index.html";
         }
 
-		/* 串口及IO口状态及设置相关 */
-		$(function() {
-			$('.do-status li').click(function() {
-		        var is_on = $(this).hasClass('do-status-on');
-		        if (is_on) {
-		            $(this).removeClass('do-status-on');
-		            $(this).addClass('do-status-off');
-		        } else {
-		            $(this).removeClass('do-status-off');
-		            $(this).addClass('do-status-on');
-		        }
-		    });
-		});
-
 		function set_do_param() {
 			var json = new Object();
 			json.msg_type = "param_setting";
@@ -158,18 +114,17 @@
 
 			var cfg = new Object();
 			var newArray = new Array();
-			$('.do-status li').each(function(i) {
+			for (var i = 0; i < 3; i++) {
 				var obj = new Object();
-				var is_on = $(this).hasClass('do-status-on');
-				if (is_on) {
+				if ($('#do-'+(i+2)+'-set').val() === "1") {
 					obj.value = 1;
 				} else {
 					obj.value = 0;
 				}
 
-				obj.name = $('#do-'+(i+2)).val();
+				obj.name = $('#do-'+(i+2)+'-name').val();
 				newArray[i] = obj;
-			});
+			}
 
 			if ($('#do_beep').is(':checked')) {
 				cfg.beep_alarm_enable = '1';
@@ -226,23 +181,26 @@
 		}
 
 		function display_do_param(msg) {
-			$('.do-status li').each(function(i) {
-				if (msg.io_status[i].value) {
+			if (msg.beep_alarm_enable == 0) {
+				$('#do_beep').attr('checked', false);
+			} else {
+				$('#do_beep').attr('checked', true);
+			}
+
+			for (var i = 0; i < 3; i++) {
+				$('#do-'+(i+2)+'-name').val(msg.do_setting[i].name);
+				$('#do-'+(i+2)+'-set').val(msg.do_setting[i].setting);
+			}
+
+			$('span').each(function(i) {
+				if (msg.do_status[i].value) {
 		            $(this).removeClass('do-status-off');
 					$(this).addClass('do-status-on');
 				} else {
 		            $(this).removeClass('do-status-on');
 					$(this).addClass('do-status-off');
 				}
-
-				$('#do-'+(i+2)).val(msg.io_status[i].name);
 			});
-
-			if (msg.beep_alarm_enable == 0) {
-				$('#do_beep').attr('checked', false);
-			} else {
-				$('#do_beep').attr('checked', true);
-			}
 		}
 
 		function load_do_param() {
