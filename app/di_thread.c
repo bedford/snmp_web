@@ -224,8 +224,12 @@ static void update_di_realdata(priv_info_t *priv, element_data_t *di_data, int i
 	di_data->enum_value = value;
 	strcpy(di_data->enum_cn_desc, (value == 1) ? param->high_desc : param->low_desc);
 	strcpy(di_data->enum_en_desc, "");
-	if (value == param->alarm_level) {
-		di_data->alarm_type = 1;
+	if (param->enable) {
+		if (value == param->alarm_level) {
+			di_data->alarm_type = 1;
+		} else {
+			di_data->alarm_type = 0;
+		}
 	} else {
 		di_data->alarm_type = 0;
 	}
