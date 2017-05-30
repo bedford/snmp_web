@@ -76,7 +76,7 @@
 				<tr><td colspan="2"><label><input type="checkbox" id="rs232_checkbox">是否启用RS232串口</label></td></td></tr>
 			</table>
 
-		<table id="RS485_param">
+			<table id="RS485_param">
 				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>RS485参数项</td></tr>
 				<tr><td class="t1">协议类型</td><td><select id="rs485_protocol_select"><option value="0"></option></select></td></tr>
 				<tr><td class="t1">波特率</td><td><select id="rs485_baudrate_select"></select></td></tr>
@@ -85,7 +85,8 @@
 				<tr><td class="t1">校验方式</td><td><select id="rs485_parity"></select></td></tr>
 				<tr><td colspan="2"><label><input type="checkbox" id="rs485_checkbox">是否启用RS485串口</label></td></td></tr>
 			</table>
-    	<input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_uart_param()">
+    		<input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_uart_param()">
+		</div>
 	</div>
 
 	<div class="jq-dialog" id="hint_dialog" title="提示信息">

@@ -5,83 +5,80 @@
     <title>干接点输入状态</title>
     <link rel="stylesheet" href="css/cssReset.css">
 <style>
-.content-wr {
-    height: 100%;
-    padding: 20px 20px;
-}
-.di-status {
-    width: 49%;
-    height: 40%;
-    box-sizing: border-box;
-    padding-bottom: 32px;
-}
-.di-status {
-    float: left;
-}
+	#table{
+		width:100%;
+		height: 50%;
+	}
 
-.di-status h3 {
-    height: 32px;
-    line-height: 32px;
-    text-indent: 10px;
-    background-color: #acacac;
-    color: #ececec;
-}
+	table {
+		border: 1px solid #003D6B;
+		color: #fff;
+		background: #117daf;
+		font-size: 14px;
+		display: inline-block;
+		margin-right: 30px;
+		margin-top: 20px;
+	}
 
-.di-status ul {
-    width: 100%;
-    height: 100%;
-    background-color: #eaeaea;
-}
+	table tr.first{
+		background: #1666A2;
+		height:15%;
+	}
 
-.di-status li {
-    width: 25%;
-    height: 100%;
-    float: left;
-    box-sizing: border-box;
-    padding-top: 134px;
-}
+	table tr td.t1{
+		width: 30%;
+		text-align: center;
+	}
 
-.di-status li span {
-    display: block;
-    width: 80px;
-    height: 24px;
-    margin: 0 auto;
-    border-radius: 20px;
-    background-color: #d7d7d7;
-    text-align: center;
-    color: #555;
-}
+	table tr td {
+        width: 140px;
+		text-align: center;
+	}
 
-.di-status-alarm-on {
-    background-color: #f30707;
-}
+    .di-status-off {
+        background: url("../images/di_off.png") center 30px no-repeat;
+		display: block;
+		height: 140px;
+    }
 
-.di-status-alarm-off {
-    background-color: #d7d7d7;
-}
-
-.di-status-off {
-    background: url("../images/di_off.png") center 30px no-repeat;
-}
-
-.di-status-on {
-    background: url("../images/di_on.png") center 30px no-repeat;
-}
+    .di-status-on {
+        background: url("../images/di_on.png") center 30px no-repeat;
+		display: block;
+		height: 140px;
+    }
 
 </style>
 </head>
 <body onbeforeunload="leave_page()">
-    <div class="content-wr">
-        <div class="di-status">
-            <h3>干接点输入DI状态</h3>
-            <ul class="clear-fix">
-                <li class="di-status-off"><span id="di-1">输入1</span></li>
-                <li class="di-status-off"><span id="di-2">输入2</span></li>
-                <li class="di-status-off"><span  class="di_alarm_on" id="di-3">输入3</span></li>
-                <li class="di-status-off"><span id="di-4">输入4</span></li>
-            </ul>
-        </div>
-    </div>
+   	<div id="table">
+		<table>
+			<tr class="first" ><td colspan="2" style="text-align: center;">干接点输入1</td></tr>
+			<tr><td class="t1">名称</td><td id="di-1-name"></td></tr>
+			<tr><td class="t1">报警状态</td><td id="di-1-alarm"></td></tr>
+			<tr><td class="t1">状态</td><td><span class="di-status-off"></span></td></tr>
+		</table>
+
+		<table>
+			<tr class="first" ><td colspan="2" style="text-align: center;">干接点输入2</td></tr>
+			<tr><td class="t1">名称</td><td id="di-2-name"></td></tr>
+			<tr><td class="t1">报警状态</td><td id="di-2-alarm"></td></tr>
+			<tr><td class="t1">状态</td><td><span class="di-status-off"></span></td></tr>
+		</table>
+
+		<table>
+			<tr class="first" ><td colspan="2" style="text-align: center;">干接点输入3</td></tr>
+			<tr><td class="t1">名称</td><td id="di-3-name"></td></tr>
+			<tr><td class="t1">报警状态</td><td id="di-3-alarm"></td></tr>
+			<tr><td class="t1">状态</td><td><span class="di-status-off"></span></td></tr>
+		</table>
+
+		<table>
+			<tr class="first" ><td colspan="2" style="text-align: center;">干接点输入4</td></tr>
+			<tr><td class="t1">名称</td><td id="di-4-name"></td></tr>
+			<tr><td class="t1">报警状态</td><td id="di-4-alarm"></td></tr>
+			<tr><td class="t1">状态</td><td><span class="di-status-off"></span></td></tr>
+		</table>
+	</div>
     <script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
     <script>
@@ -95,7 +92,7 @@
 		}
 
 		function display_io(msg) {
-			$('.di-status li').each(function(i) {
+			$('span').each(function(i) {
 				if (msg.real_data_di[i].enum_value) {
 		            $(this).removeClass('di-status-off');
 					$(this).addClass('di-status-on');
@@ -105,11 +102,15 @@
 				}
 
                 if (msg.real_data_di[i].param_desc.length != 0) {
-                    $('#di-'+(i+1)).html(msg.real_data_di[i].param_desc);
+                    $('#di-'+(i+1)+'-name').html(msg.real_data_di[i].param_desc);
                 }
 
                 if (msg.real_data_di[i].alarm_type != 0) {
-                    $('#di-'+(i+1)).css({color:"red"});
+                    $('#di-'+(i+1)+'-alarm').html("报警");
+                    $('#di-'+(i+1)+'-alarm').css({color:"red"});
+                } else {
+                    $('#di-'+(i+1)+'-alarm').html("正常");
+                    $('#di-'+(i+1)+'-alarm').css({color:"#fff"});
                 }
 			});
 		}
