@@ -85,10 +85,18 @@ static void *data_in_db_process(void *arg)
 
 	msg_t *msg = NULL;
 	char error_msg[512] = {0};
+	struct timeval current_time;
+	struct timeval last_timing;
+	gettimeofday(&last_timing, NULL);
 	while (thiz->thread_status) {
 		if (rb_handle->pop(rb_handle, (void **)&msg)) {
-			clean_old_data(data_db_handle);
-			usleep(50000);
+			gettimeofday(&current_time, NULL);
+			if ((current_time.tv_sec - last_timing.tv_sec) > (5 * 60)) {
+				last_timing = current_time;
+				clean_old_data(data_db_handle);
+			} else {
+				usleep(50000);
+			}
 			continue;
 		}
 
