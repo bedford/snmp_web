@@ -149,7 +149,7 @@
 		</table>
 	</div>
 
-	<div class="jq-dialog" id="user_dialog" title="修改用户密码">
+	<div class="jq-dialog" id="user_dialog" title="修改用户信息">
 		<table>
 			<tr>
 				<td>用户名称</td><td><input type="text" name="name" id="modify_user" disabled="true"></td>
@@ -195,12 +195,13 @@
 		                data    : data,
 		                success : function() {
 							$('#user_table').find('tr').eq(index).attr("id", json.password);
-							var html='修改用户: '+json.user+' 密码 -- 成功';
+							var html='修改用户: '+json.user+' 信息成功';
 							$('#hint_detail').html(html);
 							$('#hint_dialog').dialog({
 								resizable: false,
 								height: 160,
 								modal: true,
+								title: "编辑用户",
 								buttons: {
 									"确定": function() {
 										$(this).dialog("close");
