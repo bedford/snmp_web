@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/reboot.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "db_access.h"
 #include "debug.h"
@@ -23,6 +25,7 @@
 #include "sms_alarm_thread.h"
 #include "email_alarm_thread.h"
 #include "data_write_thread.h"
+#include "version.h"
 
 typedef struct {
 	db_access_t		*sys_db_handle;
@@ -472,8 +475,31 @@ static void send_alarm_msg(ring_buffer_t	*sms_rb_handle,
 	tmp_alarm_msg = NULL;
 }
 
+static void create_version_info(void)
+{
+	char current_timing[32] = {0};
+	struct timeval now_time;
+	struct tm *tm = NULL;
+	gettimeofday(&now_time, NULL);
+    tm = localtime(&(now_time.tv_sec));
+
+	sprintf(current_timing, "%04d-%02d-%02d %02d:%02d:%02d",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+	char tmp[1024] = {0};
+	sprintf(tmp, "%s\n%s\n%s\n", APP_VERSION, get_protocol_version(), current_timing);
+
+	FILE *fp = fopen("/tmp/version", "wb");
+	fwrite(tmp, 1, strlen(tmp), fp);
+	fclose(fp);
+	fp = NULL;
+}
+
 int main(void)
 {
+	create_version_info();
+
 	int alarm_cnt = 0;
 
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));

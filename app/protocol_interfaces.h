@@ -59,6 +59,14 @@ protocol_t *get_protocol_handle(list_t *list, unsigned int protocol_id);
  */
 void deinit_protocol_lib(list_t *list);
 
+
+/**
+ * @brief   get_protocol_version 获取协议库版本号
+ *
+ * @return  
+ */
+char *get_protocol_version(void);
+
 #ifdef __cplusplus
 }
 #endif
