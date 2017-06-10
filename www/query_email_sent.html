@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>邮件发送记录查询</title>
-	<link rel="stylesheet" href="css/cssReset.css">
 	<style>
 	#table-box {
 		width: 99%;
@@ -126,8 +125,10 @@
 		margin-left: 5px;
 	}
 	</style>
+	<link rel="stylesheet" href="css/cssReset.css">
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
 </head>
-<body>
+<body onbeforeunload="clear_email_record()">
 	<div class="operation_box">
 		<div id="start_time_box">
 			<span>开始时间</span>
@@ -138,7 +139,7 @@
 			<input class="Wdate" type="text" id="end_time" onclick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})">
 		</div>
 		<label>设备名称</label>
-		<select id="device_name" name="device_name" style="width:130px; height:25px;" onchange="device_type_change()">
+		<select id="device_name" name="device_name" style="width:130px; height:25px;">
 		<option value="全部设备">全部设备</option>
 		</select>
 
@@ -150,7 +151,7 @@
 		</select>
 		<div id="add_user_box">
 			<input type="button" id="query_btn" value="查询" onclick="email_sent_query()">
-			<input type="button" id="export_btn" value="导出数据" onclick="export_data()">
+			<input type="button" id="export_btn" value="导出数据">
 		</div>
 	</div>
 	<div id="table-box">
@@ -174,11 +175,17 @@
 		</div>
 	</div>
 
+    <div class="jq-dialog" id="hint_dialog" title="查询结果">
+		<label id="hint_detail"></label>
+	</div>
+
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script src="js/export_excel.js"></script>
-	<script src="js/query_history.js"></script>
+    <script src="js/query_history.js"></script>
 	<script src="js/WdatePicker.js"></script>
+
 	<script>
         if (window.sessionStorage.getItem("user_information") == ""
             || window.sessionStorage.getItem("user_information") == null) {
@@ -210,7 +217,7 @@
 			window.localStorage.setItem("email_record", JSON.stringify(data_list));
 		}
 
-		function clear_sms_record() {
+		function clear_email_record() {
 			window.localStorage.removeItem("email_record");
 		}
 
@@ -222,6 +229,8 @@
 		}
 
 		function email_sent_query() {
+			$('#export_btn').removeClass('btn_enable');
+			$('#export_btn').removeAttr("onclick");
 			var json = new Object();
 			json.msg_type = "query_data";
 			json.cmd_type = "query_email_record";
@@ -244,8 +253,25 @@
 			            dataType: "json",
 			            data    : data,
 			            success : function(msg) {
-							traverse_email_record(msg.email_record);
-							$('#export_btn').addClass('btn_enable');
+                            if (msg.count > 0) {
+								$('#export_btn').addClass('btn_enable');
+								$('#export_btn').attr("onclick", "export_data();");
+                            	traverse_email_record(msg.email_record);
+							} else {
+								var html='没有符合条件的数据';
+								$('#hint_detail').html(html);
+								$('#hint_dialog').dialog({
+									resizable: false,
+									height: 160,
+									modal: true,
+									title: "数据查询",
+									buttons: {
+										"确定": function() {
+											$(this).dialog("close");
+										}
+									}
+								});
+							}
 			            },
 			        });
 		}

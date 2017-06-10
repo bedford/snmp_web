@@ -128,6 +128,7 @@
 	}
 	</style>
 	<link rel="stylesheet" href="css/cssReset.css">
+	<link rel="stylesheet" href="css/jquery-ui.min.css">
 </head>
 <body onbeforeunload="clear_data_record()">
 	<div class="operation_box">
@@ -146,7 +147,7 @@
 
 		<div id="add_user_box">
 			<input type="button" id="query_btn" value="查询" onclick="data_query()">
-			<input type="button" id="export_btn" value="导出数据" onclick="export_data()">
+			<input type="button" id="export_btn" value="导出数据">
 		</div>
 	</div>
 	<div id="table-box">
@@ -170,7 +171,12 @@
 		</div>
 	</div>
 
+	<div class="jq-dialog" id="hint_dialog" title="查询结果">
+		<label id="hint_detail"></label>
+	</div>
+
 	<script src="js/jquery-1.12.0.js"></script>
+	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
 	<script src="js/export_excel.js"></script>
     <script src="js/query_history.js"></script>
@@ -213,6 +219,8 @@
 		}
 
 		function data_query() {
+			$('#export_btn').removeClass('btn_enable');
+			$('#export_btn').removeAttr("onclick");
 			var json = new Object();
 			json.msg_type = "query_data";
 			json.cmd_type = "query_data_record";
@@ -236,8 +244,25 @@
 			            dataType: "json",
 			            data    : data,
 			            success : function(msg) {
-							traverse_data_record(msg.data_record);
-							$('#export_btn').addClass('btn_enable');
+							if (msg.count > 0) {
+								$('#export_btn').addClass('btn_enable');
+								$('#export_btn').attr("onclick", "export_data();");
+								traverse_data_record(msg.data_record);
+							} else {
+								var html='没有符合条件的数据';
+								$('#hint_detail').html(html);
+								$('#hint_dialog').dialog({
+									resizable: false,
+									height: 160,
+									modal: true,
+									title: "数据查询",
+									buttons: {
+										"确定": function() {
+											$(this).dialog("close");
+										}
+									}
+								});
+							}
 			            },
 			        });
 		}
