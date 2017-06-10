@@ -6,13 +6,12 @@
 	<link rel="stylesheet" href="css/cssReset.css">
 	<style>
 	#table-box {
-		width: 80%;
-		height: 70%;
+		width: 60%;
+		height: 90%;
 		position: relative;
 		box-sizing: border-box;
-		padding-bottom: 34px;
-		padding-top: 30px;
-		padding-left: 200px;
+		padding-top: 60px;
+		padding-left: 240px;
 	}
 
 	.table-content {
@@ -30,24 +29,13 @@
 	}
 
 	.table-content tr td {
-		width: 10%;
+		width: 30%;
 		text-align: center;
-		color: #393c3d;
-		border: 1px solid #a2a1a1;
 	}
 
 	.table-content tr td+td {
-		width: 25%;
-		text-align: center;
-		color: #393c3d;
-	}
-
-	.table-content tr:nth-child(odd) {
-		background-color: #dde6ea;
-	}
-
-	.table-content tr:nth-child(even) {
-		background-color: #fff;
+		width: 70%;
+		text-align: left;
 	}
 	</style>
 </head>
@@ -57,28 +45,36 @@
 		<div class="table-content">
 			<table id="system_info_table">
 			<tr>
-				<td>设备当前时间</td>
-				<td><span id="device_time"><span></td>
+				<td>设备开机时间</td>
+				<td><span id="run_time"><span></td>
 			</tr>
 			<tr>
-				<td>运行时间</td>
-				<td><span id="run_time"><span></td>
+				<td>设备当前时间</td>
+				<td><span id="device_time"><span></td>
 			</tr>
 			<tr>
 				<td>硬件版本</td>
 				<td><span id="hardware_version"><span></td>
 			</tr>
 			<tr>
-				<td>内核版本</td>
+				<td>系统版本</td>
 				<td><span id="bsp_version"><span></td>
 			</tr>
 			<tr>
-				<td>应用程序版本</td>
+				<td>主程序版本</td>
 				<td><span id="app_version"><span></td>
+			</tr>
+			<tr>
+				<td>协议库版本</td>
+				<td><span id="protocol_version"><span></td>
 			</tr>
 			<tr>
 				<td>设备序列号</td>
 				<td><span id="serial_number"><span></td>
+			</tr>
+			<tr>
+				<td>版本信息</td>
+				<td>测试beta版</td>
 			</tr>
 			</table>
 		</div>
@@ -138,6 +134,7 @@
 			$('#bsp_version').html(system_param_list.bsp_version);
 			$('#app_version').html(system_param_list.app_version);
 			$('#serial_number').html(system_param_list.serial_number);
+			$('#protocol_version').html(system_param_list.protocol_version);
 			interval_handle = setInterval("update_device_time()", 1000);
 		}
 

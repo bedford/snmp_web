@@ -688,10 +688,39 @@ static int system_runtime_info(cJSON *root, priv_info_t *priv)
                         tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
 
     cJSON_AddStringToObject(response, "device_time", time_in_sec);
-    cJSON_AddStringToObject(response, "run_time", "300");
+
+	FILE *fp = fopen("/tmp/version", "rb");
+	if (fp != NULL) {
+		char tmp[256] = {0};
+		if (fgets(tmp, 256, fp) != NULL) {
+			cJSON_AddStringToObject(response, "app_version", tmp);
+		}
+
+		if (fgets(tmp, 256, fp) != NULL) {
+			cJSON_AddStringToObject(response, "protocol_version", tmp);
+		}
+
+		if (fgets(tmp, 256, fp) != NULL) {
+			cJSON_AddStringToObject(response, "run_time", tmp);
+		}
+	} else {
+		cJSON_AddStringToObject(response, "app_version", "未知");
+		cJSON_AddStringToObject(response, "protocol_version", "未知");
+		cJSON_AddStringToObject(response, "run_time", "未知");
+	}
+	fclose(fp);
+
+	fp = fopen("/tmp/bsp_version", "rb");
+	if (fp != NULL) {
+		char tmp[128] = {0};
+		if (fgets(tmp, 128, fp) != NULL) {
+			cJSON_AddStringToObject(response, "bsp_version", tmp);
+		}
+	} else {
+		cJSON_AddStringToObject(response, "bsp_version", "未知");
+	}
+
 	cJSON_AddStringToObject(response, "hardware_version", "V1.2");
-	cJSON_AddStringToObject(response, "bsp_version", "V0.9");
-	cJSON_AddStringToObject(response, "app_version", "beta 0.1");
 	cJSON_AddStringToObject(response, "serial_number", "20160820010001");
 
     req_buf->fb_buf = cJSON_Print(response);
