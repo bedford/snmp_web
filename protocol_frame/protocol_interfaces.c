@@ -4,6 +4,8 @@
 #include "ups.h"
 #include "environment.h"
 
+static char *version_string = "OAO_plus_ups_20170610";
+
 int init_protocol_lib(list_t *protocol_list)
 {
     /* 设备注册函数调用 */
@@ -39,4 +41,9 @@ protocol_t *get_protocol_handle(list_t *protocol_list, unsigned int protocol_id)
 void deinit_protocol_lib(list_t *protocol_list)
 {
     protocol_list->destroy_list(protocol_list);
+}
+
+char *get_protocol_version(void)
+{
+    return version_string;
 }
