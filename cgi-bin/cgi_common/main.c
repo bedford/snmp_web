@@ -710,7 +710,7 @@ static int system_runtime_info(cJSON *root, priv_info_t *priv)
 	}
 	fclose(fp);
 
-	fp = fopen("/tmp/bsp_version", "rb");
+	fp = fopen("/bsp_version", "rb");
 	if (fp != NULL) {
 		char tmp[128] = {0};
 		if (fgets(tmp, 128, fp) != NULL) {
