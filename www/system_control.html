@@ -279,24 +279,35 @@
 							var html = '';
 							if (msg.status == 0) {
 								html = '升级成功，重启设备后生效，需立即重启请按"确认"键';
+								$('#hint_detail').html(html);
+								$('#hint_dialog').dialog({
+									resizable: false,
+									height: 200,
+									modal: true,
+									buttons: {
+										"确定": function() {
+											$(this).dialog("close");
+											reboot();
+										},
+										取消: function() {
+											$(this).dialog("close");
+										}
+									}
+								});
 							} else {
 								html = '升级失败';
-							}
-							$('#hint_detail').html(html);
-							$('#hint_dialog').dialog({
-								resizable: false,
-								height: 200,
-								modal: true,
-								buttons: {
-									"确定": function() {
-										$(this).dialog("close");
-										reboot();
-									},
-									取消: function() {
-										$(this).dialog("close");
+								$('#hint_detail').html(html);
+								$('#hint_dialog').dialog({
+									resizable: false,
+									height: 160,
+									modal: true,
+									buttons: {
+										"确定": function() {
+											$(this).dialog("close");
+										}
 									}
-								}
-							});
+								});
+							}
 		                },
 						error : function(msg) {
 							$('#upgrade_btn').removeAttr("disabled");
