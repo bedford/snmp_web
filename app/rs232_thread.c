@@ -175,36 +175,46 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				data_record_flag = 1;
 			}
 
-			if (last_value->status == UP_ALARM_ON) {
-				if (current_value->param_value < param_detail->up_free) {
-					alarm_status = UP_ALARM_OFF;
-					alarm_record_flag = 1;
-				}
-			} else if (last_value->status == LOW_ALARM_ON) {
-				if (current_value->param_value > param_detail->low_free) {
-					alarm_status = LOW_ALARM_OFF;
-					alarm_record_flag = 1;
-				}
-			} else {
-				if (current_value->param_value > param_detail->up_limit) {
-                    printf("up limit %f, current %f\n", param_detail->up_limit, current_value->param_value);
-					alarm_status = UP_ALARM_ON;
-					alarm_record_flag = 1;
-				} else if (current_value->param_value < param_detail->low_limit) {
-                    printf("low limit %f, current %f\n", param_detail->low_limit, current_value->param_value);
-					alarm_status = LOW_ALARM_ON;
-					alarm_record_flag = 1;
-				}
+            if (param_detail->alarm_enable == 0) {
+				alarm_status = NORMAL;
+				alarm_record_flag = 0;
+            } else {
+                if (last_value->status == UP_ALARM_ON) {
+                    if (current_value->param_value < param_detail->up_free) {
+                        alarm_status = UP_ALARM_OFF;
+                        alarm_record_flag = 1;
+                    }
+                } else if (last_value->status == LOW_ALARM_ON) {
+                    if (current_value->param_value > param_detail->low_free) {
+                        alarm_status = LOW_ALARM_OFF;
+                        alarm_record_flag = 1;
+                    }
+                } else {
+                    if (current_value->param_value > param_detail->up_limit) {
+                        printf("up limit %f, current %f\n", param_detail->up_limit, current_value->param_value);
+                        alarm_status = UP_ALARM_ON;
+                        alarm_record_flag = 1;
+                    } else if (current_value->param_value < param_detail->low_limit) {
+                        printf("low limit %f, current %f\n", param_detail->low_limit, current_value->param_value);
+                        alarm_status = LOW_ALARM_ON;
+                        alarm_record_flag = 1;
+                    }
+                }
 			}
 		} else {
-			if (current_value->enum_value != last_value->enum_value) {
-				if (current_value->enum_value == param_detail->enum_alarm_value) {
-					alarm_status = LEVEL_ALARM_ON;
-				} else {
-					alarm_status = LEVEL_ALARM_OFF;
-				}
-				alarm_record_flag = 1;
-			}
+			if (param_detail->alarm_enable == 0) {
+				alarm_status = NORMAL;
+				alarm_record_flag = 0;
+            } else {
+                if (current_value->enum_value != last_value->enum_value) {
+                    if (current_value->enum_value == param_detail->enum_alarm_value) {
+                        alarm_status = LEVEL_ALARM_ON;
+                    } else {
+                        alarm_status = LEVEL_ALARM_OFF;
+                    }
+                    alarm_record_flag = 1;
+                }
+            }
 		}
 		last_value->param_value = current_value->param_value;
 		last_value->enum_value = current_value->enum_value;
@@ -380,6 +390,7 @@ static void update_alarm_param(priv_info_t *priv, property_t *property)
 			param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 11]);
 			param_desc->low_free = atof(query_result.result[(i + 1) * query_result.column + 12]);
 			param_desc->update_threshold = atof(query_result.result[(i + 1) * query_result.column + 14]);
+			param_desc->alarm_enable = atof(query_result.result[(i + 1) * query_result.column + 19]);
 		}
 	}
 
