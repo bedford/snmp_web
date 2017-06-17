@@ -4,7 +4,7 @@
 #include "ups.h"
 #include "environment.h"
 
-static char *version_string = "OAO_plus_ups_20170610";
+static char *version_string = "OAO_plus_ups_20170617";
 
 int init_protocol_lib(list_t *protocol_list)
 {

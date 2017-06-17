@@ -51,6 +51,7 @@ static list_t *ups_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -65,6 +66,7 @@ static list_t *ups_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 230.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -79,6 +81,7 @@ static list_t *ups_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 230.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -93,6 +96,7 @@ static list_t *ups_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 80.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -107,6 +111,7 @@ static list_t *ups_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 55.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -121,6 +126,7 @@ static list_t *ups_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 100.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -135,6 +141,7 @@ static list_t *ups_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 50.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -155,6 +162,7 @@ static list_t *ups_status_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "input_abnormal");
     sprintf(param.param_enum[1].cn_desc, "%s", "市电异常");
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -175,6 +183,7 @@ static list_t *ups_status_param_desc(void)
     param.param_enum[0].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "battery_low");
     sprintf(param.param_enum[1].cn_desc, "%s", "电池低");
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -195,6 +204,7 @@ static list_t *ups_status_param_desc(void)
     param.param_enum[0].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "battery_notused");
     sprintf(param.param_enum[1].cn_desc, "%s", "旁路");
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -215,6 +225,7 @@ static list_t *ups_status_param_desc(void)
     param.param_enum[0].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "ups_abnormal");
     sprintf(param.param_enum[1].cn_desc, "%s", "异常");
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     return desc_list;

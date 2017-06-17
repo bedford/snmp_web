@@ -93,9 +93,7 @@ typedef struct
 
     unsigned int    param_type;					/* 参数类型(模拟量还是数字枚举量?) */
 
-    //unsigned int    alarm_delay;				/* 告警延时时间 */
-    //unsigned int    record_enable;			/* 参数是否入库 */
-    //unsigned int    update_interval;			/* 入库最大时间间隔 */
+    unsigned int    alarm_enable;				/* 是否启用报警 */
     float           update_threshold;           /* 模拟量入库阈值(数字枚举量状态切换时自动入库一次) */
 
 	unsigned int	enum_alarm_value;			/* 枚举量报警值 */

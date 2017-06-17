@@ -58,6 +58,7 @@ static list_t *environment_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -72,6 +73,7 @@ static list_t *environment_status_param_desc(void)
     //param.update_interval   = 30;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ANALOG;
+    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     return desc_list;
