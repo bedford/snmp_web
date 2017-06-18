@@ -6,6 +6,9 @@
 #include <sys/reboot.h>
 #include <sys/time.h>
 #include <time.h>
+#include <errno.h>
+#include <linux/watchdog.h>
+#include <fcntl.h>
 
 #include "db_access.h"
 #include "debug.h"
@@ -85,6 +88,32 @@ static void set_signal_handler(int signum, void func(int))
         sigaddset(&sigAction.sa_mask, SIGINT);
         sigAction.sa_handler = func;
         sigaction(signum, &sigAction, NULL);
+}
+
+static int watchdog_open(void)
+{
+    int fd = open("/dev/watchdog",O_RDWR);
+    if(fd < 0){
+        perror("/dev/watchdog");
+        return -1;
+    }
+
+    return fd;
+}
+
+static void watchdog_feed(int fd)
+{
+    ioctl(fd, WDIOC_KEEPALIVE);
+}
+
+static int watchdog_set_timeout(int fd, unsigned long timeout)
+{
+    if (ioctl(fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
+        perror("set watch dog timeout time failed");
+        return -1;
+    }
+
+    return 0;
 }
 
 void create_data_table(priv_info_t *priv)
@@ -631,23 +660,21 @@ int main(void)
 	drv_gpio_write(POFF_PIN, 1);
 	drv_gpio_open(PD_INT_PIN);
 
-	/* 打开看门狗 */
-	//drv_gpio_open(WATCHDOG_PIN);
-
 	int cnt = 0;
 	int power_off_cnt = 0;
 	int alarm_flag = 0;
-	unsigned char watchdog = 0;
+
+    int fd = watchdog_open();
+    if (fd < 0) {
+        exit(1);
+    }
+    unsigned long timeout = 30;
+    watchdog_set_timeout(fd, timeout);
 
 	int reboot_flag = 0;
     while (runnable) {
-		if (watchdog == 0) {
-			watchdog = 1;
-		} else {
-			watchdog = 0;
-		}
 		/* 喂狗 */
-		//drv_gpio_write(WATCHDOG_PIN, watchdog);
+		watchdog_feed(fd);
 
 		sleep(1);
 		drv_gpio_read(PD_INT_PIN, &power_status);
