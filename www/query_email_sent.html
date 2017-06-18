@@ -193,7 +193,6 @@
         }
 
 		function traverse_email_record(data_list) {
-			$("#email_table").empty();
 			var html="";
 			$.each(data_list, function(i, item) {
 				html+='<tr>';
@@ -201,13 +200,7 @@
 				html+='<td style="width:15%;">'+item.protocol_desc+'</td>';
 				html+='<td style="width:15%;">'+item.param_desc+'</td>';
 				html+='<td style="width:8%;">'+item.user+'</td>';
-
-				if (item.send_status == 1) {
-					html+='<td style="width:8%;">失败</td>';
-				} else {
-					html+='<td style="width:8%;">成功</td>';
-				}
-
+				html+='<td style="width:8%;">'+item.send_status+'</td>';
 				html+='<td style="width:39%;">'+item.email_content+'</td>';
 				html+='</tr>';
 			});
@@ -229,6 +222,7 @@
 		}
 
 		function email_sent_query() {
+			$("#email_table").empty();
 			$('#export_btn').removeClass('btn_enable');
 			$('#export_btn').removeAttr("onclick");
 			var json = new Object();

@@ -189,7 +189,6 @@
         }
 
 		function traverse_alarm_record(data_list) {
-			$("#alarm_table").empty();
 			var html="";
 			$.each(data_list, function(i, item) {
 				html+='<tr>';
@@ -219,6 +218,7 @@
 		}
 
 		function alarm_query() {
+			$("#alarm_table").empty();
 			$('#export_btn').removeClass('btn_enable');
 			$('#export_btn').removeAttr("onclick");
 			var json = new Object();
