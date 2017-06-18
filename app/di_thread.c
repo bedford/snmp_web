@@ -66,7 +66,7 @@ typedef struct {
 	di_param_t		di_param[4];
 } priv_info_t;
 
-static void alarm_data_record(priv_info_t *priv, int index, unsigned char value, int *alarm_cnt)
+static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 {
 	msg_t *msg = NULL;
 	di_param_t *param = &(priv->di_param[index]);
@@ -77,15 +77,12 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value,
 	}
 
 	char alarm_desc[64] = {0};
-	int cnt = *alarm_cnt;
 	if (value == param->alarm_level) {
-		*alarm_cnt = cnt + 1;
 		sprintf(alarm_desc, "%s%s告警", param->device_name,
 			(value == 1) ? "高电平" : "低电平");
 		priv->di_realdata->data[index].alarm_type = 1;
 		param->alarm_status = 1;
 	} else {
-		*alarm_cnt = cnt - 1;
 		sprintf(alarm_desc, "%s%s告警解除", param->device_name,
 			(value == 1) ? "高电平" : "低电平");
 		priv->di_realdata->data[index].alarm_type = 0;
@@ -250,8 +247,6 @@ static void *di_process(void *arg)
 	priv->email_rb_handle = (ring_buffer_t *)thread_param->email_rb_handle;
 	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
-	int *alarm_cnt = (int *)thread_param->alarm_cnt;
-
 	char sql[256] = {0};
 	query_result_t query_result;
 
@@ -270,7 +265,7 @@ static void *di_process(void *arg)
 			history_data_record(priv, index, value);
 
 			if (value == param->alarm_level) {
-				alarm_data_record(priv, index, value, alarm_cnt);
+				alarm_data_record(priv, index, value);
 			}
 		}
 	}
@@ -303,11 +298,11 @@ static void *di_process(void *arg)
 			di_data = &(priv->di_realdata->data[index]);
 			if (param->enable) {
 				if ((value == param->alarm_level) && (param->alarm_status == 0)) {
-					alarm_data_record(priv, index, value, alarm_cnt);
+					alarm_data_record(priv, index, value);
 				}
 
 				if ((value != param->alarm_level) && (param->alarm_status == 1)) {
-					alarm_data_record(priv, index, value, alarm_cnt);
+					alarm_data_record(priv, index, value);
 				}
 				//printf("line %d, func %s, now %d\n", __LINE__, __func__, value);
 			}

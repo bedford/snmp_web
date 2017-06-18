@@ -19,7 +19,6 @@ typedef struct
 	void 		*email_rb_handle;
 	void 		*alarm_pool_handle;
 
-	int 		*alarm_cnt;
 	void 		*data_db_handle;
 } rs485_thread_param_t;
 

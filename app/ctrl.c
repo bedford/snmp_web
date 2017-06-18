@@ -501,8 +501,6 @@ int main(void)
 {
 	create_version_info();
 
-	int alarm_cnt = 0;
-
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
 	priv->pref_handle = preference_create();
 	int init_flag = priv->pref_handle->get_init_flag(priv->pref_handle);
@@ -591,7 +589,6 @@ int main(void)
 	rs232_thread_param.email_rb_handle	= email_rb_handle;
 	rs232_thread_param.alarm_pool_handle = alarm_pool_handle;
 	rs232_thread_param.data_db_handle	= priv->data_db_handle;
-	rs232_thread_param.alarm_cnt		= &alarm_cnt;
 	rs232_thread->start(rs232_thread, (void *)&rs232_thread_param);
 
 	thread_t *rs485_thread = rs485_thread_create();
@@ -609,7 +606,6 @@ int main(void)
 	rs485_thread_param.email_rb_handle	= email_rb_handle;
 	rs485_thread_param.alarm_pool_handle = alarm_pool_handle;
 	rs485_thread_param.data_db_handle	= priv->data_db_handle;
-	rs485_thread_param.alarm_cnt		= &alarm_cnt;
 	rs485_thread->start(rs485_thread, (void *)&rs485_thread_param);
 
 	thread_t *di_thread = di_thread_create();
@@ -627,7 +623,6 @@ int main(void)
 	di_thread_param.email_rb_handle	= email_rb_handle;
 	di_thread_param.alarm_pool_handle = alarm_pool_handle;
 	di_thread_param.init_flag		= init_flag;
-	di_thread_param.alarm_cnt		= &alarm_cnt;
 	di_thread->start(di_thread, (void *)&di_thread_param);
 
 	/* 使能电源管理模块 */
@@ -639,11 +634,7 @@ int main(void)
 	/* 打开看门狗 */
 	//drv_gpio_open(WATCHDOG_PIN);
 
-	drv_gpio_open(DIGITAL_OUT_0);
 	int cnt = 0;
-	unsigned char value = 0;
-	drv_gpio_write(DIGITAL_OUT_0, value);
-	do_param_t do_param;
 	int power_off_cnt = 0;
 	int alarm_flag = 0;
 	unsigned char watchdog = 0;
@@ -659,17 +650,6 @@ int main(void)
 		//drv_gpio_write(WATCHDOG_PIN, watchdog);
 
 		sleep(1);
-		do_param = priv->pref_handle->get_do_param(priv->pref_handle);
-		if (do_param.beep_enable) {
-			if (alarm_cnt > 0) {
-				value = 1;
-				drv_gpio_write(DIGITAL_OUT_0, value);
-			} else {
-				value = 0;
-				drv_gpio_write(DIGITAL_OUT_0, value);
-			}
-		}
-
 		drv_gpio_read(PD_INT_PIN, &power_status);
 		if (power_status) {
 			if (alarm_flag == 0) {
@@ -698,8 +678,6 @@ int main(void)
 			}
 		}
     }
-	drv_gpio_close(DIGITAL_OUT_0);
-	alarm_cnt = 0;
 
 	rs232_thread->terminate(rs232_thread);
 	rs485_thread->terminate(rs485_thread);

@@ -137,7 +137,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	gettimeofday(&(priv->last_record_time), NULL);
 }
 
-static void compare_values(priv_info_t *priv, property_t *property, list_t *valid_value, int *alarm_cnt)
+static void compare_values(priv_info_t *priv, property_t *property, list_t *valid_value)
 {
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
@@ -226,7 +226,6 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 
 		if (alarm_record_flag) {
 			memset(alarm_desc, 0, sizeof(alarm_desc));
-            int cnt = *alarm_cnt;
 			if (alarm_status & 0x10) {	//解除报警
 				switch (alarm_status & 0x0F) {
 				case 0x1:
@@ -242,7 +241,6 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 					break;
 				}
 				alarm_status = NORMAL;
-				*alarm_cnt = cnt + 1;
 			} else {
 				switch (alarm_status & 0x0F) {
 				case 0x1:
@@ -261,7 +259,6 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 				default:
 					break;
 				}
-				*alarm_cnt = cnt - 1;
 			}
 
 			msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
@@ -466,8 +463,6 @@ static void *rs485_process(void *arg)
 	priv->protocol = protocol;
     print_snmp_protocol(protocol);
 
-	int *alarm_cnt = (int *)thread_param->alarm_cnt;
-
     uart_t *uart = uart_create(&(priv->uart_param));
     uart->open(uart);
 	drv_gpio_open(RS485_ENABLE);
@@ -506,7 +501,7 @@ static void *rs485_process(void *arg)
 						create_last_param_value_list(priv, property, value_list,
 							(db_access_t *)thread_param->data_db_handle);
 					} else {
-						compare_values(priv, property, value_list, alarm_cnt);
+						compare_values(priv, property, value_list);
 					}
 	                value_list->destroy_list(value_list);
 	                value_list = NULL;
