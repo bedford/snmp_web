@@ -41,7 +41,7 @@ typedef struct
 	float           param_value;
 	unsigned int    enum_value;
 	char			enum_desc[MIN_BUF_SIZE];
-	char			alarm_desc[MED_BUF_SIZE];
+	char			alarm_desc[MAX_BUF_SIZE];
 	unsigned int	alarm_type;
 	unsigned int	send_times;
 	char			reserved[4];
