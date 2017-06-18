@@ -2,7 +2,7 @@ SHARE_TARGET = libprotocol.so
 TEST_TARGET = protocol_test
 
 CC = arm-linux-gcc
-CFLAGS += -O3
+CFLAGS += -O3 -fPIC
 
 LIB_OBJS := list.o crc16.o ups.o environment.o protocol_interfaces.o
 
