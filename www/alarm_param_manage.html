@@ -36,7 +36,7 @@
 	}
 
 	.table-head table tr th {
-		width: 14%;
+		width: 12%;
 		text-align: center;
 		color: #fff;
 	}
@@ -55,7 +55,7 @@
 	}
 
 	.table-body table tr td {
-		width: 14%;
+		width: 12%;
 		text-align: center;
 		color: #393c3d;
 		border: 1px solid #4faeda;
@@ -93,6 +93,7 @@
 					<th>下限值</th>
 					<th>下限解除值</th>
 					<th>幅度</th>
+					<th>是否报警</th>
 				</thead>
 			</table>
 		</div>
@@ -143,6 +144,7 @@
 				obj.low_limit = $(this).children('td').eq(4).text();
 				obj.low_free = $(this).children('td').eq(5).text();
 				obj.update_threshold = $(this).children('td').eq(6).text();
+				obj.alarm_enable = $($(this).children('td').eq(7)).children('select').val();
 
 				for (var index = 0; index < window.array_data.length; index++) {
 					if ((window.array_data[index].id == obj.id)
@@ -150,7 +152,8 @@
 						&& (window.array_data[index].up_free == obj.up_free)
 						&& (window.array_data[index].low_limit == obj.low_limit)
 						&& (window.array_data[index].low_free == obj.low_free)
-						&& (window.array_data[index].update_threshold == obj.update_threshold)) {
+						&& (window.array_data[index].update_threshold == obj.update_threshold)
+						&& (window.array_data[index].alarm_enable == obj.alarm_enable)) {
 						return true;
 					}
 				}
@@ -234,7 +237,15 @@
 				+ item.up_free + '</td><td contenteditable="true">'
 				+ item.low_limit + '</td><td contenteditable="true">'
 				+ item.low_free + '</td><td contenteditable="true">'
-				+ item.update_threshold + '</td></tr>';
+				+ item.update_threshold + '</td>';
+
+				if (item.alarm_enable == 1) {
+					html += '<td><select id="select_enable_' + i +'"><option value="0">否</option>'
+						+ '<option value="1" selected>是</option></select></td></tr>';
+				} else {
+					html += '<td><select id="select_enable_' + i +'"><option value="0" selected>否</option>'
+						+ '<option value="1">是</option></select></td></tr>';
+				}
 			});
 			$("#alarm_param_table").append(html);
 		}

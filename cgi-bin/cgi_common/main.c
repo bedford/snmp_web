@@ -1548,7 +1548,11 @@ static int query_sms_record(cJSON *root, priv_info_t *priv)
 			//cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
 			cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 12]);
 			//cJSON_AddStringToObject(child, "phone", query_result.result[i * query_result.column + 13]);
-			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 14]);
+			if (atoi(query_result.result[i * query_result.column + 14]) == 1) {
+				cJSON_AddStringToObject(child, "send_status", "失败");
+			} else {
+				cJSON_AddStringToObject(child, "send_status", "成功");
+			}
 			cJSON_AddStringToObject(child, "sms_content", query_result.result[i * query_result.column + 15]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
@@ -1637,7 +1641,11 @@ static int query_email_record(cJSON *root, priv_info_t *priv)
 			//cJSON_AddStringToObject(child, "enum_desc", query_result.result[i * query_result.column + 11]);
 			cJSON_AddStringToObject(child, "user", query_result.result[i * query_result.column + 12]);
 			//cJSON_AddStringToObject(child, "email", query_result.result[i * query_result.column + 13]);
-			cJSON_AddStringToObject(child, "send_status", query_result.result[i * query_result.column + 14]);
+			if (atoi(query_result.result[i * query_result.column + 14]) == 1) {
+				cJSON_AddStringToObject(child, "send_status", "失败");
+			} else {
+				cJSON_AddStringToObject(child, "send_status", "成功");
+			}
 			cJSON_AddStringToObject(child, "email_content", query_result.result[i * query_result.column + 15]);
     		cJSON_AddItemToArray(sub_dir, child);
 		}
@@ -2023,6 +2031,7 @@ static int get_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 			cJSON_AddStringToObject(child, "low_cn_desc", query_result.result[i * query_result.column + 16]);
 			cJSON_AddStringToObject(child, "high_en_desc", query_result.result[i * query_result.column + 17]);
 			cJSON_AddStringToObject(child, "high_cn_desc", query_result.result[i * query_result.column + 18]);
+			cJSON_AddStringToObject(child, "alarm_enable", query_result.result[i * query_result.column + 19]);
     		cJSON_AddItemToArray(sub_dir, child);
     	}
 	}
@@ -2052,6 +2061,7 @@ static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 		double low_free = 0.0;
 		double low_limit = 0.0;
 		double update_threshold = 0.0;
+		int alarm_enable = 0;
 		int id = 0;
         for (i = 0; i < size; i++) {
             object = cJSON_GetArrayItem(array_item, i);
@@ -2061,9 +2071,10 @@ static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 			low_limit = atof(cJSON_GetObjectItem(object, "low_limit")->valuestring);
 			low_free = atof(cJSON_GetObjectItem(object, "low_free")->valuestring);
 			update_threshold = atof(cJSON_GetObjectItem(object, "update_threshold")->valuestring);
+			alarm_enable = atoi(cJSON_GetObjectItem(object, "alarm_enable")->valuestring);
 			memset(sql, 0, sizeof(sql));
-			sprintf(sql, "UPDATE %s SET up_limit=%.1f, up_free=%.1f, low_limit=%.1f, low_free=%.1f, update_threshold=%.1f WHERE id=%d",
-					"parameter", up_limit, up_free, low_limit, low_free, update_threshold, id);
+			sprintf(sql, "UPDATE %s SET up_limit=%.1f, up_free=%.1f, low_limit=%.1f, low_free=%.1f, update_threshold=%.1f, alarm_enable=%d WHERE id=%d",
+					"parameter", up_limit, up_free, low_limit, low_free, update_threshold, alarm_enable, id);
 			db_handle->action(db_handle, sql, error_msg);
         }
         object = NULL;
