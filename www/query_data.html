@@ -126,11 +126,18 @@
 		border: none;
 		margin-left: 5px;
 	}
+
+	#warning{
+		position:absolute;
+		left: 15%;
+		top: 15%;
+	}
 	</style>
 	<link rel="stylesheet" href="css/cssReset.css">
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 </head>
 <body onbeforeunload="clear_data_record()">
+	<div id="warning" style="margin-top: 9%;margin-left:10%;"></div>
 	<div class="operation_box">
 		<div id="start_time_box">
 			<span>开始时间</span>
@@ -189,7 +196,6 @@
         }
 
 		function traverse_data_record(data_list) {
-			$("#data_table").empty();
 			var html="";
 			$.each(data_list, function(i, item) {
 				html+="<tr>";
@@ -219,8 +225,6 @@
 		}
 
 		function data_query() {
-			$('#export_btn').removeClass('btn_enable');
-			$('#export_btn').removeAttr("onclick");
 			var json = new Object();
 			json.msg_type = "query_data";
 			json.cmd_type = "query_data_record";
@@ -238,16 +242,27 @@
 
 			json.cfg = cfg;
 			var data = $.toJSON(json);
+			$("#data_table").empty();
+			$('#export_btn').removeClass('btn_enable');
+			$('#export_btn').removeAttr("onclick");
+			$("#query_btn").attr("disabled","disabled");
 			$.ajax({
 			            url     : "/cgi-bin/common.cgi",
 			            type    : "POST",
 			            dataType: "json",
 			            data    : data,
+						beforeSend : function() {
+							var html ="<img id='loading_img' src='./images/loading.gif'>";
+							$('#warning').append(html);
+						},
+						complete : function() {
+							$('#loading_img').remove();
+						},
 			            success : function(msg) {
 							if (msg.count > 0) {
+								traverse_data_record(msg.data_record);
 								$('#export_btn').addClass('btn_enable');
 								$('#export_btn').attr("onclick", "export_data();");
-								traverse_data_record(msg.data_record);
 							} else {
 								var html='没有符合条件的数据';
 								$('#hint_detail').html(html);
@@ -263,7 +278,11 @@
 									}
 								});
 							}
+							$("#query_btn").removeAttr("disabled");
 			            },
+						error : function(msg, status) {
+							$("#query_btn").removeAttr("disabled");
+						}
 			        });
 		}
 
