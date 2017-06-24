@@ -146,8 +146,8 @@ static void update_email_contact(priv_info_t *priv)
 static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 {
 	priv->smtp_handle = smtp_create();
-	char email_content[128] = {0};
-	sprintf(email_content, "%s, %s", alarm_msg->protocol_name, alarm_msg->alarm_desc);
+	char email_content[256] = {0};
+	sprintf(email_content, "%s", alarm_msg->alarm_desc);
 
 	email_server_t email_server_param;
 	email_server_param = priv->pref_handle->get_email_server_param(priv->pref_handle);
@@ -245,7 +245,7 @@ static void send_alarm_email(priv_info_t *priv)
 			send_to_contact(priv, msg);
 			msg->send_times--;
 			priv->last_send_timing[i] = current_time;
-		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) > (priv->send_interval * 5 * 60)) {
+		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) >= (priv->send_interval * 5 * 60)) {
 			send_to_contact(priv, msg);
 			priv->last_send_timing[i] = current_time;
 			msg->send_times--;
@@ -323,6 +323,8 @@ static void *email_alarm_process(void *arg)
 					drv_gpio_write(DIGITAL_OUT_0, value);
 				}
 			}
+		} else {
+			sleep(1);
 		}
 
 		if (do_param.beep_enable == 0) {
