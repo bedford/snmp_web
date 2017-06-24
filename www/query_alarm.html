@@ -156,10 +156,10 @@
 				<thead>
 					<th style="width:15%;">时间</th>
 					<th style="width:15%;">设备名称</th>
-					<th style="width:15%;">参数名称</th>
-					<th style="width:10%;">参数值</th>
-					<th style="width:10%;">开关量</th>
-					<th style="width:25%;">告警说明</th>
+					<th style="width:10%;">参数名称</th>
+					<th style="width:8%;">参数值</th>
+					<th style="width:7%;">开关量</th>
+					<th style="width:35%;">告警说明</th>
 				</thead>
 			</table>
 		</div>
@@ -194,10 +194,10 @@
 				html+='<tr>';
 				html+='<td style="width:15%;">' + item.created_time + '</td>';
 				html+='<td style="width:15%;">' + item.protocol_desc + '</td>';
-				html+='<td style="width:15%;">' + item.param_desc + '</td>';
-				html+='<td style="width:10%;">' + item.analog_value + '</td>';
-				html+='<td style="width:10%;">' + item.enum_value + '</td>';
-				html+='<td style="width:25%;">' + item.alarm_desc + '</td>';
+				html+='<td style="width:10%;">' + item.param_desc + '</td>';
+				html+='<td style="width:8%;">' + item.analog_value + '</td>';
+				html+='<td style="width:7%;">' + item.enum_value + '</td>';
+				html+='<td style="width:35%;">' + item.alarm_desc + '</td>';
 				html+='</tr>'
 			});
 			$("#alarm_table").append(html);
