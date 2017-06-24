@@ -27,13 +27,13 @@ typedef void (*_release_property)(list_t *property_list);
  */
 typedef struct
 {
-	unsigned int 	    protocol_id;
-	unsigned char	    protocol_name[MIN_PROTOCOL_LEN];		/* 协议库名称 */
-	unsigned char	    protocol_desc[MIN_PROTOCOL_LEN];		/* 协议库描述 */
+    unsigned int    protocol_id;                        /* 协议库编号 */
+    unsigned char   protocol_name[MIN_PROTOCOL_LEN];    /* 协议库名称 */
+    unsigned char   protocol_desc[MIN_PROTOCOL_LEN];    /* 协议库描述 */
 
-	_get_property       get_property;
+    _get_property       get_property;
     _release_property   release_property;
-	_calculate_data     calculate_data;
+    _calculate_data     calculate_data;
 } protocol_t;
 
 /**

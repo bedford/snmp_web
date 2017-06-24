@@ -12,6 +12,13 @@ enum
 extern "C" {
 #endif
 
+/**
+ * @brief   environment_register 温湿度传感器注册接口
+ *
+ * @param   protocol_list
+ *
+ * @return
+ */
 int environment_register(list_t *protocol_list);
 
 #ifdef __cplusplus

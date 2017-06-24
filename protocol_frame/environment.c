@@ -14,6 +14,11 @@ enum
     READ_STATUS_CMD = 0x01,
 };
 
+/*
+* @brief    get_status_cmd  获取查询温湿度传感器状态的命令参数
+*
+* @return
+*/
 static cmd_t get_status_cmd(void)
 {
     cmd_t tmp_cmd;
@@ -42,6 +47,11 @@ static cmd_t get_status_cmd(void)
     return tmp_cmd;
 }
 
+/**
+ * @brief   environment_status_param_desc 温湿度传感器获取命令返回参数的初始化
+ *
+ * @return
+ */
 static list_t *environment_status_param_desc(void)
 {
     list_t *desc_list = list_create(sizeof(param_desc_t));
@@ -55,7 +65,6 @@ static list_t *environment_status_param_desc(void)
     param.up_free   = 55.0;
     param.low_limit = 5.0;
     param.low_free  = 10.0;
-    //param.update_interval   = 30;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ANALOG;
     param.alarm_enable = 1;
@@ -70,7 +79,6 @@ static list_t *environment_status_param_desc(void)
     param.up_free   = 85.0;
     param.low_limit = 20.0;
     param.low_free  = 25.0;
-    //param.update_interval   = 30;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ANALOG;
     param.alarm_enable = 1;
@@ -79,6 +87,17 @@ static list_t *environment_status_param_desc(void)
     return desc_list;
 }
 
+/**
+ * @brief   calculate_device_status 查询温湿度传感器状态返回值处理
+ *
+ * @param   cmd
+ * @param   param_desc_list
+ * @param   data
+ * @param   data_len
+ * @param   valid_value
+ *
+ * @return
+ */
 static int calculate_device_status(cmd_t    *cmd,
                                    list_t   *param_desc_list,
                                    char     *data,
@@ -113,7 +132,6 @@ static int calculate_device_status(cmd_t    *cmd,
     param_value_t tmp_value;
     memset(&tmp_value, 0, sizeof(param_value_t));
     tmp_value.param_id = desc->param_id;
-    //tmp_value.param_type = PARAM_TYPE_ANALOG;
     tmp_value.param_value =(double)((unsigned char)data[3] * 256 + (unsigned char)data[4]) / 10;
     tmp_value.enum_value = 0;
     valid_value->push_back(valid_value, &tmp_value);
@@ -121,7 +139,6 @@ static int calculate_device_status(cmd_t    *cmd,
     desc = (param_desc_t *)param_desc_list->get_index_value(param_desc_list, 1);
     memset(&tmp_value, 0, sizeof(param_value_t));
     tmp_value.param_id = desc->param_id;
-    //tmp_value.param_type = PARAM_TYPE_ANALOG;
     tmp_value.param_value =(double)((unsigned char)data[5] * 256 + (unsigned char)data[6]) / 10;
     tmp_value.enum_value = 0;
     valid_value->push_back(valid_value, &tmp_value);
@@ -131,6 +148,17 @@ static int calculate_device_status(cmd_t    *cmd,
     return ret;
 }
 
+/**
+ * @brief   calculate_device_data 协议处理函数
+ *          根据命令编号调用不同的处理函数,按协议标准进行解析
+ *
+ * @param   property
+ * @param   data
+ * @param   len
+ * @param   valid_value
+ *
+ * @return
+ */
 static int calculate_device_data(property_t *property, char *data, int len, list_t *valid_value)
 {
     cmd_t *cmd = &(property->cmd);

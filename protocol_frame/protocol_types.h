@@ -103,9 +103,6 @@ typedef struct
 typedef struct
 {
     unsigned int    param_id;
-    //unsigned char   param_name[MIN_PARAM_LEN];
-    //unsigned char   param_unit[MIN_PARAM_LEN];
-    //param_type_t    param_type;
     float           param_value;
     unsigned int    enum_value;
 	unsigned int	status;		//0, 正常; 1,上限报警; 2,下限报警; 4,阈值报警
