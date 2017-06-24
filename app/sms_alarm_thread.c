@@ -168,7 +168,7 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 	int i = 0;
 	msg_t *msg = NULL;
 	char sms_content[256] = {0};
-	sprintf(sms_content, "%s, %s", alarm_msg->protocol_name, alarm_msg->alarm_desc);
+	sprintf(sms_content, "%s", alarm_msg->alarm_desc);
 	for (i = 0; i < priv->sms_contact_cnt; i++) {
 		msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
 		if (msg == NULL) {
@@ -234,7 +234,7 @@ static void send_alarm_sms(priv_info_t *priv)
 			send_to_contact(priv, msg);
 			priv->last_send_timing[i] = current_time;
 			msg->send_times--;
-		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) > (priv->send_interval * 5 * 60)) {
+		} else if ((current_time.tv_sec - priv->last_send_timing[i].tv_sec) >= (priv->send_interval * 5 * 60)) {
 			send_to_contact(priv, msg);
 			priv->last_send_timing[i] = current_time;
 			msg->send_times--;
@@ -275,6 +275,8 @@ static void *sms_alarm_process(void *arg)
 			update_alarm_table(priv, alarm_msg);
 			priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
 			alarm_msg = NULL;
+		} else {
+			sleep(1);
 		}
 
 		if (priv->pref_handle->get_sms_contact_flag(priv->pref_handle)) {
