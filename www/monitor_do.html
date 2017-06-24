@@ -107,6 +107,10 @@
             window.location.href = "/index.html";
         }
 
+		function leave_page() {
+			clearInterval(interval_handle);
+		}
+
 		function set_do_param() {
 			var json = new Object();
 			json.msg_type = "param_setting";
@@ -221,6 +225,7 @@
 
 		$(document).ready(function() {
 			load_do_param();
+			interval_handle = setInterval("load_do_param()", 5000);
 		});
     </script>
 </body>
