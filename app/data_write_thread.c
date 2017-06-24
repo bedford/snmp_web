@@ -38,38 +38,39 @@ static void clean_old_data(db_access_t *data_db_handle)
 	char sql[1024] = {0};
 	char error_msg[512] = {0};
 
-	char timeout[32] = {0};
+	char timeout_string[32] = {0};
 	struct timeval now_time;
 	struct tm *tm = NULL;
 	gettimeofday(&now_time, NULL);
 
-	now_time.tv_sec -= HISTORY_DATA_TIMEOUT;
-    tm = localtime(&(now_time.tv_sec));
-	sprintf(timeout, "%04d-%02d-%02d %02d:%02d:%02d",
+	struct timeval timeout;
+	timeout.tv_sec = now_time.tv_sec - HISTORY_DATA_TIMEOUT;
+    tm = localtime(&(timeout.tv_sec));
+	sprintf(timeout_string, "%04d-%02d-%02d %02d:%02d:%02d",
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 			tm->tm_hour, tm->tm_min, tm->tm_sec);
 	sprintf(sql, "delete from %s where id in (select id from %s where created_time < '%s' ORDER BY id limit 5)",
-			"data_record", "data_record", timeout);
+			"data_record", "data_record", timeout_string);
 	memset(error_msg, 0, sizeof(error_msg));
 	data_db_handle->action(data_db_handle, sql, error_msg);
 
-	now_time.tv_sec -= ALARM_DATA_TIMEOUT;
-    tm = localtime(&(now_time.tv_sec));
-	sprintf(timeout, "%04d-%02d-%02d %02d:%02d:%02d",
+	timeout.tv_sec = now_time.tv_sec - ALARM_DATA_TIMEOUT;
+    tm = localtime(&(timeout.tv_sec));
+	sprintf(timeout_string, "%04d-%02d-%02d %02d:%02d:%02d",
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 			tm->tm_hour, tm->tm_min, tm->tm_sec);
 	sprintf(sql, "delete from %s where id in (select id from %s where created_time < '%s' ORDER BY id limit 5)",
-			"alarm_record", "alarm_record", timeout);
+			"alarm_record", "alarm_record", timeout_string);
 	memset(error_msg, 0, sizeof(error_msg));
 	data_db_handle->action(data_db_handle, sql, error_msg);
 
 	sprintf(sql, "delete from %s where id in (select id from %s where send_time < '%s' ORDER BY id limit 5)",
-			"email_record", "email_record", timeout);
+			"email_record", "email_record", timeout_string);
 	memset(error_msg, 0, sizeof(error_msg));
 	data_db_handle->action(data_db_handle, sql, error_msg);
 
 	sprintf(sql, "delete from %s where id in (select id from %s where send_time < '%s' ORDER BY id limit 5)",
-			"sms_record", "sms_record", timeout);
+			"sms_record", "sms_record", timeout_string);
 	memset(error_msg, 0, sizeof(error_msg));
 	data_db_handle->action(data_db_handle, sql, error_msg);
 }
@@ -91,11 +92,11 @@ static void *data_in_db_process(void *arg)
 	while (thiz->thread_status) {
 		if (rb_handle->pop(rb_handle, (void **)&msg)) {
 			gettimeofday(&current_time, NULL);
-			if ((current_time.tv_sec - last_timing.tv_sec) > (5 * 60)) {
+			if ((current_time.tv_sec - last_timing.tv_sec) >= (5 * 60)) {
 				last_timing = current_time;
 				clean_old_data(data_db_handle);
 			} else {
-				usleep(50000);
+				usleep(200000);
 			}
 			continue;
 		}
