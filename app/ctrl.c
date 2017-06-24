@@ -169,7 +169,7 @@ void create_data_table(priv_info_t *priv)
              enum_value INTEGER, \
              enum_en_desc VARCHAR(32), \
              enum_cn_desc VARCHAR(32), \
-             alarm_desc VARCHAR(64))", "alarm_record");
+             alarm_desc VARCHAR(256))", "alarm_record");
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
@@ -189,7 +189,7 @@ void create_data_table(priv_info_t *priv)
 			 name VARCHAR(32), \
 		 	 phone VARCHAR(32), \
 		 	 send_status INTEGER, \
-             sms_content VARCHAR(64))", "sms_record");
+             sms_content VARCHAR(256))", "sms_record");
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
@@ -209,7 +209,7 @@ void create_data_table(priv_info_t *priv)
 			 name VARCHAR(32), \
 		 	 email VARCHAR(64), \
 		 	 send_status INTEGER, \
-             email_content VARCHAR(64))", "email_record");
+             email_content VARCHAR(256))", "email_record");
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 }
 
