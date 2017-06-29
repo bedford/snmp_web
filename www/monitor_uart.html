@@ -10,7 +10,7 @@
 		height: 80%;
 		position: relative;
 		box-sizing: border-box;
-		margin-top: 20px;
+		margin-top: 5px;
 	}
 
 	.table-head {
@@ -49,23 +49,48 @@
 		background-color: #f01818;
 	}
 
-	/*.table-body tr:nth-child(odd) {
-		background-color: #dde6ea;
-	}
-
-	.table-body tr:nth-child(even) {
-		background-color: #fff;
-	}*/
-
 	.table-body table tr td {
-		/*width: 16%;*/
 		text-align: center;
 		color: #393c3d;
 		border: 1px solid #4faeda;
 	}
+
+	.table-uart-body {
+		margin-top: 5px;
+	}
+
+	.table-uart-body table tr {
+		height: 20px;
+		background-color: #e4eff5;
+	}
+
+	.table-uart-body table tr td {
+		width: 16%;
+		text-align: center;
+		color: #393c3d;
+		border: 1px solid #4faeda;
+	}
+
+	.table-uart-body td:nth-child(odd) {
+		background-color: #dde6ea;
+	}
+
+	.table-uart-body td:nth-child(even) {
+		background-color: #fff;
+	}
 	</style>
 </head>
 <body onbeforeunload="leave_page()">
+	<div class="table-uart-body">
+		<table id="uart_status">
+			<tr>
+				<td>RS232串口读写状态</td>
+				<td id="rs232_rw_status">异常</td>
+				<td>RS485串口读写状态</td>
+				<td id="rs485_rw_status">异常</td>
+			</tr>
+		</table>
+	</div>
 	<div id="table-box">
 		<div class="table-head">
 			<table>
@@ -166,6 +191,9 @@
 
 					$("#real_data").append(html);
 				});
+				$('#rs232_rw_status').val("正常");
+			} else {
+				$('#rs232_rw_status').val("异常");
 			}
 
 			if (msg.rs485_count > 0) {
@@ -200,6 +228,9 @@
 
 					$("#real_data").append(html);
 				});
+				$('#rs485_rw_status').val("正常");
+			} else {
+				$('#rs485_rw_status').val("异常");
 			}
 		}
 
