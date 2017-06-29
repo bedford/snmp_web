@@ -4,11 +4,10 @@
 
 #include "mib_create.h"
 
-#define VENDOR			"JiTong"
 #define IO_DEVICE_NAME	"device_io"
 #define MIB_NODE_NAME	"JT_Guard"
 
-unsigned int fill_mib_header(unsigned char *buffer, unsigned int offset)
+unsigned int fill_mib_header(unsigned char *buffer, unsigned int offset, char *spec_name, int spec_code)
 {
 	unsigned char *tmp_buf = buffer + offset;
 	sprintf(tmp_buf, "%s DEFINITIONS ::= BEGIN \n\n"
@@ -21,8 +20,8 @@ unsigned int fill_mib_header(unsigned char *buffer, unsigned int offset)
 					 "\t\tFROM RFC-1212\n"
 					 "\tTRAP-TYPE\n"
 					 "\t\tFROM RFC-1215;\n\n"
-					 "%s OBJECT IDENTIFIER ::= { enterprises 999 }\n\n",
-					 MIB_NODE_NAME, VENDOR);
+					 "%s OBJECT IDENTIFIER ::= { enterprises %d }\n\n",
+					 MIB_NODE_NAME, spec_name, spec_code);
 
 	offset += strlen(tmp_buf);
 
@@ -53,10 +52,10 @@ unsigned int fill_di_mib(unsigned char *buffer, unsigned int offset, di_param_t 
 	return offset;
 }
 
-unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset)
+unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset, char *spec_name)
 {
 	unsigned char *tmp_buf = buffer + offset;
-    sprintf(tmp_buf, "%s\tOBJECT IDENTIFIER ::= { JiTong %d }\n\n", IO_DEVICE_NAME, 0x01);
+    sprintf(tmp_buf, "%s\tOBJECT IDENTIFIER ::= { %s %d }\n\n", IO_DEVICE_NAME, spec_name, 0x01);
 	offset += strlen(tmp_buf);
 
 	int i = 0;
@@ -81,11 +80,11 @@ unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset)
 }
 
 unsigned int fill_protocol_mib(unsigned char *buffer, unsigned int offset,
-		unsigned int protocol_id, char *protocol_name)
+		unsigned int protocol_id, char *protocol_name, char *spec_name)
 {
     unsigned char *tmp_buf = buffer + offset;
-    sprintf(tmp_buf, "%s\tOBJECT IDENTIFIER ::= { JiTong %d }\n\n",
-			protocol_name, protocol_id);
+    sprintf(tmp_buf, "%s\tOBJECT IDENTIFIER ::= { %s %d }\n\n",
+			protocol_name, spec_name, protocol_id);
 	offset += strlen(tmp_buf);
 
 	return offset;

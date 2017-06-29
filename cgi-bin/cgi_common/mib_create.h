@@ -41,14 +41,14 @@ typedef struct {
 	unsigned int	alarm_method;				/* 报警方式 */
 } di_param_t;
 
-unsigned int fill_mib_header(unsigned char *buffer, unsigned int offset);
+unsigned int fill_mib_header(unsigned char *buffer, unsigned int offset, char *spec_name, int spec_code);
 
 unsigned int fill_di_mib(unsigned char *buffer, unsigned int offset, di_param_t *di_param);
 
-unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset);
+unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset, char *spec_name);
 
 unsigned int fill_protocol_mib(unsigned char *buffer, unsigned int offset,
-		unsigned int protocol_id, char *protocol_name);
+		unsigned int protocol_id, char *protocol_name, char *spec_name);
 
 unsigned int fill_param_mib(unsigned char *buffer, unsigned int offset,
 				char *protocol_name, param_desc_t *param_desc);

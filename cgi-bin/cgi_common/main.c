@@ -10,7 +10,6 @@
 #include "db_access.h"
 #include "mib_create.h"
 
-#include "lf_queue.h"
 #include "common_type.h"
 #include "shm_object.h"
 #include "semaphore.h"
@@ -2347,9 +2346,13 @@ static int mib_download(req_buf_t *req_buf, priv_info_t *priv, const char *filen
 	unsigned int offset = 0;
 	unsigned int i = 0;
 
+    int enterprise_code = iniparser_getint(priv->dic, "SNMP:enterprise_code", 999);
+	char enterprise_name[32] = {0};
+    strcpy(enterprise_name, iniparser_getstring(priv->dic, "SNMP:enterprise_name", "Jitong"));
+
 	char *buf = calloc(1, MAX_MIB_SIZE);
-	offset = fill_mib_header(buf, offset);
-	offset = fill_do_mib(buf, offset);
+	offset = fill_mib_header(buf, offset, enterprise_name, enterprise_code);
+	offset = fill_do_mib(buf, offset, enterprise_name);
 
 	char sql[256] = {0};
 	sprintf(sql, "SELECT * FROM %s ORDER by id", "di_cfg");
@@ -2402,7 +2405,7 @@ static int mib_download(req_buf_t *req_buf, priv_info_t *priv, const char *filen
 
 		if (query_result.row > 0) {
 			offset = fill_protocol_mib(buf, offset, protocol_id_array[i],
-				query_result.result[query_result.column + 2]);
+				query_result.result[query_result.column + 2], enterprise_name);
 
 			unsigned int j = 0;
 			param_desc_t param_desc;
