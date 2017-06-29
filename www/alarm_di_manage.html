@@ -245,10 +245,16 @@
 
 				if (item.alarm_level == 1) {
 					html += '<td><select id="select_alarm_level_' + i +'"><option value="0">低</option>'
-							+ '<option value="1" selected>高</option></select></td>';
-				} else {
+							+ '<option value="1" selected>高</option>'
+							+ '<option value="2">不告警</option></select></td>';
+				} else if (item.alarm_level == 0) {
 					html += '<td><select id="select_alarm_level_' + i +'"><option value="0" selected>低</option>'
-							+ '<option value="1">高</option></select></td>';
+							+ '<option value="1">高</option>'
+							+ '<option value="2">不告警</option></select></td>';
+				} else {
+					html += '<td><select id="select_alarm_level_' + i +'"><option value="0">低</option>'
+							+ '<option value="1">高</option>'
+							+ '<option value="2" selected>不告警</option></select></td>';
 				}
 
 				if (item.enable == 1) {
