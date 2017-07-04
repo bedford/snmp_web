@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "protocol_interfaces.h"
 
@@ -17,7 +18,6 @@
 #include "ring_buffer.h"
 #include "mem_pool.h"
 
-#include "lf_queue.h"
 #include "common_type.h"
 #include "shm_object.h"
 #include "semaphore.h"
@@ -33,7 +33,6 @@ typedef struct {
 	ring_buffer_t	*email_rb_handle;
 	mem_pool_t		*alarm_pool_handle;
 
-	lf_queue_t		rs232_queue;
 	uart_realdata_t *rs232_realdata;
 
 	int				sem_id;
@@ -136,7 +135,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	gettimeofday(&(priv->last_record_time), NULL);
 }
 
-static void compare_values(priv_info_t *priv, property_t *property, list_t *valid_value)
+static int compare_values(priv_info_t *priv, property_t *property, list_t *valid_value, int offset)
 {
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
@@ -160,7 +159,7 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 	int data_record_flag = 0;
 	int alarm_record_flag = 0;
 	unsigned int alarm_status = NORMAL;
-	char alarm_desc[64] = {0};
+	char alarm_desc[256] = {0};
 	for (i = 0; i < list_size; i++) {
 		data_record_flag = 0;
 		alarm_record_flag = 0;
@@ -225,16 +224,33 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 
 		if (alarm_record_flag) {
 			memset(alarm_desc, 0, sizeof(alarm_desc));
+
+			struct timeval now_time;
+			struct tm *tm = NULL;
+			gettimeofday(&now_time, NULL);
+			tm = localtime(&(now_time.tv_sec));
 			if (alarm_status & 0x10) {	//解除报警
 				switch (alarm_status & 0x0F) {
 				case 0x1:
-					sprintf(alarm_desc, "%s%s", param_detail->param_desc, "上限报警解除");
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%s",
+						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+						tm->tm_hour, tm->tm_min, tm->tm_sec,
+						priv->protocol->protocol_name,
+						param_detail->param_desc, "上限报警解除");
 					break;
 				case 0x2:
-					sprintf(alarm_desc, "%s%s", param_detail->param_desc, "下限报警解除");
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%s",
+						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+						tm->tm_hour, tm->tm_min, tm->tm_sec,
+						priv->protocol->protocol_name,
+						param_detail->param_desc, "下限报警解除");
 					break;
 				case 0x4:
-					sprintf(alarm_desc, "%s%s", param_detail->param_desc, "恢复");
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%s",
+						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+						tm->tm_hour, tm->tm_min, tm->tm_sec,
+						priv->protocol->protocol_name,
+						param_detail->param_desc, "恢复");
 					break;
 				default:
 					break;
@@ -243,17 +259,27 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			} else {
 				switch (alarm_status & 0x0F) {
 				case 0x1:
-					sprintf(alarm_desc, "%s%.1f%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%.1f%s%s",
+						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+						tm->tm_hour, tm->tm_min, tm->tm_sec,
+						priv->protocol->protocol_name,
 						param_detail->param_desc, current_value->param_value,
 						param_detail->param_unit, ",超过阈值");
 					break;
 				case 0x2:
-					sprintf(alarm_desc, "%s%.1f%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%.1f%s%s",
+						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+						tm->tm_hour, tm->tm_min, tm->tm_sec,
+						priv->protocol->protocol_name,
 						param_detail->param_desc, current_value->param_value,
 						param_detail->param_unit, ",低于阈值");
 					break;
 				case 0x4:
-					sprintf(alarm_desc, "%s%s", param_detail->param_desc, "异常");
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%s",
+						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+						tm->tm_hour, tm->tm_min, tm->tm_sec,
+						priv->protocol->protocol_name,
+						param_detail->param_desc, "异常");
 					break;
 				default:
 					break;
@@ -345,25 +371,23 @@ static void compare_values(priv_info_t *priv, property_t *property, list_t *vali
 			msg = NULL;
 		}
 
-		priv->rs232_realdata->data[i].protocol_id = priv->protocol->protocol_id;
-		strcpy(priv->rs232_realdata->data[i].protocol_name, priv->protocol->protocol_name);
-		strcpy(priv->rs232_realdata->data[i].protocol_desc, priv->protocol->protocol_desc);
-		priv->rs232_realdata->data[i].param_id = current_value->param_id;
-		strcpy(priv->rs232_realdata->data[i].param_name, param_detail->param_name);
-		strcpy(priv->rs232_realdata->data[i].param_desc, param_detail->param_desc);
-		priv->rs232_realdata->data[i].param_type = param_detail->param_type;
-		priv->rs232_realdata->data[i].analog_value = current_value->param_value;
-		strcpy(priv->rs232_realdata->data[i].param_unit, param_detail->param_unit);
-		priv->rs232_realdata->data[i].enum_value = current_value->enum_value;
-		strcpy(priv->rs232_realdata->data[i].enum_en_desc, param_detail->param_enum[current_value->enum_value].en_desc);
-		strcpy(priv->rs232_realdata->data[i].enum_cn_desc, param_detail->param_enum[current_value->enum_value].cn_desc);
-		priv->rs232_realdata->data[i].alarm_type = alarm_status;
+		priv->rs232_realdata->data[i + offset].protocol_id = priv->protocol->protocol_id;
+		strcpy(priv->rs232_realdata->data[i + offset].protocol_name, priv->protocol->protocol_name);
+		strcpy(priv->rs232_realdata->data[i + offset].protocol_desc, priv->protocol->protocol_desc);
+		priv->rs232_realdata->data[i + offset].param_id = current_value->param_id;
+		strcpy(priv->rs232_realdata->data[i + offset].param_name, param_detail->param_name);
+		strcpy(priv->rs232_realdata->data[i + offset].param_desc, param_detail->param_desc);
+		priv->rs232_realdata->data[i + offset].param_type = param_detail->param_type;
+		priv->rs232_realdata->data[i + offset].analog_value = current_value->param_value;
+		strcpy(priv->rs232_realdata->data[i + offset].param_unit, param_detail->param_unit);
+		priv->rs232_realdata->data[i + offset].enum_value = current_value->enum_value;
+		strcpy(priv->rs232_realdata->data[i + offset].enum_en_desc, param_detail->param_enum[current_value->enum_value].en_desc);
+		strcpy(priv->rs232_realdata->data[i + offset].enum_cn_desc, param_detail->param_enum[current_value->enum_value].cn_desc);
+		priv->rs232_realdata->data[i + offset].alarm_type = alarm_status;
 	}
-	priv->rs232_realdata->cnt = list_size;
+	priv->rs232_realdata->cnt = list_size + offset;
 
-	semaphore_p(priv->sem_id);
-	priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
-	semaphore_v(priv->sem_id);
+	return list_size + param_cnt;
 }
 
 static void update_alarm_param(priv_info_t *priv, property_t *property)
@@ -473,7 +497,9 @@ static void *rs232_process(void *arg)
 	char buf[256] = {0};
     property_t *property = NULL;
 	int update_alarm_param_flag = 1;
+	int param_cnt = 0;
 	while (thiz->thread_status) {
+		param_cnt = 0;
 		for (index = 0; index < property_list_size; index++) {
 			property = property_list->get_index_value(property_list, index);
 	        memset(buf, 0, sizeof(buf));
@@ -495,16 +521,24 @@ static void *rs232_process(void *arg)
 						create_last_param_value_list(priv, property, value_list,
 							(db_access_t *)thread_param->data_db_handle);
 					} else {
-						compare_values(priv, property, value_list);
+						param_cnt = compare_values(priv, property, value_list, param_cnt);
 					}
 	                value_list->destroy_list(value_list);
 	                value_list = NULL;
-	            }
+	            } else if (len == 0) {
+					priv->rs232_realdata->cnt = 0;
+					//semaphore_p(priv->sem_id);
+					//priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
+					//semaphore_v(priv->sem_id);
+				}
 	        } else {
 	            printf("write cmd failed------------\n");
 	        }
 			sleep(1);
 		}
+        semaphore_p(priv->sem_id);
+        priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
+        semaphore_v(priv->sem_id);
 
 		if (update_alarm_param_flag) {
 			update_alarm_param_flag = 0;
