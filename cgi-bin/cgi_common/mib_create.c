@@ -7,6 +7,16 @@
 #define IO_DEVICE_NAME	"device_io"
 #define MIB_NODE_NAME	"JT_Guard"
 
+/**
+ * @brief   fill_mib_header 生成MIB文件头
+ *
+ * @param   buffer
+ * @param   offset
+ * @param   spec_name
+ * @param   spec_code
+ *
+ * @return
+ */
 unsigned int fill_mib_header(unsigned char *buffer, unsigned int offset, char *spec_name, int spec_code)
 {
 	unsigned char *tmp_buf = buffer + offset;
@@ -28,6 +38,15 @@ unsigned int fill_mib_header(unsigned char *buffer, unsigned int offset, char *s
 	return offset;
 }
 
+/**
+ * @brief   fill_di_mib 生成DI输入的MIB信息
+ *
+ * @param   buffer
+ * @param   offset
+ * @param   di_param
+ *
+ * @return
+ */
 unsigned int fill_di_mib(unsigned char *buffer, unsigned int offset, di_param_t *di_param)
 {
 	unsigned char *tmp_buf = buffer + offset;
@@ -52,6 +71,15 @@ unsigned int fill_di_mib(unsigned char *buffer, unsigned int offset, di_param_t 
 	return offset;
 }
 
+/**
+ * @brief   fill_do_mib 生成DO的MIB信息
+ *
+ * @param   buffer
+ * @param   offset
+ * @param   spec_name
+ *
+ * @return
+ */
 unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset, char *spec_name)
 {
 	unsigned char *tmp_buf = buffer + offset;
@@ -79,6 +107,17 @@ unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset, char *spec_
 	return offset;
 }
 
+/**
+ * @brief   fill_protocol_mib 生成协议库的MIB信息
+ *
+ * @param   buffer
+ * @param   offset
+ * @param   protocol_id
+ * @param   protocol_name
+ * @param   spec_name
+ *
+ * @return
+ */
 unsigned int fill_protocol_mib(unsigned char *buffer, unsigned int offset,
 		unsigned int protocol_id, char *protocol_name, char *spec_name)
 {
@@ -90,6 +129,16 @@ unsigned int fill_protocol_mib(unsigned char *buffer, unsigned int offset,
 	return offset;
 }
 
+/**
+ * @brief   fill_param_mib 根据协议库参数生成MIB文件信息
+ *
+ * @param   buffer
+ * @param   offset
+ * @param   protocol_name
+ * @param   param_desc
+ *
+ * @return
+ */
 unsigned int fill_param_mib(unsigned char *buffer, unsigned int offset,
 				char *protocol_name, param_desc_t *param_desc)
 {
@@ -125,6 +174,14 @@ unsigned int fill_param_mib(unsigned char *buffer, unsigned int offset,
 	return offset;
 }
 
+/**
+ * @brief   fill_mib_tail 生成MIB文件尾
+ *
+ * @param   buffer
+ * @param   offset
+ *
+ * @return
+ */
 unsigned int fill_mib_tail(unsigned char *buffer, unsigned int offset)
 {
 	unsigned char *tmp_buf = buffer + offset;

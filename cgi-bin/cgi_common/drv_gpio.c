@@ -26,13 +26,13 @@
 
 typedef struct
 {
-    int   fd;         /* IO文件描述符 */
-    unsigned int  port;       /* 端口,如GPA,GPB,GPC, 则GPA为0 */
-    unsigned int  pin;        /* 对应端口的顺序号,从0~31 */
+    int   fd;                   /* IO文件描述符 */
+    unsigned int  port;         /* 端口,如GPA,GPB,GPC, 则GPA为0 */
+    unsigned int  pin;          /* 对应端口的顺序号,从0~31 */
     unsigned char   direction;  /* 0:out, 1:in */
     unsigned char   edge;       /* 0:无,电平触平; 1:上升沿; 2:下降沿; 3:兼用上升沿和下降沿两种 */
     unsigned char   cur_val;    /* 当前值 */
-    char    *name;      /* GPIO的名称 */
+    char    *name;              /* GPIO的名称 */
 } gpio_info_t;
 
 static gpio_info_t gpio_info[] = {
@@ -59,9 +59,9 @@ static gpio_info_t gpio_info[] = {
 
 int drv_gpio_open(enum GPIO_NAME gpio_name)
 {
-    int   ret = RET_OK;
-    int   tmp_fd  = -1;
-    int   pin_num = 0;
+    int     ret = RET_OK;
+    int     tmp_fd  = -1;
+    int     pin_num = 0;
     char    fname[64] = {0};
 
     if (gpio_name >= MAX_GPIO_NAME) {

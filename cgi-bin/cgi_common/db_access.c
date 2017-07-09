@@ -11,6 +11,15 @@ typedef struct
     sqlite3     *db;
 } priv_info;
 
+/**
+ * @brief   execute_no_query 非数据查询类的操作调用接口
+ *
+ * @param   thiz
+ * @param   sql
+ * @param   err_msg
+ *
+ * @return
+ */
 static int execute_no_query(db_access_t *thiz, const char *sql, char *err_msg)
 {
     priv_info *priv = (priv_info *)thiz->priv;
@@ -42,35 +51,17 @@ static int execute_no_query(db_access_t *thiz, const char *sql, char *err_msg)
     return 0;
 }
 
+/**
+ * @brief   execute_query 数据库查询调用接口
+ *
+ * @param   thiz
+ * @param   sql
+ * @param   query_result
+ *
+ * @return
+ */
 static int execute_query(db_access_t *thiz, const char *sql, query_result_t *query_result)
 {
-#if 0
-    int ret = -1;
-    int row = 0;
-    int column = 0;
-    char *errMsg = NULL;
-    char **result;
-    priv_info *priv = (priv_info *)thiz->priv;
-
-    ret = sqlite3_get_table(priv->db, sql, &result, &row, &column, &errMsg);
-    if (ret != SQLITE_OK) {
-        fprintf(stderr, "errmsg:%s, sql %s\n", sqlite3_errmsg(priv->db), sql);
-        sqlite3_free(errMsg);
-        return -1;
-    }
-
-    //printf("sql:%s\n row %d, column %d\n", sql, row, column);
-    if (row > 0) {
-        int i = 1;
-        for (i = 1; i < (row + 1); i++) {
-            strcpy(list->filename[list->size], result[i * column + 1]);
-            list->size++;
-        }
-    }
-    sqlite3_free_table(result);
-
-    return 0;
-#else
 	priv_info *priv = (priv_info *)thiz->priv;
 	char *error_msg = NULL;
 	int ret = sqlite3_get_table(priv->db, sql, &(query_result->result), &(query_result->row),
@@ -82,9 +73,16 @@ static int execute_query(db_access_t *thiz, const char *sql, query_result_t *que
 	}
 
 	return 0;
-#endif
 }
 
+/**
+ * @brief   db_free_table 释放查询返回数据资源
+ *
+ * @param   thiz
+ * @param   result
+ *
+ * @return
+ */
 static int db_free_table(db_access_t *thiz, char **result)
 {
 	sqlite3_free_table(result);
@@ -92,6 +90,11 @@ static int db_free_table(db_access_t *thiz, char **result)
 	return 0;
 }
 
+/**
+ * @brief   db_access_destroy 释放数据库访问对象资源
+ *
+ * @param   thiz
+ */
 static void db_access_destroy(db_access_t *thiz)
 {
     if (thiz != NULL) {
@@ -107,6 +110,13 @@ static void db_access_destroy(db_access_t *thiz)
     }
 }
 
+/**
+ * @brief   db_access_create 创建访问数据库对象
+ *
+ * @param   file_name
+ *
+ * @return
+ */
 db_access_t *db_access_create(const char *file_name)
 {
         db_access_t *thiz = NULL;
