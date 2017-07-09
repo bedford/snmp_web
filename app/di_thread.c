@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include "protocol_interfaces.h"
 
@@ -17,7 +18,6 @@
 #include "ring_buffer.h"
 #include "mem_pool.h"
 
-#include "lf_queue.h"
 #include "common_type.h"
 #include "shm_object.h"
 #include "semaphore.h"
@@ -44,6 +44,7 @@ typedef struct {
 	unsigned int	alarm_level;				/* 报警电平 */
 	unsigned int	alarm_method;				/* 报警方式 */
 	unsigned int	alarm_status;				/* 状态 */
+	unsigned int	last_status;				/* 上一个状态 */
 } di_param_t;
 
 typedef struct {
@@ -56,7 +57,6 @@ typedef struct {
 	ring_buffer_t	*email_rb_handle;
 	mem_pool_t		*alarm_pool_handle;
 
-	lf_queue_t		di_queue;
 	di_realdata_t	*di_realdata;
 
 	int				sem_id;
@@ -76,15 +76,24 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 		return;
 	}
 
-	char alarm_desc[64] = {0};
+	struct timeval now_time;
+	struct tm *tm = NULL;
+	gettimeofday(&now_time, NULL);
+    tm = localtime(&(now_time.tv_sec));
+
+	char alarm_desc[128] = {0};
 	if (value == param->alarm_level) {
-		sprintf(alarm_desc, "%s%s告警", param->device_name,
+		sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]DI:%s%s告警",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec, param->device_name,
 			(value == 1) ? "高电平" : "低电平");
 		priv->di_realdata->data[index].alarm_type = 1;
 		param->alarm_status = 1;
 	} else {
-		sprintf(alarm_desc, "%s%s告警解除", param->device_name,
-			(value == 1) ? "高电平" : "低电平");
+		sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]DI:%s%s告警解除",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec, param->device_name,
+			(value == 1) ? "低电平" : "高电平");
 		priv->di_realdata->data[index].alarm_type = 0;
 		param->alarm_status = 0;
 	}
@@ -263,6 +272,7 @@ static void *di_process(void *arg)
 		drv_gpio_read(index, &value);
 		if (param->enable) {
 			history_data_record(priv, index, value);
+			param->last_status = value;
 
 			if (value == param->alarm_level) {
 				alarm_data_record(priv, index, value);
@@ -308,9 +318,16 @@ static void *di_process(void *arg)
 			}
 			update_di_realdata(priv, di_data, index, value);
 
-			if (timeout_record_flag && param->enable) {
-				history_data_record(priv, index, value);
+			if (param->enable) {
+				if (timeout_record_flag) {
+					history_data_record(priv, index, value);
+				} else {
+					if (param->last_status != value) {
+						history_data_record(priv, index, value);
+					}
+				}
 			}
+			param->last_status = value;
 		}
 		priv->di_realdata->cnt = 4;
 
