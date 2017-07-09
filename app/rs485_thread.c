@@ -81,30 +81,6 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	int i = 0;
 	msg_t *msg = NULL;
 	for (i = 0; i < list_size; i++) {
-		current_value = valid_value->get_index_value(valid_value, i);
-		param_desc = desc_list->get_index_value(desc_list, i);
-
-		priv->rs485_realdata->data[i].protocol_id = priv->protocol->protocol_id;
-		strcpy(priv->rs485_realdata->data[i].protocol_name, priv->protocol->protocol_name);
-		strcpy(priv->rs485_realdata->data[i].protocol_desc, priv->protocol->protocol_desc);
-		priv->rs485_realdata->data[i].param_id = current_value->param_id;
-		strcpy(priv->rs485_realdata->data[i].param_name, param_desc->param_name);
-		strcpy(priv->rs485_realdata->data[i].param_desc, param_desc->param_desc);
-		priv->rs485_realdata->data[i].param_type = param_desc->param_type;
-		priv->rs485_realdata->data[i].analog_value = current_value->param_value;
-		strcpy(priv->rs485_realdata->data[i].param_unit, param_desc->param_unit);
-		priv->rs485_realdata->data[i].enum_value = current_value->enum_value;
-		strcpy(priv->rs485_realdata->data[i].enum_en_desc, param_desc->param_enum[current_value->enum_value].en_desc);
-		strcpy(priv->rs485_realdata->data[i].enum_cn_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
-		priv->rs485_realdata->data[i].alarm_type = 0;
-	}
-	priv->rs485_realdata->cnt = list_size;
-
-	semaphore_p(priv->sem_id);
-	priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs485_realdata));
-	semaphore_v(priv->sem_id);
-
-	for (i = 0; i < list_size; i++) {
 		memset(&last_value, 0, sizeof(param_value_t));
 		current_value = valid_value->get_index_value(valid_value, i);
 		param_desc = desc_list->get_index_value(desc_list, i);
@@ -202,18 +178,31 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
                 }
 			}
 		} else {
+            if (current_value->enum_value != last_value->enum_value) {
+				data_record_flag = 1;
+			}
+
 			if (param_detail->alarm_enable == 0) {
 				alarm_status = NORMAL;
 				alarm_record_flag = 0;
             } else {
-                if (current_value->enum_value != last_value->enum_value) {
-                    if (current_value->enum_value == param_detail->enum_alarm_value) {
-                        alarm_status = LEVEL_ALARM_ON;
-                    } else {
-                        alarm_status = LEVEL_ALARM_OFF;
-                    }
-                    alarm_record_flag = 1;
-                }
+                unsigned int alarm_raise_level = param_detail->up_limit;
+				unsigned int alarm_discard_level = param_detail->up_free;
+				if (alarm_raise_level != alarm_discard_level) {
+					if (last_value->status == LEVEL_ALARM_ON) {
+						if (current_value->enum_value == alarm_discard_level) {
+							alarm_status = LEVEL_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					} else {
+						if (current_value->enum_value == alarm_raise_level) {
+							alarm_status = LEVEL_ALARM_ON;
+							alarm_record_flag = 1;
+						} else {
+							alarm_status = NORMAL;
+						}
+					}
+				}
             }
 		}
 		last_value->param_value = current_value->param_value;
@@ -388,7 +377,7 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 	}
 	priv->rs485_realdata->cnt = list_size + offset;
 
-	return list_size + param_cnt;
+	return list_size + offset;
 }
 
 static void update_alarm_param(priv_info_t *priv, property_t *property)
