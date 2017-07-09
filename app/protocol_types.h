@@ -21,8 +21,8 @@ enum
  */
 enum
 {
-    VERIFY_TYPE_NONE    = 1,	/* 无数据校验 */
-    VERIFY_TYPE_CRC,			/* CRC校验 */
+    VERIFY_TYPE_NONE    = 1,    /* 无数据校验 */
+    VERIFY_TYPE_CRC,            /* CRC校验 */
 };
 
 /**
@@ -30,8 +30,8 @@ enum
  */
 enum
 {
-    PARAM_TYPE_ANALOG   = 1,	/* 模拟量 */
-    PARAM_TYPE_ENUM,			/* 枚举量 */
+    PARAM_TYPE_ANALOG   = 1,    /* 模拟量 */
+    PARAM_TYPE_ENUM,            /* 枚举量 */
 };
 
 /**
@@ -54,17 +54,18 @@ typedef struct
 
 enum
 {
-	PROTOCOL_DEVICE_TYPE_MASK	= 0x0000FF00,
-	PROTOCOL_SUB_TYPE_MASK		= 0x000000FF,
+    PROTOCOL_DEVICE_TYPE_MASK	= 0x0000FF00,   /* 设备主类型掩码 */
+    PROTOCOL_SUB_TYPE_MASK		= 0x000000FF,   /* 设备子类型掩码 */
 };
 
 enum
 {
-	LOCAL_DI			= 0x00000001,	/* 设备本身的DI */
+    LOCAL_DI            = 0x00000001,   /* 设备本身的DI */
     TEMP_HUM_DEVICE     = 0x00000100,   /* 温湿度检测类设备 */
     WATER_LEAK_DETECT   = 0x00000200,   /* 漏水检测类 */
     AIR_CONDITION       = 0x00000300,   /* 空调检测类 */
     UPS                 = 0x00000400,   /* UPS */
+    EXTERNAL_IO         = 0x00000500,   /* 外接IO传感器 */
 };
 
 
@@ -74,41 +75,36 @@ enum
 
 typedef struct
 {
-	unsigned char	en_desc[MIN_PARAM_LEN];	/* 枚举量英文描述 */
-    unsigned char   cn_desc[MIN_PARAM_LEN];	/* 枚举量中文描述 */
-    unsigned int    value;					/* 枚举量值 */
+    unsigned char   en_desc[MIN_PARAM_LEN]; /* 枚举量英文描述 */
+    unsigned char   cn_desc[MIN_PARAM_LEN]; /* 枚举量中文描述 */
+    unsigned int    value;                  /* 枚举量值 */
 } param_enum_t;
 
 typedef struct
 {
     unsigned int    param_id;                   /* 参数编号 */
-    unsigned char   param_name[MIN_PARAM_LEN];	/* 参数名称 */
-    unsigned char   param_unit[MIN_PARAM_LEN];	/* 参数单位 */
-    unsigned char   param_desc[MIN_PARAM_LEN];	/* 参数描述 */
+    unsigned char   param_name[MIN_PARAM_LEN];  /* 参数名称 */
+    unsigned char   param_unit[MIN_PARAM_LEN];  /* 参数单位 */
+    unsigned char   param_desc[MIN_PARAM_LEN];  /* 参数描述 */
 
-    float           up_limit;					/* 上限 */
-    float           up_free;					/* 上限解除 */
-    float           low_limit;					/* 下限 */
-    float           low_free;					/* 下限解除 */
+    float           up_limit;                   /* 上限 */
+    float           up_free;                    /* 上限解除 */
+    float           low_limit;                  /* 下限 */
+    float           low_free;                   /* 下限解除 */
 
-    unsigned int    param_type;					/* 参数类型(模拟量还是数字枚举量?) */
+    unsigned int    param_type;                 /* 参数类型(模拟量还是数字枚举量?) */
 
-    unsigned int    alarm_enable;				/* 是否启用报警 */
+    unsigned int    alarm_enable;               /* 是否启用报警 */
     float           update_threshold;           /* 模拟量入库阈值(数字枚举量状态切换时自动入库一次) */
-
-	unsigned int	enum_alarm_value;			/* 枚举量报警值 */
     param_enum_t    param_enum[PARAM_ENUM_NUM]; /* 数字枚举量 */
 } param_desc_t;
 
 typedef struct
 {
     unsigned int    param_id;
-    //unsigned char   param_name[MIN_PARAM_LEN];
-    //unsigned char   param_unit[MIN_PARAM_LEN];
-    //param_type_t    param_type;
     float           param_value;
     unsigned int    enum_value;
-	unsigned int	status;		//0, 正常; 1,上限报警; 2,下限报警; 4,阈值报警
+    unsigned int	status;		//0, 正常; 1,上限报警; 2,下限报警; 4,阈值报警
 } param_value_t;
 
 
