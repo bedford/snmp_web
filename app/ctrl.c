@@ -28,6 +28,7 @@
 #include "sms_alarm_thread.h"
 #include "email_alarm_thread.h"
 #include "data_write_thread.h"
+#include "beep_thread.h"
 #include "version.h"
 
 typedef struct {
@@ -654,6 +655,16 @@ int main(void)
 	di_thread_param.init_flag		= init_flag;
 	di_thread->start(di_thread, (void *)&di_thread_param);
 
+	thread_t *beep_thread = beep_thread_create();
+	if (!beep_thread) {
+		printf("create beep thread failed\n");
+		return -1;
+	}
+	beep_thread_param_t beep_thread_param;
+	beep_thread_param.self			= beep_thread;
+	beep_thread_param.pref_handle	= priv->pref_handle;
+	beep_thread->start(beep_thread, (void *)&beep_thread_param);
+
 	/* 使能电源管理模块 */
 	unsigned char power_status = 0;
 	drv_gpio_open(POFF_PIN);
@@ -736,6 +747,11 @@ int main(void)
 	data_write_thread->join(data_write_thread);
 	data_write_thread->destroy(data_write_thread);
 	data_write_thread = NULL;
+
+	beep_thread->terminate(beep_thread);
+	beep_thread->join(beep_thread);
+	beep_thread->destroy(beep_thread);
+	beep_thread = NULL;
 
 	if (priv->sys_db_handle) {
     	priv->sys_db_handle->destroy(priv->sys_db_handle);

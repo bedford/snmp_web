@@ -15,7 +15,6 @@
 #include "ring_buffer.h"
 #include "lf_queue.h"
 #include "common_type.h"
-#include "drv_gpio.h"
 
 #include "smtp.h"
 
@@ -285,16 +284,9 @@ static void *email_alarm_process(void *arg)
 	alarm_msg_t *alarm_msg = NULL;
 	priv->send_times = 1;
 	priv->send_interval = 0;
-
-	int alarm_cnt = 0;
-	drv_gpio_open(DIGITAL_OUT_0);
-	unsigned char value = 0;
-	drv_gpio_write(DIGITAL_OUT_0, value);
-	do_param_t do_param;
 	while (thiz->thread_status) {
         priv->send_times = priv->pref_handle->get_send_email_times(priv->pref_handle);
 		priv->send_interval = priv->pref_handle->get_send_email_interval(priv->pref_handle);
-		do_param = priv->pref_handle->get_do_param(priv->pref_handle);
 
 		if (priv->email_rb_handle->pop(priv->email_rb_handle, (void **)&alarm_msg) == 0) {
 			update_alarm_table(priv, alarm_msg);
@@ -305,31 +297,10 @@ static void *email_alarm_process(void *arg)
 				printf("##############  push to lock-free queue done ##############\n");	
 			}
 
-			if (alarm_msg->alarm_type == ALARM_RAISE) {
-				alarm_cnt++;
-			} else {
-				alarm_cnt--;
-			}
-
 			priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
 			alarm_msg = NULL;
-
-			if (do_param.beep_enable) {
-				if (alarm_cnt > 0) {
-					value = 1;
-					drv_gpio_write(DIGITAL_OUT_0, value);
-				} else {
-					value = 0;
-					drv_gpio_write(DIGITAL_OUT_0, value);
-				}
-			}
 		} else {
 			sleep(1);
-		}
-
-		if (do_param.beep_enable == 0) {
-			value = 0;
-			drv_gpio_write(DIGITAL_OUT_0, value);
 		}
 
 		if (priv->pref_handle->get_email_contact_flag(priv->pref_handle)) {
@@ -340,7 +311,6 @@ static void *email_alarm_process(void *arg)
 		send_alarm_email(priv);
 		alarm_msg = NULL;
 	}
-	drv_gpio_close(DIGITAL_OUT_0);
 
 	clear_ring_buffer(priv->rb_handle, priv->mpool_handle);
     lf_queue_fini(&queue);
