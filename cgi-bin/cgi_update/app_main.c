@@ -4,6 +4,14 @@
 
 #include "cJSON.h"
 
+/**
+ * @brief   get_filename 提取文件名
+ *
+ * @param   src
+ * @param   filename
+ *
+ * @return
+ */
 static int get_filename(const char *src, char *filename)
 {
     int ret = -1;
