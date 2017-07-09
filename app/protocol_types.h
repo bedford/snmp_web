@@ -39,23 +39,23 @@ enum
  */
 typedef struct
 {
-    unsigned int    cmd_id;					/* 指令编号 */
-    unsigned char   cmd_name[MAX_CMD_LEN];	/* 指令名称及说明 */
-    unsigned char   cmd_code[MAX_CMD_LEN];	/* 指令对应的数据 */
-    unsigned char   end_code[MIN_CMD_LEN];	/* 指令结束符 */
+    unsigned int    cmd_id;                 /* 指令编号 */
+    unsigned char   cmd_name[MAX_CMD_LEN];  /* 指令名称及说明 */
+    unsigned char   cmd_code[MAX_CMD_LEN];  /* 指令对应的数据 */
+    unsigned char   end_code[MIN_CMD_LEN];  /* 指令结束符 */
     unsigned int    cmd_len;                /* 指令数据长度 */
     unsigned int    end_len;                /* 结束符长度 */
-    unsigned int    cmd_format;				/* 指令数据格式类型 */
-    unsigned int    read_timeout;			/* 读取返回数据超时时间 */
-    unsigned int    check_len;				/* 指令返回数据长度 */
-    unsigned int    verify_type;			/* 指令返回数据校验方式 */
-    unsigned int    record_interval;		/* 入库最大时间间隔 */
+    unsigned int    cmd_format;             /* 指令数据格式类型 */
+    unsigned int    read_timeout;           /* 读取返回数据超时时间 */
+    unsigned int    check_len;              /* 指令返回数据长度 */
+    unsigned int    verify_type;            /* 指令返回数据校验方式 */
+    unsigned int    record_interval;        /* 入库最大时间间隔 */
 } cmd_t;
 
 enum
 {
-    PROTOCOL_DEVICE_TYPE_MASK	= 0x0000FF00,   /* 设备主类型掩码 */
-    PROTOCOL_SUB_TYPE_MASK		= 0x000000FF,   /* 设备子类型掩码 */
+    PROTOCOL_DEVICE_TYPE_MASK   = 0x0000FF00,   /* 设备主类型掩码 */
+    PROTOCOL_SUB_TYPE_MASK      = 0x000000FF,   /* 设备子类型掩码 */
 };
 
 enum
@@ -101,10 +101,10 @@ typedef struct
 
 typedef struct
 {
-    unsigned int    param_id;
-    float           param_value;
-    unsigned int    enum_value;
-    unsigned int	status;		//0, 正常; 1,上限报警; 2,下限报警; 4,阈值报警
+    unsigned int    param_id;       /* 参数编号 */
+    float           param_value;    /* 参数模拟量值 */
+    unsigned int    enum_value;     /* 参数枚举量值 */
+    unsigned int    status;         /* 0, 正常; 1,上限报警; 2,下限报警; 4,阈值报警 */
 } param_value_t;
 
 
