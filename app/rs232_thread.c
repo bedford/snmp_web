@@ -239,7 +239,8 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
 						priv->protocol->protocol_name,
-						param_detail->param_desc, "恢复");
+						param_detail->param_desc,
+						(current_value->enum_value == 1) ? "低电平报警解除" : "高电平报警解除");
 					break;
 				default:
 					break;
@@ -268,7 +269,8 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
 						priv->protocol->protocol_name,
-						param_detail->param_desc, "异常");
+						param_detail->param_desc,
+						(current_value->enum_value == 1) ? "高电平报警" : "低电平报警");
 					break;
 				default:
 					break;
