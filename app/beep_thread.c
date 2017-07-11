@@ -31,7 +31,7 @@ static void *beep_process(void *arg)
 	int rs485_sem_id = semaphore_create(RS485_KEY);
 
 	uart_realdata_t *uart_realdata = NULL;
-    int ret = 0;
+	int ret = 0;
 	do {
 		rs232_shm_handle = shm_object_create(RS232_SHM_KEY, sizeof(uart_realdata_t));
 		if (rs232_shm_handle == NULL) {
@@ -72,14 +72,14 @@ static void *beep_process(void *arg)
 	} while(0);
 
 	do_param_t do_param;
-    int alarm_flag = 0;
+	int alarm_flag = 0;
 	drv_gpio_open(DIGITAL_OUT_0);
-    unsigned char last_value = 0;
+	unsigned char last_value = 0;
 	unsigned char value = 0;
 	drv_gpio_write(DIGITAL_OUT_0, value);
-    int i = 0;
+	int i = 0;
 	while (thiz->thread_status) {
-        alarm_flag = 0;
+		alarm_flag = 0;
 
 		semaphore_p(di_sem_id);
 		ret = di_shm_handle->shm_get(di_shm_handle, (void *)di_realdata);
@@ -92,7 +92,7 @@ static void *beep_process(void *arg)
 			}
 		}
 
-        semaphore_p(rs232_sem_id);
+		semaphore_p(rs232_sem_id);
 		ret = rs232_shm_handle->shm_get(rs232_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs232_sem_id);
 		if (ret == 0) {
@@ -103,7 +103,7 @@ static void *beep_process(void *arg)
             }
         }
 
-        semaphore_p(rs485_sem_id);
+		semaphore_p(rs485_sem_id);
 		ret = rs485_shm_handle->shm_get(rs485_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs485_sem_id);
 		if (ret == 0) {
@@ -138,9 +138,9 @@ static void *beep_process(void *arg)
 		}
         sleep(2);
 	}
-    drv_gpio_close(DIGITAL_OUT_0);
+	drv_gpio_close(DIGITAL_OUT_0);
 
-    pref_handle = NULL;
+	pref_handle = NULL;
 	thiz = NULL;
 	thread_param = NULL;
 
