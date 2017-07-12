@@ -269,8 +269,7 @@ void update_uart_cfg(priv_info_t *priv)
 			low_en_desc VARCHAR(32), \
 			low_cn_desc VARCHAR(32), \
 			high_en_desc VARCHAR(32), \
-			high_cn_desc VARCHAR(32), \
-			alarm_enable INTEGER)", "parameter");
+			high_cn_desc VARCHAR(32))", "parameter");
     priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
 	memset(sql, 0, sizeof(sql));
@@ -323,15 +322,14 @@ void update_uart_cfg(priv_info_t *priv)
 				sprintf(sql, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, \
 						cmd_id, param_id, param_name, param_desc, param_unit, \
 						up_limit, up_free, low_limit, low_free, param_type, update_threshold, \
-						low_en_desc, low_cn_desc, high_en_desc, high_cn_desc, alarm_enable) \
-						VALUES (%d, '%s', '%s', %d, %d, '%s', '%s', '%s', '%.1f', '%.1f', '%.1f', '%.1f',\
-							%d, '%.1f', '%s', '%s', '%s', '%s', %d)",
+						low_en_desc, low_cn_desc, high_en_desc, high_cn_desc) \
+						VALUES (%d, '%s', '%s', %d, %d, '%s', '%s', '%s', '%s', '%s', '%s', '%s',\
+							%d, '%.1f', '%s', '%s', '%s', '%s')",
 						"parameter", tmp->protocol_id, tmp->protocol_name, tmp->protocol_desc,
 						cmd->cmd_id, param->param_id, param->param_name, param->param_desc,
-						param->param_unit, param->up_limit, param->up_free,
-						param->low_limit, param->low_free, param->param_type,
+						param->param_unit, "", "", "", "", param->param_type,
 						param->update_threshold, param->param_enum[0].en_desc, param->param_enum[0].cn_desc,
-						param->param_enum[1].en_desc, param->param_enum[1].cn_desc, param->alarm_enable);
+						param->param_enum[1].en_desc, param->param_enum[1].cn_desc);
     			priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 			}
 		}
@@ -480,7 +478,7 @@ static void send_alarm_msg(ring_buffer_t	*sms_rb_handle,
 	}
 
 	alarm_msg->alarm_type = ALARM_DISCARD;
-	alarm_msg->protocol_id = LOCAL_DI;
+	alarm_msg->protocol_id = 0x00000001;
 	strcpy(alarm_msg->protocol_name, "DI");
 	alarm_msg->param_id = 0;
 	strcpy(alarm_msg->param_name, "input_power");

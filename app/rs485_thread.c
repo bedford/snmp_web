@@ -150,67 +150,109 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 						> param_detail->update_threshold) {
 				data_record_flag = 1;
 			}
-
-            if (param_detail->alarm_enable == 0) {
-				alarm_status = NORMAL;
-				alarm_record_flag = 0;
-            } else {
-                if (last_value->status == UP_ALARM_ON) {
-                    if (current_value->param_value < param_detail->up_free) {
-                        alarm_status = UP_ALARM_OFF;
-                        alarm_record_flag = 1;
-                    }
-                } else if (last_value->status == LOW_ALARM_ON) {
-                    if (current_value->param_value > param_detail->low_free) {
-                        alarm_status = LOW_ALARM_OFF;
-                        alarm_record_flag = 1;
-                    }
-                } else {
-                    if (current_value->param_value > param_detail->up_limit) {
-                        printf("up limit %f, current %f\n", param_detail->up_limit, current_value->param_value);
-                        alarm_status = UP_ALARM_ON;
-                        alarm_record_flag = 1;
-                    } else if (current_value->param_value < param_detail->low_limit) {
-                        printf("low limit %f, current %f\n", param_detail->low_limit, current_value->param_value);
-                        alarm_status = LOW_ALARM_ON;
-                        alarm_record_flag = 1;
-                    }
-                }
-			}
 		} else {
-            if (current_value->enum_value != last_value->enum_value) {
+		    if (current_value->enum_value != last_value->enum_value) {
 				data_record_flag = 1;
 			}
-
-			if (param_detail->alarm_enable == 0) {
-				alarm_status = NORMAL;
-				alarm_record_flag = 0;
-            } else {
-                unsigned int alarm_raise_level = param_detail->up_limit;
-				unsigned int alarm_discard_level = param_detail->up_free;
-				if (alarm_raise_level != alarm_discard_level) {
-					if (last_value->status == LEVEL_ALARM_ON) {
-						if (current_value->enum_value == alarm_discard_level) {
-							alarm_status = LEVEL_ALARM_OFF;
-							alarm_record_flag = 1;
-						}
-					} else {
-						if (current_value->enum_value == alarm_raise_level) {
-							alarm_status = LEVEL_ALARM_ON;
-							alarm_record_flag = 1;
-						} else {
-							alarm_status = NORMAL;
-						}
-					}
-				}
-            }
 		}
-		last_value->param_value = current_value->param_value;
-		last_value->enum_value = current_value->enum_value;
 
 		if (timeout_record_flag) {
 			data_record_flag = 1;
 		}
+
+		/* 上一次读取状态时，为上限报警状态 */
+        if (last_value->status == UP_ALARM_ON) {
+			if (param_detail->alarm_enable & 0x01) { /* 报警上限值存在 */
+				if (param_detail->alarm_enable & 0x02) { /* 报警上限解除值存在 */
+					if (param_detail->param_type == PARAM_TYPE_ANALOG) {
+						if (current_value->param_value < param_detail->up_free) { /* 当前值小于报警上限解除值时报警解除 */
+							alarm_status = UP_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					} else {
+						if (current_value->enum_value < param_detail->up_free) { /* 当前值小于报警上限解除值时报警解除 */
+							alarm_status = UP_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					}
+				} else { /* 报警上限解除值不存在 */
+					if (param_detail->param_type == PARAM_TYPE_ANALOG) {
+						if (current_value->param_value < param_detail->up_limit) { /* 当前值小于报警上限值时报警解除 */
+							alarm_status = UP_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					} else {
+						if (current_value->enum_value < param_detail->up_limit) { /* 当前值小于报警上限值时报警解除 */
+							alarm_status = UP_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					}
+				}
+			} else { /* 上限值不存在，则解除报警 */
+				alarm_status = UP_ALARM_OFF;
+				alarm_record_flag = 1;
+			}
+        } else if (last_value->status == LOW_ALARM_ON) { /* 上一次读取状态时，为下限报警状态 */
+			if (param_detail->alarm_enable & 0x04) { /* 报警下限值存在 */
+				if (param_detail->alarm_enable & 0x08) { /* 报警下限解除值存在 */
+					if (param_detail->param_type == PARAM_TYPE_ANALOG) {
+						if (current_value->param_value > param_detail->low_free) { /* 当前值大于报警下限解除值时报警解除 */
+							alarm_status = LOW_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					} else {
+						if (current_value->enum_value > param_detail->low_free) { /* 当前值大于报警下限解除值时报警解除 */
+							alarm_status = LOW_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					}
+				} else { /* 报警下限解除值不存在 */
+					if (param_detail->param_type == PARAM_TYPE_ANALOG) {
+						if (current_value->param_value > param_detail->low_limit) { /* 当前值大于报警下限值时报警解除 */
+							alarm_status = LOW_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					} else {
+						if (current_value->enum_value > param_detail->low_limit) { /* 当前值大于报警下限值时报警解除 */
+							alarm_status = LOW_ALARM_OFF;
+							alarm_record_flag = 1;
+						}
+					}
+				}
+			} else { /* 下限值不存在，则解除报警 */
+				alarm_status = LOW_ALARM_OFF;
+				alarm_record_flag = 1;
+			}
+        } else { /* 上一次读取状态时，为正常状态 */
+			if (param_detail->alarm_enable & 0x01) {
+				if (param_detail->param_type == PARAM_TYPE_ANALOG) {
+					if (current_value->param_value > param_detail->up_limit) {
+						alarm_status = UP_ALARM_ON;
+						alarm_record_flag = 1;
+					}
+				} else {
+					if (current_value->enum_value >= param_detail->up_limit) {
+						alarm_status = UP_ALARM_ON;
+						alarm_record_flag = 1;
+					}
+				}
+			} else if (param_detail->alarm_enable & 0x04) {
+				if (param_detail->param_type == PARAM_TYPE_ANALOG) {
+					if (current_value->param_value < param_detail->low_limit) {
+						alarm_status = LOW_ALARM_ON;
+						alarm_record_flag = 1;
+					}
+				} else {
+					if (current_value->enum_value <= param_detail->low_limit) {
+						alarm_status = LOW_ALARM_ON;
+						alarm_record_flag = 1;
+					}
+				}
+			}
+		}
+
+		last_value->param_value = current_value->param_value;
+		last_value->enum_value = current_value->enum_value;
 
 		if (alarm_record_flag) {
 			memset(alarm_desc, 0, sizeof(alarm_desc));
@@ -222,21 +264,21 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			if (alarm_status & 0x10) {	//解除报警
 				switch (alarm_status & 0x0F) {
 				case 0x1:
-					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
 						priv->protocol->protocol_name,
 						param_detail->param_desc, "上限报警解除");
 					break;
 				case 0x2:
-					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
 						priv->protocol->protocol_name,
 						param_detail->param_desc, "下限报警解除");
 					break;
 				case 0x4:
-					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
 						priv->protocol->protocol_name,
@@ -250,7 +292,7 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			} else {
 				switch (alarm_status & 0x0F) {
 				case 0x1:
-					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%.1f%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%.1f%s%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
 						priv->protocol->protocol_name,
@@ -258,7 +300,7 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 						param_detail->param_unit, ",超过阈值");
 					break;
 				case 0x2:
-					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%.1f%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%.1f%s%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
 						priv->protocol->protocol_name,
@@ -266,7 +308,7 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 						param_detail->param_unit, ",低于阈值");
 					break;
 				case 0x4:
-					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
 						priv->protocol->protocol_name,
@@ -398,12 +440,27 @@ static void update_alarm_param(priv_info_t *priv, property_t *property)
 	if (query_result.row > 0) {
 		for (i = 0; i < list_size; i++) {
 			param_desc = desc_list->get_index_value(desc_list, i);
-			param_desc->up_limit = atof(query_result.result[(i + 1) * query_result.column + 9]);
-			param_desc->up_free = atof(query_result.result[(i + 1) * query_result.column + 10]);
-			param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 11]);
-			param_desc->low_free = atof(query_result.result[(i + 1) * query_result.column + 12]);
+			param_desc->alarm_enable = 0;
+			if (strlen(query_result.result[(i + 1) * query_result.column + 9]) != 0) {
+				param_desc->up_limit = atof(query_result.result[(i + 1) * query_result.column + 9]);
+				param_desc->alarm_enable |= 0x01;
+			}
+
+			if (strlen(query_result.result[(i + 1) * query_result.column + 10]) != 0) {
+				param_desc->up_free = atof(query_result.result[(i + 1) * query_result.column + 10]);
+				param_desc->alarm_enable |= 0x02;
+			}
+
+			if (strlen(query_result.result[(i + 1) * query_result.column + 11]) != 0) {
+				param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 11]);
+				param_desc->alarm_enable |= 0x04;
+			}
+
+			if (strlen(query_result.result[(i + 1) * query_result.column + 12]) != 0) {
+				param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 12]);
+				param_desc->alarm_enable |= 0x08;
+			}
 			param_desc->update_threshold = atof(query_result.result[(i + 1) * query_result.column + 14]);
-			param_desc->alarm_enable = atof(query_result.result[(i + 1) * query_result.column + 19]);
 		}
 	}
 
