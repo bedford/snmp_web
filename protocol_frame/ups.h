@@ -3,11 +3,6 @@
 
 #include "list.h"
 
-enum
-{
-    C_KS = 0x01,
-};
-
 #ifdef __cplusplus
 extern "C" {
 #endif

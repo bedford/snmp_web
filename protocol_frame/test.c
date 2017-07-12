@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "device_id_define.h"
 #include "protocol_interfaces.h"
 
 static void print_snmp_protocol(protocol_t *snmp_protocol)

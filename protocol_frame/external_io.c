@@ -5,6 +5,7 @@
 
 #include "protocol_types.h"
 #include "protocol_interfaces.h"
+#include "device_id_define.h"
 
 #include "external_io.h"
 #include "crc16.h"
@@ -96,10 +97,6 @@ static list_t *di_param_desc(void)
     sprintf(param.param_desc, "%s", "DI通道1");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 1;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -108,7 +105,6 @@ static list_t *di_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "di1_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DI1高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -116,10 +112,6 @@ static list_t *di_param_desc(void)
     sprintf(param.param_desc, "%s", "DI通道2");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 2;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -128,7 +120,6 @@ static list_t *di_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "di2_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DI2高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
 	memset(&param, 0, sizeof(param_desc_t));
@@ -136,10 +127,6 @@ static list_t *di_param_desc(void)
     sprintf(param.param_desc, "%s", "DI通道3");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 3;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -148,7 +135,6 @@ static list_t *di_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "di3_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DI3高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -156,10 +142,6 @@ static list_t *di_param_desc(void)
     sprintf(param.param_desc, "%s", "DI通道4");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 4;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -168,7 +150,6 @@ static list_t *di_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "di4_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DI4高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -176,10 +157,6 @@ static list_t *di_param_desc(void)
     sprintf(param.param_desc, "%s", "DI通道5");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 5;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -188,7 +165,6 @@ static list_t *di_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "di5_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DI5高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
 	memset(&param, 0, sizeof(param_desc_t));
@@ -196,10 +172,6 @@ static list_t *di_param_desc(void)
     sprintf(param.param_desc, "%s", "DI通道6");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 6;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -208,7 +180,6 @@ static list_t *di_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "di6_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DI6高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     return desc_list;
@@ -228,10 +199,6 @@ static list_t *do_param_desc(void)
     sprintf(param.param_desc, "%s", "DO通道1");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 7;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -240,7 +207,6 @@ static list_t *do_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "do1_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DO1高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
 	memset(&param, 0, sizeof(param_desc_t));
@@ -248,10 +214,6 @@ static list_t *do_param_desc(void)
     sprintf(param.param_desc, "%s", "DO通道2");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 8;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -260,7 +222,6 @@ static list_t *do_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "do2_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DO2高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
 	memset(&param, 0, sizeof(param_desc_t));
@@ -268,10 +229,6 @@ static list_t *do_param_desc(void)
     sprintf(param.param_desc, "%s", "DO通道3");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 9;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -280,7 +237,6 @@ static list_t *do_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "do3_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DO3高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
 	memset(&param, 0, sizeof(param_desc_t));
@@ -288,10 +244,6 @@ static list_t *do_param_desc(void)
     sprintf(param.param_desc, "%s", "DO通道4");
     sprintf(param.param_unit, "%s", "");
     param.param_id  = 10;
-    param.up_limit  = 0;
-    param.up_free   = 0;
-    param.low_limit = 0;
-    param.low_free  = 0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ENUM;
     param.param_enum[0].value = 0;
@@ -300,7 +252,6 @@ static list_t *do_param_desc(void)
     param.param_enum[1].value = 1;
 	sprintf(param.param_enum[1].en_desc, "%s", "do4_high_voltage");
     sprintf(param.param_enum[1].cn_desc, "%s", "DO4高电平");
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     return desc_list;

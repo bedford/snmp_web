@@ -5,6 +5,7 @@
 
 #include "protocol_types.h"
 #include "protocol_interfaces.h"
+#include "device_id_define.h"
 
 #include "environment.h"
 #include "crc16.h"
@@ -61,13 +62,8 @@ static list_t *environment_status_param_desc(void)
     sprintf(param.param_desc, "%s", "当前温度");
     sprintf(param.param_unit, "%s", "℃");
     param.param_id  = 1;
-    param.up_limit  = 60.0;
-    param.up_free   = 55.0;
-    param.low_limit = 5.0;
-    param.low_free  = 10.0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ANALOG;
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     memset(&param, 0, sizeof(param_desc_t));
@@ -75,13 +71,8 @@ static list_t *environment_status_param_desc(void)
     sprintf(param.param_desc, "%s", "当前湿度");
     sprintf(param.param_unit, "%s", "%");
     param.param_id  = 2;
-    param.up_limit  = 90.0;
-    param.up_free   = 85.0;
-    param.low_limit = 20.0;
-    param.low_free  = 25.0;
     param.update_threshold  = 1.0;
     param.param_type = PARAM_TYPE_ANALOG;
-    param.alarm_enable = 1;
     desc_list->push_back(desc_list, &param);
 
     return desc_list;
