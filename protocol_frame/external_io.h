@@ -1,5 +1,5 @@
-#ifndef _ENVIROMENT_H_
-#define _ENVIROMENT_H_
+#ifndef _EXTERNAL_IO_H_
+#define _EXTERNAL_IO_H_
 
 #include "list.h"
 
