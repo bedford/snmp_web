@@ -93,7 +93,6 @@
 					<th>下限值</th>
 					<th>下限解除值</th>
 					<th>幅度</th>
-					<th>是否报警</th>
 				</thead>
 			</table>
 		</div>
@@ -134,6 +133,8 @@
 		function set_alarm_param(msg) {
 			var cnt = 0;
 			var newArray = new Array();
+			var error_flag = false;
+			var html = "";
 			$('#alarm_param_table tr').each(function() {
 				var obj = new Object();
 				obj.id = $(this).attr("id");
@@ -144,7 +145,88 @@
 				obj.low_limit = $(this).children('td').eq(4).text();
 				obj.low_free = $(this).children('td').eq(5).text();
 				obj.update_threshold = $(this).children('td').eq(6).text();
-				obj.alarm_enable = $($(this).children('td').eq(7)).children('select').val();
+
+				/* 报警上限校验 */
+				if (obj.up_limit != "") {
+					if (isNaN(obj.up_limit)) {
+						html = device_name + ',' + param_desc + '：上限值必须为数字';
+						error_flag = true;
+						return false;
+					}
+
+					if (parseFloat(obj.up_limit) < 0) {
+						html = device_name + ',' + param_desc + '：上限值需大于等于0';
+						error_flag = true;
+						return false;
+					}
+				}
+
+				/* 上限报警解除 */
+				if (obj.up_free != "") {
+					if (isNaN(obj.up_free)) {
+						html = device_name + ',' + param_desc + '：上限解除值必须为数字';
+						error_flag = true;
+						return false;
+					}
+
+					if (parseFloat(obj.up_free) < 0) {
+						html = device_name + ',' + param_desc + '：上限解除值需大于等于0';
+						error_flag = true;
+						return false;
+					}
+
+					if (obj.up_free != "") {
+						if (parseFloat(obj.up_limit) < parseFloat(obj.up_free)) {
+							html = device_name + ',' + param_desc + '：上限值需大于或等于上限解除值';
+							error_flag = true;
+							return false;
+						}
+					}
+				}
+
+				if (obj.low_limit != "") {
+					if (isNaN(obj.low_limit)) {
+						html = device_name + ',' + param_desc + '：下限值必须为数字';
+						error_flag = true;
+						return false;
+					}
+
+					if (parseFloat(obj.low_limit) < 0) {
+						html = device_name + ',' + param_desc + '：下限值需大于等于0';
+						error_flag = true;
+						return false;
+					}
+
+					if (obj.up_limit != "") {
+						if (parseFloat(obj.up_limit) < parseFloat(obj.low_limit)) {
+							html = device_name + ',' + param_desc + '：上限值必须大于或等于下限值';
+							error_flag = true;
+							return false;
+						}
+					}
+				}
+
+				if (obj.low_free != "") {
+					if (isNaN(obj.low_free)) {
+						html = device_name + ',' + param_desc + '：下限解除值必须为数字';
+						error_flag = true;
+						return false;
+					}
+
+					if (parseFloat(obj.low_free) < 0) {
+						html = device_name + ',' + param_desc + '：下限解除值需大于等于0';
+						error_flag = true;
+						return false;
+					}
+
+					if (obj.low_limit != "") {
+						if (parseFloat(obj.low_limit) > parseFloat(obj.low_free)) {
+							html = device_name + ',' + param_desc + '：下限值需小于或等于下限解除值';
+							error_flag = true;
+							return false;
+						}
+					}
+				}
 
 				for (var index = 0; index < window.array_data.length; index++) {
 					if ((window.array_data[index].id == obj.id)
@@ -152,8 +234,7 @@
 						&& (window.array_data[index].up_free == obj.up_free)
 						&& (window.array_data[index].low_limit == obj.low_limit)
 						&& (window.array_data[index].low_free == obj.low_free)
-						&& (window.array_data[index].update_threshold == obj.update_threshold)
-						&& (window.array_data[index].alarm_enable == obj.alarm_enable)) {
+						&& (window.array_data[index].update_threshold == obj.update_threshold)) {
 						return true;
 					}
 				}
@@ -161,6 +242,21 @@
 				newArray[cnt] = obj;
 				cnt++;
 			});
+
+			if (error_flag) {
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
+					resizable: false,
+					height: 180,
+					modal: true,
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+				return false;
+			}
 
 			if (newArray.length == 0) {
 				var html = '没有需要更新的数据';
@@ -237,15 +333,7 @@
 				+ item.up_free + '</td><td contenteditable="true">'
 				+ item.low_limit + '</td><td contenteditable="true">'
 				+ item.low_free + '</td><td contenteditable="true">'
-				+ item.update_threshold + '</td>';
-
-				if (item.alarm_enable == 1) {
-					html += '<td><select id="select_enable_' + i +'"><option value="0">否</option>'
-						+ '<option value="1" selected>是</option></select></td></tr>';
-				} else {
-					html += '<td><select id="select_enable_' + i +'"><option value="0" selected>否</option>'
-						+ '<option value="1">是</option></select></td></tr>';
-				}
+				+ item.update_threshold + '</td></tr>';
 			});
 			$("#alarm_param_table").append(html);
 		}
