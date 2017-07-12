@@ -2003,6 +2003,7 @@ static int get_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 	sys_db_handle->query(sys_db_handle, sql, &query_result);
 
     cJSON *response = cJSON_CreateObject();
+	cJSON_AddStringToObject(response, "sql", sql);
 	cJSON *sub_dir = NULL;
 	cJSON *child = NULL;
 	int i = 0;
@@ -2030,7 +2031,6 @@ static int get_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 			cJSON_AddStringToObject(child, "low_cn_desc", query_result.result[i * query_result.column + 16]);
 			cJSON_AddStringToObject(child, "high_en_desc", query_result.result[i * query_result.column + 17]);
 			cJSON_AddStringToObject(child, "high_cn_desc", query_result.result[i * query_result.column + 18]);
-			cJSON_AddStringToObject(child, "alarm_enable", query_result.result[i * query_result.column + 19]);
     		cJSON_AddItemToArray(sub_dir, child);
     	}
 	}
@@ -2048,32 +2048,53 @@ static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
 	dictionary *dic		= priv->dic;
 	db_access_t *db_handle = priv->sys_db_handle;
 
-	char sql[256] = {0};
+	char sql[512] = {0};
 	char error_msg[256] = {0};
     cJSON *array_item = cJSON_GetObjectItem(root, "cfg");
+    cJSON *response;
+    response = cJSON_CreateObject();
     if (array_item != NULL) {
         int size = cJSON_GetArraySize(array_item);
         int i = 0;
         cJSON *object = NULL;
-		double up_limit = 0.0;
-		double up_free = 0.0;
-		double low_free = 0.0;
-		double low_limit = 0.0;
 		double update_threshold = 0.0;
-		int alarm_enable = 0;
+        char up_limit[32] = {0};
+        char up_free[32] = {0};
+        char low_limit[32] = {0};
+        char low_free[32] = {0};
 		int id = 0;
         for (i = 0; i < size; i++) {
             object = cJSON_GetArrayItem(array_item, i);
 			id = atoi(cJSON_GetObjectItem(object, "id")->valuestring);
-			up_limit = atof(cJSON_GetObjectItem(object, "up_limit")->valuestring);
-			up_free = atof(cJSON_GetObjectItem(object, "up_free")->valuestring);
-			low_limit = atof(cJSON_GetObjectItem(object, "low_limit")->valuestring);
-			low_free = atof(cJSON_GetObjectItem(object, "low_free")->valuestring);
+            if (strlen(cJSON_GetObjectItem(object, "up_limit")->valuestring) == 0) {
+				sprintf(up_limit, "up_limit=''");
+			} else {
+                sprintf(up_limit, "up_limit=%.1f", atof(cJSON_GetObjectItem(object, "up_limit")->valuestring));
+            }
+
+            if (strlen(cJSON_GetObjectItem(object, "up_free")->valuestring) == 0) {
+				sprintf(up_free, "up_free=''");
+			} else {
+                sprintf(up_free, "up_free=%.1f", atof(cJSON_GetObjectItem(object, "up_free")->valuestring));
+            }
+
+            if (strlen(cJSON_GetObjectItem(object, "low_limit")->valuestring) == 0) {
+                sprintf(low_limit, "low_limit=''");
+			} else {
+                sprintf(low_limit, "low_limit=%.1f", atof(cJSON_GetObjectItem(object, "low_limit")->valuestring));
+            }
+
+            if (strlen(cJSON_GetObjectItem(object, "low_free")->valuestring) == 0) {
+                sprintf(low_free, "low_free=''");
+			} else {
+                sprintf(low_free, "low_free=%.1f", atof(cJSON_GetObjectItem(object, "low_free")->valuestring));
+            }
+
 			update_threshold = atof(cJSON_GetObjectItem(object, "update_threshold")->valuestring);
-			alarm_enable = atoi(cJSON_GetObjectItem(object, "alarm_enable")->valuestring);
 			memset(sql, 0, sizeof(sql));
-			sprintf(sql, "UPDATE %s SET up_limit=%.1f, up_free=%.1f, low_limit=%.1f, low_free=%.1f, update_threshold=%.1f, alarm_enable=%d WHERE id=%d",
-					"parameter", up_limit, up_free, low_limit, low_free, update_threshold, alarm_enable, id);
+			sprintf(sql, "UPDATE %s SET %s, %s, %s, %s, update_threshold=%.1f WHERE id=%d",
+					"parameter", up_limit, up_free, low_limit, low_free, update_threshold, id);
+            cJSON_AddStringToObject(response, "sql", sql);
 			db_handle->action(db_handle, sql, error_msg);
         }
         object = NULL;
@@ -2083,8 +2104,6 @@ static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
     write_profile(dic, "ALARM", "rs485_alarm_flag", "1");
     dump_profile(dic, INI_FILE_NAME);
 
-    cJSON *response;
-    response = cJSON_CreateObject();
     cJSON_AddNumberToObject(response, "status", 1);
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
