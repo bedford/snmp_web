@@ -52,22 +52,6 @@ typedef struct
     unsigned int    record_interval;        /* 入库最大时间间隔 */
 } cmd_t;
 
-enum
-{
-    PROTOCOL_DEVICE_TYPE_MASK   = 0x0000FF00,   /* 设备主类型掩码 */
-    PROTOCOL_SUB_TYPE_MASK      = 0x000000FF,   /* 设备子类型掩码 */
-};
-
-enum
-{
-    LOCAL_DI            = 0x00000001,   /* 设备本身的DI */
-    TEMP_HUM_DEVICE     = 0x00000100,   /* 温湿度检测类设备 */
-    WATER_LEAK_DETECT   = 0x00000200,   /* 漏水检测类 */
-    AIR_CONDITION       = 0x00000300,   /* 空调检测类 */
-    UPS                 = 0x00000400,   /* UPS */
-    EXTERNAL_IO         = 0x00000500,   /* 外接IO传感器 */
-};
-
 
 #define MAX_PARAM_LEN	(128)
 #define MIN_PARAM_LEN	(32)

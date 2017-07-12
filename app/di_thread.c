@@ -26,6 +26,8 @@
 #define MAX_PARAM_LEN	(128)
 #define MIN_PARAM_LEN	(32)
 
+#define LOCAL_DI (0x00000001)
+
 enum {
 	NONE		= 0,
 	SMS_ALARM 	= 1,
