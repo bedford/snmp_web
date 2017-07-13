@@ -236,7 +236,9 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 						alarm_record_flag = 1;
 					}
 				}
-			} else if (param_detail->alarm_enable & 0x04) {
+			}
+
+			if (param_detail->alarm_enable & 0x04) {
 				if (param_detail->param_type == PARAM_TYPE_ANALOG) {
 					if (current_value->param_value < param_detail->low_limit) {
 						alarm_status = LOW_ALARM_ON;
@@ -457,7 +459,7 @@ static void update_alarm_param(priv_info_t *priv, property_t *property)
 			}
 
 			if (strlen(query_result.result[(i + 1) * query_result.column + 12]) != 0) {
-				param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 12]);
+				param_desc->low_free = atof(query_result.result[(i + 1) * query_result.column + 12]);
 				param_desc->alarm_enable |= 0x08;
 			}
 			param_desc->update_threshold = atof(query_result.result[(i + 1) * query_result.column + 14]);
