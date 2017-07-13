@@ -183,13 +183,20 @@
 						+ '<td style="width:15%;">' + item.enum_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
 						+ '<td style="width:15%;">正常</td></tr>';
-					} else {
+					} else if (item.alarm_type == '1') {
 						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
 						+ '<td style="width:15%;">' + item.param_desc + '</td>'
 						+ '<td style="width:15%;">' + item.analog_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
-						+ '<td style="width:15%;">报警</td></tr>';
+						+ '<td style="width:15%;">上限报警</td></tr>';
+					} else if (item.alarm_type == '2') {
+						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+						+ '<td style="width:15%;">' + item.param_desc + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + '</td>'
+						+ '<td style="width:15%;">' + item.enum_value + '</td>'
+						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+						+ '<td style="width:15%;">下限报警</td></tr>';
 					}
 
 					$("#real_data").append(html);
@@ -222,22 +229,29 @@
 						+ '<td style="width:15%;">' + item.enum_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
 						+ '<td style="width:15%;">正常</td></tr>';
-					} else {
+					} else if (item.alarm_type == '1') {
 						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
 						+ '<td style="width:15%;">' + item.param_desc + '</td>'
 						+ '<td style="width:15%;">' + item.analog_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_value + '</td>'
 						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
-						+ '<td style="width:15%;">报警</td></tr>';
+						+ '<td style="width:15%;">上限报警</td></tr>';
+					} else if (item.alarm_type == '2') {
+						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+						+ '<td style="width:15%;">' + item.param_desc + '</td>'
+						+ '<td style="width:15%;">' + item.analog_value + '</td>'
+						+ '<td style="width:15%;">' + item.enum_value + '</td>'
+						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+						+ '<td style="width:15%;">下限报警</td></tr>';
 					}
 
 					$("#real_data").append(html);
 				});
-				$('#rs232_rw_status').text("正常");
-				$('#rs232_rw_status').css("background-color", "#35e60a");
+				$('#rs485_rw_status').text("正常");
+				$('#rs485_rw_status').css("background-color", "#35e60a");
 			} else {
-				$('#rs232_rw_status').text("异常");
-				$('#rs232_rw_status').css("background-color", "#f01818");
+				$('#rs485_rw_status').text("异常");
+				$('#rs485_rw_status').css("background-color", "#f01818");
 			}
 		}
 
