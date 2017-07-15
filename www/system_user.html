@@ -135,13 +135,13 @@
 	<div class="jq-dialog" id="new_dialog" title="新增系统用户">
 		<table>
 			<tr>
-				<td>用户名称</td><td><input type="text" name="name" id="new_user"></td>
+				<td>用户名称</td><td><input type="text" name="name" id="new_user" onkeyup="value=value.replace(/[^\w\.\/]/ig,'')"></td>
 			</tr>
 			<tr>
-				<td>密码</td><td><input type="password" name="password" id="new_password"></td>
+				<td>密码</td><td><input type="password" name="password" id="new_password" onkeyup="value=value.replace(/[^\w\.\/]/ig,'')"></td>
 			</tr>
 			<tr>
-				<td>确认密码</td><td><input type="password" name="confirm_password" id="new_confirm_password"></td>
+				<td>确认密码</td><td><input type="password" name="confirm_password" id="new_confirm_password" onkeyup="value=value.replace(/[^\w\.\/]/ig,'')"></td>
 			</tr>
 			<tr>
 				<td>权限</td><td><select id="new_permit"><option value="1">管理员</option><option value="2">控制权</option><option value="4">监看权</option><option value="8" selected="true">查看权</option></select></td>
@@ -155,10 +155,10 @@
 				<td>用户名称</td><td><input type="text" name="name" id="modify_user" disabled="true"></td>
 			</tr>
 			<tr>
-				<td>密码</td><td><input type="password" name="password" id="modify_password"></td>
+				<td>密码</td><td><input type="password" name="password" id="modify_password" onkeyup="value=value.replace(/[^\w\.\/]/ig,'')"></td>
 			</tr>
 			<tr>
-				<td>确认密码</td><td><input type="password" name="confirm_password" id="confirm_password"></td>
+				<td>确认密码</td><td><input type="password" name="confirm_password" id="confirm_password" onkeyup="value=value.replace(/[^\w\.\/]/ig,'')"></td>
 			</tr>
 			<tr>
 				<td>权限</td><td><select id="modify_permit"><option value="1">管理员</option><option value="2">控制权</option><option value="4">监看权</option><option value="8">查看权</option></select></td>
