@@ -39,10 +39,10 @@ typedef struct {
 	char			di_name[MIN_PARAM_LEN];		/* DI名称 */
 	char			di_desc[MIN_PARAM_LEN];
 	char			device_name[MIN_PARAM_LEN];
-	char			low_desc[MIN_PARAM_LEN]; 	/* 低电平描述 */
-	char			high_desc[MIN_PARAM_LEN]; 	/* 高电平描述 */
+	char			low_desc[MIN_PARAM_LEN];	/* 低电平描述 */
+	char			high_desc[MIN_PARAM_LEN];	/* 高电平描述 */
 	unsigned int	id;							/* DI编号 0, 1, 2, 3*/
-	unsigned int	enable;						/* 是否使能 */
+	unsigned int	enable;						/* 是否记录状态 */
 	unsigned int	alarm_level;				/* 报警电平 */
 	unsigned int	alarm_method;				/* 报警方式 */
 	unsigned int	alarm_status;				/* 状态 */
@@ -232,14 +232,14 @@ static void update_di_realdata(priv_info_t *priv, element_data_t *di_data, int i
 	di_data->enum_value = value;
 	strcpy(di_data->enum_cn_desc, (value == 1) ? param->high_desc : param->low_desc);
 	strcpy(di_data->enum_en_desc, "");
-	if (param->enable) {
+	if (param->alarm_level == 2) {
+		di_data->alarm_type = 2;
+	} else {
 		if (value == param->alarm_level) {
 			di_data->alarm_type = 1;
 		} else {
 			di_data->alarm_type = 0;
 		}
-	} else {
-		di_data->alarm_type = 0;
 	}
 }
 
@@ -274,11 +274,11 @@ static void *di_process(void *arg)
 		drv_gpio_read(index, &value);
 		if (param->enable) {
 			history_data_record(priv, index, value);
-			param->last_status = value;
+		}
+		param->last_status = value;
 
-			if (value == param->alarm_level) {
-				alarm_data_record(priv, index, value);
-			}
+		if (value == param->alarm_level) {
+			alarm_data_record(priv, index, value);
 		}
 	}
 	gettimeofday(&(priv->last_record_time), NULL);
@@ -308,16 +308,14 @@ static void *di_process(void *arg)
 			param = &(priv->di_param[index]);
 			drv_gpio_read(index, &value);
 			di_data = &(priv->di_realdata->data[index]);
-			if (param->enable) {
-				if ((value == param->alarm_level) && (param->alarm_status == 0)) {
-					alarm_data_record(priv, index, value);
-				}
-
-				if ((value != param->alarm_level) && (param->alarm_status == 1)) {
-					alarm_data_record(priv, index, value);
-				}
-				//printf("line %d, func %s, now %d\n", __LINE__, __func__, value);
+			if ((value == param->alarm_level) && (param->alarm_status == 0)) {
+				alarm_data_record(priv, index, value);
 			}
+
+			if ((value != param->alarm_level) && (param->alarm_status == 1)) {
+				alarm_data_record(priv, index, value);
+			}
+			//printf("line %d, func %s, now %d\n", __LINE__, __func__, value);
 			update_di_realdata(priv, di_data, index, value);
 
 			if (param->enable) {

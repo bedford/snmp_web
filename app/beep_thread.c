@@ -86,7 +86,7 @@ static void *beep_process(void *arg)
 		semaphore_v(di_sem_id);
 		if (ret == 0) {
 			for (i = 0; i < di_realdata->cnt; i++) {
-                if (di_realdata->data[i].alarm_type != 0) {
+                if (di_realdata->data[i].alarm_type == 1) {
                     alarm_flag = 1;
                 }
 			}
