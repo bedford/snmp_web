@@ -105,12 +105,25 @@
                     $('#di-'+(i+1)+'-name').html(msg.real_data_di[i].param_desc);
                 }
 
-                if (msg.real_data_di[i].alarm_type != 0) {
-                    $('#di-'+(i+1)+'-alarm').html("报警");
-                    $('#di-'+(i+1)+'-alarm').css({color:"red"});
-                } else {
-                    $('#di-'+(i+1)+'-alarm').html("正常");
-                    $('#di-'+(i+1)+'-alarm').css({color:"#fff"});
+                if (msg.real_data_di[i].alarm_type == 1) {
+					if (msg.real_data_di[i].enum_cn_desc != '') {
+						$('#di-'+(i+1)+'-alarm').html(msg.real_data_di[i].enum_cn_desc);
+						$('#di-'+(i+1)+'-alarm').css({color:"red"});
+					} else {
+						$('#di-'+(i+1)+'-alarm').html("告警");
+						$('#di-'+(i+1)+'-alarm').css({color:"red"});
+					}
+				} else if (msg.real_data_di[i].alarm_type == 2) {
+					$('#di-'+(i+1)+'-alarm').html("不告警");
+					$('#di-'+(i+1)+'-alarm').css({color:"#000000"});
+				} else {
+					if (msg.real_data_di[i].enum_cn_desc != '') {
+						$('#di-'+(i+1)+'-alarm').html(msg.real_data_di[i].enum_cn_desc);
+						$('#di-'+(i+1)+'-alarm').css({color:"#35e60a"});
+					} else {
+						$('#di-'+(i+1)+'-alarm').html("正常");
+						$('#di-'+(i+1)+'-alarm').css({color:"#35e60a"});
+					}
                 }
 			});
 		}
