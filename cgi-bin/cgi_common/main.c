@@ -1702,6 +1702,7 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 		ret = rs232_shm_handle->shm_get(rs232_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs232_sem_id);
 		if (ret == 0) {
+			cJSON_AddNumberToObject(response, "rs232_enable", uart_realdata->enable);
 			cJSON_AddNumberToObject(response, "rs232_count", uart_realdata->cnt);
 			sub_dir = cJSON_CreateArray();
 			cJSON_AddItemToObject(response, "real_data_rs232", sub_dir);
@@ -1733,6 +1734,7 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 		ret = rs485_shm_handle->shm_get(rs485_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs485_sem_id);
 		if (ret == 0) {
+			cJSON_AddNumberToObject(response, "rs485_enable", uart_realdata->enable);
 			cJSON_AddNumberToObject(response, "rs485_count", uart_realdata->cnt);
 			sub_dir = cJSON_CreateArray();
 			cJSON_AddItemToObject(response, "real_data_rs485", sub_dir);
