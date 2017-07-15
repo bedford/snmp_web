@@ -522,7 +522,7 @@ static void *rs232_process(void *arg)
 
 	while ((protocol == NULL) || (priv->rs232_enable == 0)
 			|| (ret < 0)) {
-		sleep(1);
+		sleep(3);
 
 		if (thiz->thread_status == 0) {
 			deinit_protocol_lib(protocol_list);
@@ -531,6 +531,12 @@ static void *rs232_process(void *arg)
 			priv->shm_handle->shm_destroy(priv->shm_handle);
 			return (void *)0;
 		}
+
+		priv->rs232_realdata->enable = 0;
+		priv->rs232_realdata->cnt = 0;
+		semaphore_p(priv->sem_id);
+		priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
+		semaphore_v(priv->sem_id);
 	}
 
 	priv->protocol = protocol;
@@ -577,18 +583,16 @@ static void *rs232_process(void *arg)
 	                value_list = NULL;
 	            } else if (len == 0) {
 					priv->rs232_realdata->cnt = 0;
-					//semaphore_p(priv->sem_id);
-					//priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
-					//semaphore_v(priv->sem_id);
 				}
 	        } else {
 	            printf("write cmd failed------------\n");
 	        }
 			sleep(1);
 		}
-        semaphore_p(priv->sem_id);
-        priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
-        semaphore_v(priv->sem_id);
+		priv->rs232_realdata->enable = 1;
+		semaphore_p(priv->sem_id);
+		priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs232_realdata));
+		semaphore_v(priv->sem_id);
 
 		if (update_alarm_param_flag) {
 			update_alarm_param_flag = 0;
