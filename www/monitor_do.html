@@ -184,25 +184,30 @@
 					});
 		}
 
-		function display_do_param(msg) {
-			if (msg.beep_alarm_enable == 0) {
-				$('#do_beep').attr('checked', false);
-			} else {
-				$('#do_beep').attr('checked', true);
-			}
-
-			for (var i = 0; i < 3; i++) {
-				$('#do-'+(i+2)+'-name').val(msg.do_setting[i].name);
-				$('#do-'+(i+2)+'-set').val(msg.do_setting[i].setting);
-			}
-
-			$('span').each(function(i) {
-				if (msg.do_status[i].value) {
-		            $(this).removeClass('do-status-off');
-					$(this).addClass('do-status-on');
+		function display_do_param(msg, flag) {
+			if (flag == 1) {
+				if (msg.beep_alarm_enable == 0) {
+					$('#do_beep').attr('checked', false);
 				} else {
-		            $(this).removeClass('do-status-on');
-					$(this).addClass('do-status-off');
+					$('#do_beep').attr('checked', true);
+				}
+
+				for (var i = 0; i < 3; i++) {
+					$('#do-'+(i+2)+'-name').val(msg.do_setting[i].name);
+					$('#do-'+(i+2)+'-set').val(msg.do_setting[i].setting);
+				}
+			}
+
+			var i = 0;
+			$('span').each(function(i) {
+				if (i < 4) {
+					if (msg.do_status[i].value) {
+						$(this).removeClass('do-status-off');
+						$(this).addClass('do-status-on');
+					} else {
+						$(this).removeClass('do-status-on');
+						$(this).addClass('do-status-off');
+					}
 				}
 			});
 		}
@@ -218,14 +223,30 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function(msg) {
-		                    display_do_param(msg);
+		                    display_do_param(msg, 1);
+		                },
+		            });
+		}
+
+		function refresh_do_status() {
+		    var json = new Object();
+		    json.msg_type = "param_setting";
+		    json.cmd_type = "get_do_param";
+		    var data = $.toJSON(json);
+		    $.ajax({
+		                url     : "/cgi-bin/common.cgi",
+		                type    : "POST",
+		                dataType: "json",
+		                data    : data,
+		                success : function(msg) {
+		                    display_do_param(msg, 0);
 		                },
 		            });
 		}
 
 		$(document).ready(function() {
 			load_do_param();
-			interval_handle = setInterval("load_do_param()", 5000);
+			interval_handle = setInterval("refresh_do_status()", 5000);
 		});
     </script>
 </body>
