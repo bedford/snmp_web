@@ -162,96 +162,106 @@
 
 		function display_real_data(msg, device_type, status) {
 			$('#real_data').empty();
-			if (msg.rs232_count > 0) {
-				$.each(msg.real_data_rs232, function(i, item) {
-					if ((device_type != '全部') && (device_type != item.protocol_id)) {
-						return true;
-					}
-
-					if (status != '全部') {
-						if (((status == '0') && (item.alarm_type != '0'))
-							|| ((status != '0') && (item.alarm_type == '0'))) {
+			if (msg.rs232_enable == 1) {
+				if (msg.rs232_count > 0) {
+					$.each(msg.real_data_rs232, function(i, item) {
+						if ((device_type != '全部') && (device_type != item.protocol_id)) {
 							return true;
 						}
-					}
 
-					var html="";
-					if (item.alarm_type == '0') {
-						var html = '<tr><td style="width:25%;">' + item.protocol_desc + '</td>'
-						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
-						+ '<td style="width:15%;">正常</td></tr>';
-					} else if (item.alarm_type == '1') {
-						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
-						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
-						+ '<td style="width:15%;">上限报警</td></tr>';
-					} else if (item.alarm_type == '2') {
-						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
-						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
-						+ '<td style="width:15%;">下限报警</td></tr>';
-					}
+						if (status != '全部') {
+							if (((status == '0') && (item.alarm_type != '0'))
+								|| ((status != '0') && (item.alarm_type == '0'))) {
+								return true;
+							}
+						}
 
-					$("#real_data").append(html);
-				});
-				$('#rs232_rw_status').text("正常");
-				$('#rs232_rw_status').css("background-color", "#35e60a");
+						var html="";
+						if (item.alarm_type == '0') {
+							var html = '<tr><td style="width:25%;">' + item.protocol_desc + '</td>'
+							+ '<td style="width:15%;">' + item.param_desc + '</td>'
+							+ '<td style="width:15%;">' + item.analog_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+							+ '<td style="width:15%;">正常</td></tr>';
+						} else if (item.alarm_type == '1') {
+							var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+							+ '<td style="width:15%;">' + item.param_desc + '</td>'
+							+ '<td style="width:15%;">' + item.analog_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+							+ '<td style="width:15%;">上限报警</td></tr>';
+						} else if (item.alarm_type == '2') {
+							var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+							+ '<td style="width:15%;">' + item.param_desc + '</td>'
+							+ '<td style="width:15%;">' + item.analog_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+							+ '<td style="width:15%;">下限报警</td></tr>';
+						}
+
+						$("#real_data").append(html);
+					});
+					$('#rs232_rw_status').text("正常");
+					$('#rs232_rw_status').css("background-color", "#35e60a");
+				} else {
+					$('#rs232_rw_status').text("异常");
+					$('#rs232_rw_status').css("background-color", "#f01818");
+				}
 			} else {
-				$('#rs232_rw_status').text("异常");
-				$('#rs232_rw_status').css("background-color", "#f01818");
+				$('#rs232_rw_status').text("未启用");
+				$('#rs232_rw_status').css("background-color", "#35e60a");
 			}
 
-			if (msg.rs485_count > 0) {
-				$.each(msg.real_data_rs485, function(i, item) {
-					if ((device_type != '全部') && (device_type != item.protocol_id)) {
-						return true;
-					}
-
-					if (status != '全部') {
-						if (((status == '0') && (item.alarm_type != '0'))
-							|| ((status != '0') && (item.alarm_type == '0'))) {
+			if (msg.rs485_enable == 1) {
+				if (msg.rs485_count > 0) {
+					$.each(msg.real_data_rs485, function(i, item) {
+						if ((device_type != '全部') && (device_type != item.protocol_id)) {
 							return true;
 						}
-					}
 
-					var html="";
-					if (item.alarm_type == '0') {
-						var html = '<tr><td style="width:25%;">' + item.protocol_desc + '</td>'
-						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
-						+ '<td style="width:15%;">正常</td></tr>';
-					} else if (item.alarm_type == '1') {
-						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
-						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
-						+ '<td style="width:15%;">上限报警</td></tr>';
-					} else if (item.alarm_type == '2') {
-						var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
-						+ '<td style="width:15%;">' + item.param_desc + '</td>'
-						+ '<td style="width:15%;">' + item.analog_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_value + '</td>'
-						+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
-						+ '<td style="width:15%;">下限报警</td></tr>';
-					}
+						if (status != '全部') {
+							if (((status == '0') && (item.alarm_type != '0'))
+								|| ((status != '0') && (item.alarm_type == '0'))) {
+								return true;
+							}
+						}
 
-					$("#real_data").append(html);
-				});
-				$('#rs485_rw_status').text("正常");
-				$('#rs485_rw_status').css("background-color", "#35e60a");
+						var html="";
+						if (item.alarm_type == '0') {
+							var html = '<tr><td style="width:25%;">' + item.protocol_desc + '</td>'
+							+ '<td style="width:15%;">' + item.param_desc + '</td>'
+							+ '<td style="width:15%;">' + item.analog_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+							+ '<td style="width:15%;">正常</td></tr>';
+						} else if (item.alarm_type == '1') {
+							var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+							+ '<td style="width:15%;">' + item.param_desc + '</td>'
+							+ '<td style="width:15%;">' + item.analog_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+							+ '<td style="width:15%;">上限报警</td></tr>';
+						} else if (item.alarm_type == '2') {
+							var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+							+ '<td style="width:15%;">' + item.param_desc + '</td>'
+							+ '<td style="width:15%;">' + item.analog_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_value + '</td>'
+							+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
+							+ '<td style="width:15%;">下限报警</td></tr>';
+						}
+
+						$("#real_data").append(html);
+					});
+					$('#rs485_rw_status').text("正常");
+					$('#rs485_rw_status').css("background-color", "#35e60a");
+				} else {
+					$('#rs485_rw_status').text("异常");
+					$('#rs485_rw_status').css("background-color", "#f01818");
+				}
 			} else {
-				$('#rs485_rw_status').text("异常");
-				$('#rs485_rw_status').css("background-color", "#f01818");
+				$('#rs485_rw_status').text("未启用");
+				$('#rs485_rw_status').css("background-color", "#35e60a");
 			}
 		}
 
