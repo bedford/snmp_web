@@ -805,6 +805,7 @@ static int get_phone_user(cJSON *root, priv_info_t *priv)
 
 static int add_phone_user(cJSON *root, priv_info_t *priv)
 {
+    dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->sys_db_handle;
     cJSON *response = cJSON_CreateObject();
@@ -842,6 +843,9 @@ static int add_phone_user(cJSON *root, priv_info_t *priv)
 	}
 	db_handle->free_table(db_handle, query_result.result);
 
+    write_profile(dic, "ALARM", "sms_contact_flag", "1");
+    dump_profile(dic, INI_FILE_NAME);
+
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
 
@@ -850,6 +854,7 @@ static int add_phone_user(cJSON *root, priv_info_t *priv)
 
 static int modify_phone_user(cJSON *root, priv_info_t *priv)
 {
+    dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->sys_db_handle;
     cJSON *response = cJSON_CreateObject();
@@ -864,6 +869,9 @@ static int modify_phone_user(cJSON *root, priv_info_t *priv)
     cJSON_AddNumberToObject(response, "status", ret);
 	cJSON_AddStringToObject(response, "err_msg", error_msg);
 
+    write_profile(dic, "ALARM", "sms_contact_flag", "1");
+    dump_profile(dic, INI_FILE_NAME);
+
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
 
@@ -872,6 +880,7 @@ static int modify_phone_user(cJSON *root, priv_info_t *priv)
 
 static int delete_phone_user(cJSON *root, priv_info_t *priv)
 {
+    dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->sys_db_handle;
     cJSON *response = cJSON_CreateObject();
@@ -883,6 +892,9 @@ static int delete_phone_user(cJSON *root, priv_info_t *priv)
 	int ret = db_handle->action(db_handle, sql, error_msg);
     cJSON_AddNumberToObject(response, "status", ret);
 	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    write_profile(dic, "ALARM", "sms_contact_flag", "1");
+    dump_profile(dic, INI_FILE_NAME);
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -928,6 +940,7 @@ static int get_email_user(cJSON *root, priv_info_t *priv)
 
 static int add_email_user(cJSON *root, priv_info_t *priv)
 {
+    dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->sys_db_handle;
     cJSON *response = cJSON_CreateObject();
@@ -965,6 +978,9 @@ static int add_email_user(cJSON *root, priv_info_t *priv)
 	}
 	db_handle->free_table(db_handle, query_result.result);
 
+    write_profile(dic, "ALARM", "email_contact_flag", "1");
+    dump_profile(dic, INI_FILE_NAME);
+
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
 
@@ -973,6 +989,7 @@ static int add_email_user(cJSON *root, priv_info_t *priv)
 
 static int modify_email_user(cJSON *root, priv_info_t *priv)
 {
+    dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->sys_db_handle;
     cJSON *response = cJSON_CreateObject();
@@ -987,6 +1004,9 @@ static int modify_email_user(cJSON *root, priv_info_t *priv)
     cJSON_AddNumberToObject(response, "status", ret);
 	cJSON_AddStringToObject(response, "err_msg", error_msg);
 
+    write_profile(dic, "ALARM", "email_contact_flag", "1");
+    dump_profile(dic, INI_FILE_NAME);
+
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
 
@@ -995,6 +1015,7 @@ static int modify_email_user(cJSON *root, priv_info_t *priv)
 
 static int delete_email_user(cJSON *root, priv_info_t *priv)
 {
+    dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
 	db_access_t *db_handle = priv->sys_db_handle;
     cJSON *response = cJSON_CreateObject();
@@ -1006,6 +1027,9 @@ static int delete_email_user(cJSON *root, priv_info_t *priv)
 	int ret = db_handle->action(db_handle, sql, error_msg);
     cJSON_AddNumberToObject(response, "status", ret);
 	cJSON_AddStringToObject(response, "err_msg", error_msg);
+
+    write_profile(dic, "ALARM", "email_contact_flag", "1");
+    dump_profile(dic, INI_FILE_NAME);
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
