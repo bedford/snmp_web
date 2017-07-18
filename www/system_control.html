@@ -154,12 +154,11 @@
 			download_window.focus();
 		}
 
-		function reboot() {
+		function reboot_apply() {
 			var json = new Object();
 			json.msg_type = "system_setting";
 			json.cmd_type = "system_reboot";
 
-			$('#reboot_btn').attr("disabled", "disabled");
 			var data = $.toJSON(json);
 		    $.ajax({
 		                url     : "/cgi-bin/common.cgi",
@@ -167,7 +166,6 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function(msg) {
-		                    $('#reboot_btn').removeAttr("disabled");
 							var html = '';
 							if (msg.status == 1) {
 								html = '重启成功，正在重启中，请稍后再连接设备';
@@ -182,12 +180,12 @@
 								buttons: {
 									"确定": function() {
 										$(this).dialog("close");
+										$('#reboot_btn').removeAttr("disabled");
 									}
 								}
 							});
 		                },
 						error : function(msg) {
-		                    $('#reboot_btn').removeAttr("disabled");
 							var html = '操作失败';
 							$('#hint_detail').html(html);
 							$('#hint_dialog').dialog({
@@ -197,6 +195,7 @@
 								buttons: {
 									"确定": function() {
 										$(this).dialog("close");
+										$('#reboot_btn').removeAttr("disabled");
 									}
 								}
 							});
@@ -204,12 +203,31 @@
 					});
 		}
 
-		function recovery() {
+		function reboot() {
+			$('#reboot_btn').attr("disabled", "disabled");
+			$('#hint_detail').html("确认要重启设备吗？");
+			$('#hint_dialog').dialog({
+				resizable: false,
+				height: 160,
+				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+						reboot_apply();
+					},
+					取消: function() {
+						$(this).dialog("close");
+						$('#reboot_btn').removeAttr("disabled");
+					}
+				}
+			});
+		}
+
+		function recovery_apply() {
 			var json = new Object();
 			json.msg_type = "system_setting";
 			json.cmd_type = "system_recovery";
 
-			$('#recovery_btn').attr("disabled", "disabled");
 			var data = $.toJSON(json);
 		    $.ajax({
 		                url     : "/cgi-bin/common.cgi",
@@ -217,7 +235,6 @@
 		                dataType: "json",
 		                data    : data,
 		                success : function(msg) {
-		                    $('#recovery_btn').removeAttr("disabled");
 							var html = '';
 							if (msg.status == 1) {
 								html = '恢复设置成功，重启设备后生效，需立即重启请按"确认"键';
@@ -232,16 +249,17 @@
 								buttons: {
 									"确定": function() {
 										$(this).dialog("close");
+										$('#recovery_btn').removeAttr("disabled");
 										reboot();
 									},
 									取消: function() {
+										$('#recovery_btn').removeAttr("disabled");
 										$(this).dialog("close");
 									}
 								}
 							});
 		                },
 						error : function(msg) {
-		                    $('#recovery_btn').removeAttr("disabled");
 							var html = '操作失败';
 							$('#hint_detail').html(html);
 							$('#hint_dialog').dialog({
@@ -251,11 +269,32 @@
 								buttons: {
 									"确定": function() {
 										$(this).dialog("close");
+						                $('#recovery_btn').removeAttr("disabled");
 									}
 								}
 							});
 						},
 					});
+		}
+
+		function recovery() {
+			$('#recovery_btn').attr("disabled", "disabled");
+			$('#hint_detail').html("确认要恢复默认设置吗？");
+			$('#hint_dialog').dialog({
+				resizable: false,
+				height: 160,
+				modal: true,
+				buttons: {
+					"确定": function() {
+						$(this).dialog("close");
+						recovery_apply();
+					},
+					取消: function() {
+						$(this).dialog("close");
+						$('#recovery_btn').removeAttr("disabled");
+					}
+				}
+			});
 		}
 
 		function upgrade_apply(response) {
