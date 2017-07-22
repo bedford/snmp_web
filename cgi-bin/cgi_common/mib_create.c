@@ -94,7 +94,7 @@ unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset, char *spec_
 				"\t\t%s(0),\n"
 				"\t\t%s(1)\n"
 				"\t}\n"
-				"\tACCESS read-only\n"
+				"\tACCESS read-write\n"
 				"\tSTATUS mandatory\n"
 				"\tDESCRIPTION\n"
 				"\t\t\"%s\"\n"
