@@ -16,6 +16,7 @@
 
 #include "protocol_interfaces.h"
 #include "drv_gpio.h"
+#include "utils.h"
 
 #include "types.h"
 #include "mem_pool.h"
@@ -531,19 +532,19 @@ int main(void)
 
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
 	priv->pref_handle = preference_create();
-	int init_flag = priv->pref_handle->get_init_flag(priv->pref_handle);
+	int init_flag = file_exist("/opt/app/recovery_default");
 
 	priv->sys_db_handle = db_access_create("/opt/app/sys.db");
 	priv->data_db_handle = db_access_create("/opt/data/data.db");
 
 	init_do_output(priv);
 
-	if (init_flag == 1) {
+	if (init_flag == 0) {
 		create_user(priv);
 		create_di_cfg(priv);
 		create_data_table(priv);
 		update_uart_cfg(priv);
-		priv->pref_handle->set_init_flag(priv->pref_handle, 0);
+		file_remove("/opt/app/recovery_default");
 	}
 
 	ring_buffer_t *rb_handle = ring_buffer_create(32);
@@ -650,7 +651,6 @@ int main(void)
 	di_thread_param.sms_rb_handle	= sms_rb_handle;
 	di_thread_param.email_rb_handle	= email_rb_handle;
 	di_thread_param.alarm_pool_handle = alarm_pool_handle;
-	di_thread_param.init_flag		= init_flag;
 	di_thread->start(di_thread, (void *)&di_thread_param);
 
 	thread_t *beep_thread = beep_thread_create();

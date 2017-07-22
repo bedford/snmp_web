@@ -18,8 +18,6 @@ typedef struct
 	void 		*sms_rb_handle;
 	void 		*email_rb_handle;
 	void 		*alarm_pool_handle;
-
-	int			init_flag;
 } di_thread_param_t;
 
 thread_t *di_thread_create(void);

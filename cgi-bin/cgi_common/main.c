@@ -618,7 +618,9 @@ static int system_recovery(cJSON *root, priv_info_t *priv)
 	dictionary *dic		= priv->dic;
 	req_buf_t *req_buf	= &(priv->request);
 
-    write_profile(dic, "SYSTEM", "init_flag", "1");
+	FILE *fp = fopen("/opt/app/recovery_default", "wb");
+	fclose(fp);
+	fp = NULL;
 
     write_profile(dic, "NETWORK", "ip_addr", "192.168.0.233");
     write_profile(dic, "NETWORK", "gateway", "192.168.0.1");
