@@ -89,18 +89,33 @@ unsigned int fill_do_mib(unsigned char *buffer, unsigned int offset, char *spec_
 	int i = 0;
 	for (i = 0; i < 4; i++) {
 		tmp_buf = buffer + offset;
-		sprintf(tmp_buf, "do%d OBJECT-TYPE\n"
-				"\tSYNTAX INTEGER {\n"
-				"\t\t%s(0),\n"
-				"\t\t%s(1)\n"
-				"\t}\n"
-				"\tACCESS read-write\n"
-				"\tSTATUS mandatory\n"
-				"\tDESCRIPTION\n"
-				"\t\t\"%s\"\n"
-				"\t::= { %s %d }\n\n",
-				i + 1, "low_level", "high_level",
-				"DO status", IO_DEVICE_NAME, i + 5);
+        if (i == 0) {
+            sprintf(tmp_buf, "do%d OBJECT-TYPE\n"
+                    "\tSYNTAX INTEGER {\n"
+                    "\t\t%s(0),\n"
+                    "\t\t%s(1)\n"
+                    "\t}\n"
+                    "\tACCESS read-only\n"
+                    "\tSTATUS mandatory\n"
+                    "\tDESCRIPTION\n"
+                    "\t\t\"%s\"\n"
+                    "\t::= { %s %d }\n\n",
+                    i + 1, "low_level", "high_level",
+                    "DO status", IO_DEVICE_NAME, i + 5);
+        } else {
+            sprintf(tmp_buf, "do%d OBJECT-TYPE\n"
+                    "\tSYNTAX INTEGER {\n"
+                    "\t\t%s(0),\n"
+                    "\t\t%s(1)\n"
+                    "\t}\n"
+                    "\tACCESS read-write\n"
+                    "\tSTATUS mandatory\n"
+                    "\tDESCRIPTION\n"
+                    "\t\t\"%s\"\n"
+                    "\t::= { %s %d }\n\n",
+                    i + 1, "low_level", "high_level",
+                    "DO status", IO_DEVICE_NAME, i + 5);
+        }
 		offset += strlen(tmp_buf);
 	}
 
