@@ -4,6 +4,12 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+#include <net/if_arp.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "cJSON.h"
 #include "iniparser.h"
@@ -33,12 +39,54 @@ typedef struct {
 	dictionary	*dic;
 } priv_info_t;
 
+/**
+ * @brief	get mac address of an interface
+ * @param	"char *ifname" : [IN]interface name
+ * @param	"unsigned char *mac" : [OUT]mac address
+ * @retval	0 : success ; -1 : fail
+ */
+static int net_get_hwaddr(char *ifname, unsigned char *mac)
+{
+	struct ifreq ifr;
+	int skfd;
+
+	if ( (skfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+		printf("socket error");
+		return -1;
+	}
+
+	strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
+	if (ioctl(skfd, SIOCGIFHWADDR, &ifr) < 0) {
+		printf("net_get_hwaddr: ioctl SIOCGIFHWADDR");
+		close(skfd);
+		return -1;
+	}
+	close(skfd);
+
+	sprintf(mac, "%02x:%02x:%02x:%02x:%02x:%02x",
+		(unsigned char)ifr.ifr_hwaddr.sa_data[0],
+		(unsigned char)ifr.ifr_hwaddr.sa_data[1],
+		(unsigned char)ifr.ifr_hwaddr.sa_data[2],
+		(unsigned char)ifr.ifr_hwaddr.sa_data[3],
+		(unsigned char)ifr.ifr_hwaddr.sa_data[4],
+		(unsigned char)ifr.ifr_hwaddr.sa_data[5]);
+
+	return 0;
+}
+
 static int get_network_param(cJSON *root, priv_info_t *priv)
 {
-	dictionary *dic		= priv->dic;
-	req_buf_t *req_buf	= &(priv->request);
+    dictionary *dic		= priv->dic;
+    req_buf_t *req_buf	= &(priv->request);
     cJSON *response = cJSON_CreateObject();
-    cJSON_AddStringToObject(response, "mac_addr", "F0:FF:04:00:5D:F4");
+
+    char mac[32] = {0};
+    if (net_get_hwaddr("eth0", mac) == 0 ) {
+        cJSON_AddStringToObject(response, "mac_addr", mac);
+    } else {
+        cJSON_AddStringToObject(response, "mac_addr", "F0:FF:04:00:5D:F3");
+    }
+
     cJSON_AddStringToObject(response, "ip_addr",
             iniparser_getstring(dic, "NETWORK:ip_addr", "192.168.0.100"));
     cJSON_AddStringToObject(response, "gateway",
@@ -2418,11 +2466,7 @@ static int mib_download(req_buf_t *req_buf, priv_info_t *priv, const char *filen
 			strcpy(di_param.device_name, query_result.result[i * query_result.column + 3]);
 			strcpy(di_param.low_desc, query_result.result[i * query_result.column + 4]);
 			strcpy(di_param.high_desc, query_result.result[i * query_result.column + 5]);
-			di_param.enable = atoi(query_result.result[i * query_result.column + 7]);
-
-			if (di_param.enable) {
-				offset = fill_di_mib(buf, offset, &di_param);
-			}
+            offset = fill_di_mib(buf, offset, &di_param);
 		}
 	}
 	db_handle->free_table(db_handle, query_result.result);
