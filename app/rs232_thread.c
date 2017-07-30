@@ -425,6 +425,97 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 	return list_size + offset;
 }
 
+static int record_com_fail(priv_info_t *priv, int alarm_status)
+{
+	msg_t *msg = NULL;
+	alarm_msg_t *alarm_msg = NULL;
+
+	char alarm_desc[256] = {0};
+
+	struct timeval now_time;
+	struct tm *tm = NULL;
+	gettimeofday(&now_time, NULL);
+	tm = localtime(&(now_time.tv_sec));
+	if (alarm_status == 0) {	//解除报警
+		sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec,
+			priv->protocol->protocol_name, "设备通信失败解除");
+	} else {
+		sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec,
+			priv->protocol->protocol_name, "设备通信失败");
+	}
+
+	msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
+	if (msg == NULL) {
+		printf("memory pool is empty\n");
+	}
+	sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
+		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc, alarm_desc) \
+		VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
+			priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
+			0, "", "", PARAM_TYPE_ENUM, 0.0, "", alarm_status, (alarm_status == 0) ? "com_normal" : "com_fail",
+			(alarm_status == 0) ? "通信恢复" : "通信失败", alarm_desc);
+
+	if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
+		printf("ring buffer is full\n");
+		priv->mpool_handle->mpool_free(priv->mpool_handle, (void *)msg);
+	}
+	msg = NULL;
+
+	alarm_msg = (alarm_msg_t *)priv->alarm_pool_handle->mpool_alloc(priv->alarm_pool_handle);
+	if (alarm_msg == NULL) {
+		printf("memory pool is empty\n");
+		return -1;
+	}
+
+	alarm_msg_t *tmp_alarm_msg = (alarm_msg_t *)priv->alarm_pool_handle->mpool_alloc(priv->alarm_pool_handle);
+	if (tmp_alarm_msg == NULL) {
+		printf("memory pool is empty\n");
+		priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
+		return -1;
+	}
+
+    if (alarm_status == 0) {
+		alarm_msg->alarm_type = ALARM_DISCARD;
+	} else {
+		alarm_msg->alarm_type = ALARM_RAISE;
+	}
+	alarm_msg->protocol_id = priv->protocol->protocol_id;
+	strcpy(alarm_msg->protocol_name, priv->protocol->protocol_name);
+	strcpy(alarm_msg->protocol_desc, priv->protocol->protocol_desc);
+	alarm_msg->param_id = 0;
+	strcpy(alarm_msg->param_name, "");
+	strcpy(alarm_msg->param_desc, "");
+	strcpy(alarm_msg->param_unit, "");
+	alarm_msg->param_type = PARAM_TYPE_ENUM;
+	alarm_msg->param_value = 0;
+	alarm_msg->enum_value = alarm_status;
+	if (alarm_status) {
+		strcpy(alarm_msg->enum_desc, "通信失败");
+	} else {
+		strcpy(alarm_msg->enum_desc, "通信恢复");
+	}
+	strcpy(alarm_msg->alarm_desc, alarm_desc);
+	memcpy(tmp_alarm_msg, alarm_msg, sizeof(alarm_msg_t));
+
+	if (priv->sms_rb_handle->push(priv->sms_rb_handle, (void *)alarm_msg)) {
+		printf("sms ring buffer is full\n");
+		priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)alarm_msg);
+	}
+	alarm_msg = NULL;
+
+	if (priv->email_rb_handle->push(priv->email_rb_handle, (void *)tmp_alarm_msg)) {
+		printf("email ring buffer is full\n");
+		priv->alarm_pool_handle->mpool_free(priv->alarm_pool_handle, (void *)tmp_alarm_msg);
+	}
+	tmp_alarm_msg = NULL;
+
+	return 0;
+}
+
 static void update_alarm_param(priv_info_t *priv, property_t *property)
 {
 	char sql[256] = {0};
@@ -554,6 +645,8 @@ static void *rs232_process(void *arg)
     property_t *property = NULL;
 	int update_alarm_param_flag = 1;
 	int param_cnt = 0;
+	int com_fail_count = 0;
+	int com_fail_flag = 0;
 	while (thiz->thread_status) {
 		param_cnt = 0;
 		for (index = 0; index < property_list_size; index++) {
@@ -581,9 +674,21 @@ static void *rs232_process(void *arg)
 					}
 	                value_list->destroy_list(value_list);
 	                value_list = NULL;
+					com_fail_count = 0;
+					if (com_fail_flag) {
+						com_fail_flag = 0;
+						record_com_fail(priv, 0);
+					}
 	            } else if (len == 0) {
 					priv->rs232_realdata->cnt = 0;
-				}
+					if (com_fail_flag == 0) {
+						com_fail_count++;
+						if (com_fail_count > 1) {
+							com_fail_flag = 1;
+							record_com_fail(priv, 1);
+						}
+					}
+                }
 	        } else {
 	            printf("write cmd failed------------\n");
 	        }
