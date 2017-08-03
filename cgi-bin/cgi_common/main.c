@@ -11,6 +11,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <linux/rtc.h>
+#include <sys/fcntl.h>
+
 #include "cJSON.h"
 #include "iniparser.h"
 #include "db_access.h"
@@ -81,11 +84,11 @@ static int get_network_param(cJSON *root, priv_info_t *priv)
     cJSON *response = cJSON_CreateObject();
 
     char mac[32] = {0};
-    if (net_get_hwaddr("eth0", mac) == 0 ) {
-        cJSON_AddStringToObject(response, "mac_addr", mac);
-    } else {
-        cJSON_AddStringToObject(response, "mac_addr", "F0:FF:04:00:5D:F3");
-    }
+	if (net_get_hwaddr("eth0", mac) == 0 ) {
+		cJSON_AddStringToObject(response, "mac_addr", mac);
+	} else {
+		cJSON_AddStringToObject(response, "mac_addr", "F0:FF:04:00:5D:F3");
+	}
 
     cJSON_AddStringToObject(response, "ip_addr",
             iniparser_getstring(dic, "NETWORK:ip_addr", "192.168.0.100"));
@@ -603,20 +606,80 @@ static int set_do_param(cJSON *root, priv_info_t *priv)
     return 0;
 }
 
+int from_sys_clock(void)
+{
+#define TWEAK_USEC 200
+    struct tm tm_time;
+    struct timeval tv;
+    unsigned adj = TWEAK_USEC;
+    int rtc = open("/dev/rtc0", O_WRONLY);
+
+    if (rtc < 0)
+        return -1;
+
+    while (1) {
+        unsigned rem_usec;
+        time_t t;
+        gettimeofday(&tv, NULL);
+
+        t = tv.tv_sec;
+        rem_usec = 1000000 - tv.tv_usec;
+        if (rem_usec < 1024) {
+small_rem:
+            t++;
+        }
+
+        localtime_r(&t, &tm_time);
+        tm_time.tm_isdst = 0;
+
+        gettimeofday(&tv, NULL);
+        if (tv.tv_sec < t || (tv.tv_sec == t && tv.tv_usec < 1024)) {
+            break;
+        }
+
+        adj += 32;
+        if (adj >= 1024) {
+            break;
+        }
+
+        rem_usec = 1000000 - tv.tv_usec;
+        if (rem_usec < 1024) {
+            goto small_rem;
+        }
+        usleep(rem_usec - adj);
+    }
+
+    ioctl(rtc, RTC_SET_TIME, &tm_time);
+    close(rtc);
+
+    return 0;
+}
+
 static int set_device_time(cJSON *root, priv_info_t *priv)
 {
-	dictionary *dic		= priv->dic;
-	req_buf_t *req_buf	= &(priv->request);
+    dictionary *dic		= priv->dic;
+    req_buf_t *req_buf	= &(priv->request);
 
+	struct tm tmp_tm;
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
-    char cmd[128] = {0};
-    sprintf(cmd, "date -s \"%s\"; hwclock -w",
-            cJSON_GetObjectItem(cfg, "calibration_pc_time")->valuestring);
-    int ret = system(cmd);
+    sscanf(cJSON_GetObjectItem(cfg, "calibration_pc_time")->valuestring,
+            "%04d-%02d-%02d %02d:%02d:%02d", &tmp_tm.tm_year, &tmp_tm.tm_mon,
+            &tmp_tm.tm_mday, &tmp_tm.tm_hour, &tmp_tm.tm_min, &tmp_tm.tm_sec);
+
+    tmp_tm.tm_year -= 1900;
+    tmp_tm.tm_mon -= 1;
+
+    int ret = 1;
+    struct timeval tv;
+    tv.tv_sec = mktime(&tmp_tm);
+    if (settimeofday(&tv, (struct timezone *)0) < 0) {
+        ret = 0;
+    }
+    from_sys_clock();
 
     cJSON *response;
     response = cJSON_CreateObject();
-    cJSON_AddNumberToObject(response, "status", 1);
+    cJSON_AddNumberToObject(response, "status", ret);
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
 
@@ -2466,7 +2529,7 @@ static int mib_download(req_buf_t *req_buf, priv_info_t *priv, const char *filen
 			strcpy(di_param.device_name, query_result.result[i * query_result.column + 3]);
 			strcpy(di_param.low_desc, query_result.result[i * query_result.column + 4]);
 			strcpy(di_param.high_desc, query_result.result[i * query_result.column + 5]);
-            offset = fill_di_mib(buf, offset, &di_param);
+			offset = fill_di_mib(buf, offset, &di_param);
 		}
 	}
 	db_handle->free_table(db_handle, query_result.result);
