@@ -160,6 +160,8 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			data_record_flag = 1;
 		}
 
+		//printf("last_value->status %d, param_detail->alarm_enable %d, param_detail->param_type %d\n",
+		//	last_value->status, param_detail->alarm_enable, param_detail->param_type);
 		/* 上一次读取状态时，为上限报警状态 */
         if (last_value->status == UP_ALARM_ON) {
 			if (param_detail->alarm_enable & 0x01) { /* 报警上限值存在 */
@@ -458,7 +460,7 @@ static int record_com_fail(priv_info_t *priv, int alarm_status)
 		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc, alarm_desc) \
 		VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
 			priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
-			0, "", "", PARAM_TYPE_ENUM, 0, "", alarm_status, (alarm_status == 0) ? "com_normal" : "com_fail",
+			0, "", "", PARAM_TYPE_ENUM, 0.0, "", alarm_status, (alarm_status == 0) ? "com_normal" : "com_fail",
 			(alarm_status == 0) ? "通信恢复" : "通信失败", alarm_desc);
 
 	if (priv->rb_handle->push(priv->rb_handle, (void *)msg)) {
@@ -524,44 +526,49 @@ static void update_alarm_param(priv_info_t *priv, property_t *property)
 	query_result_t query_result;
 	sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d AND cmd_id=%d order by id",
 			"parameter", priv->protocol->protocol_id, property->cmd.cmd_id);
-	memset(&query_result, 0, sizeof(query_result_t));
-	priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
 
-	list_t *desc_list = property->param_desc;
-	param_desc_t *param_desc = NULL;
-	int list_size = desc_list->get_list_size(desc_list);
-	int i = 0;
-	if (query_result.row > 0) {
-		for (i = 0; i < list_size; i++) {
-			param_desc = desc_list->get_index_value(desc_list, i);
-			param_desc->alarm_enable = 0;
-			if (strlen(query_result.result[(i + 1) * query_result.column + 9]) != 0) {
-				param_desc->up_limit = atof(query_result.result[(i + 1) * query_result.column + 9]);
-				param_desc->alarm_enable |= 0x01;
-			}
+	int update_finish = 0;
+	while (!update_finish) {
+		memset(&query_result, 0, sizeof(query_result_t));
+		priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
 
-			if (strlen(query_result.result[(i + 1) * query_result.column + 10]) != 0) {
-				param_desc->up_free = atof(query_result.result[(i + 1) * query_result.column + 10]);
-				param_desc->alarm_enable |= 0x02;
-			}
+		if (query_result.row > 0) {
+			list_t *desc_list = property->param_desc;
+			param_desc_t *param_desc = NULL;
+			int list_size = desc_list->get_list_size(desc_list);
+			int i = 0;
+			for (i = 0; i < list_size; i++) {
+				param_desc = desc_list->get_index_value(desc_list, i);
+				param_desc->alarm_enable = 0;
+				if (strlen(query_result.result[(i + 1) * query_result.column + 9]) != 0) {
+					param_desc->up_limit = atof(query_result.result[(i + 1) * query_result.column + 9]);
+					param_desc->alarm_enable |= 0x01;
+				}
 
-			if (strlen(query_result.result[(i + 1) * query_result.column + 11]) != 0) {
-				param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 11]);
-				param_desc->alarm_enable |= 0x04;
-			}
+				if (strlen(query_result.result[(i + 1) * query_result.column + 10]) != 0) {
+					param_desc->up_free = atof(query_result.result[(i + 1) * query_result.column + 10]);
+					param_desc->alarm_enable |= 0x02;
+				}
 
-			if (strlen(query_result.result[(i + 1) * query_result.column + 12]) != 0) {
-				param_desc->low_free = atof(query_result.result[(i + 1) * query_result.column + 12]);
-				param_desc->alarm_enable |= 0x08;
+				if (strlen(query_result.result[(i + 1) * query_result.column + 11]) != 0) {
+					param_desc->low_limit = atof(query_result.result[(i + 1) * query_result.column + 11]);
+					param_desc->alarm_enable |= 0x04;
+				}
+
+				if (strlen(query_result.result[(i + 1) * query_result.column + 12]) != 0) {
+					param_desc->low_free = atof(query_result.result[(i + 1) * query_result.column + 12]);
+					param_desc->alarm_enable |= 0x08;
+				}
+				param_desc->update_threshold = atof(query_result.result[(i + 1) * query_result.column + 14]);
 			}
-			param_desc->update_threshold = atof(query_result.result[(i + 1) * query_result.column + 14]);
+			desc_list = NULL;
+			param_desc = NULL;
+			update_finish = 1;
 		}
+
+		priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
+		sleep(1);
 	}
-
-	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
-
-	desc_list = NULL;
-	param_desc = NULL;
 }
 
 static void *rs485_process(void *arg)
