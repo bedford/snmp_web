@@ -160,8 +160,6 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			data_record_flag = 1;
 		}
 
-		//printf("last_value->status %d, param_detail->alarm_enable %d, param_detail->param_type %d\n",
-		//	last_value->status, param_detail->alarm_enable, param_detail->param_type);
 		/* 上一次读取状态时，为上限报警状态 */
         if (last_value->status == UP_ALARM_ON) {
 			if (param_detail->alarm_enable & 0x01) { /* 报警上限值存在 */
@@ -663,6 +661,9 @@ static void *rs485_process(void *arg)
 			property = property_list->get_index_value(property_list, index);
 	        memset(buf, 0, sizeof(buf));
     		//print_buf(property->cmd.cmd_code, property->cmd.cmd_len);
+			if (update_alarm_param_flag) {
+				update_alarm_param(priv, property);
+			}
 
 			drv_gpio_write(RS485_ENABLE, 1);
 	        if (uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2)
@@ -677,9 +678,6 @@ static void *rs485_process(void *arg)
 	                list_t *value_list = list_create(sizeof(param_value_t));
 	                protocol->calculate_data(property, buf, len, value_list);
 	                //print_param_value(value_list);
-					if (update_alarm_param_flag) {
-						update_alarm_param(priv, property);
-					}
 					if (property->last_param_value == NULL) {
 						create_last_param_value_list(priv, property, value_list,
 							(db_access_t *)thread_param->data_db_handle);
