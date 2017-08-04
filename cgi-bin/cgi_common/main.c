@@ -66,7 +66,7 @@ static int net_get_hwaddr(char *ifname, unsigned char *mac)
 	}
 	close(skfd);
 
-	sprintf(mac, "%02x:%02x:%02x:%02x:%02x:%02x",
+	sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X",
 		(unsigned char)ifr.ifr_hwaddr.sa_data[0],
 		(unsigned char)ifr.ifr_hwaddr.sa_data[1],
 		(unsigned char)ifr.ifr_hwaddr.sa_data[2],
@@ -833,7 +833,16 @@ static int system_runtime_info(cJSON *root, priv_info_t *priv)
 	}
 
 	cJSON_AddStringToObject(response, "hardware_version", "V1.2");
-	cJSON_AddStringToObject(response, "serial_number", "20160820010001");
+
+	fp = fopen("/tmp/sn", "rb");
+	if (fp != NULL) {
+		char tmp[128] = {0};
+		if (fgets(tmp, 128, fp) != NULL) {
+			cJSON_AddStringToObject(response, "serial_number", tmp);
+		}
+	} else {
+		cJSON_AddStringToObject(response, "serial_number", "20160820010001");
+	}
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
