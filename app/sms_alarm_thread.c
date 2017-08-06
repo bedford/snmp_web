@@ -266,6 +266,31 @@ static void *sms_alarm_process(void *arg)
 	update_sms_contact(priv);
 	priv->modem = modem_create();
 
+	int ret = -1;
+	int count = 0;
+	char sca_code[32] = {0};
+	while (ret != 0) {
+		count++;
+		if (count > 20) {
+			break;
+		}
+
+		printf("try to get sca time: %d\n", count);
+		if (priv->modem->connected(priv->modem)) {
+			printf("conntected modem failed\n");
+			sleep(1);
+			continue;
+		}
+
+		if (priv->modem->get_sca(priv->modem, sca_code)) {
+			printf("get sca failed\n");
+			sleep(1);
+			continue;
+		}
+
+		ret = 0;
+	}
+
 	alarm_msg_t *alarm_msg = NULL;
 	while (thiz->thread_status) {
 		priv->send_times = priv->pref_handle->get_send_sms_times(priv->pref_handle);
