@@ -821,6 +821,7 @@ static int system_runtime_info(cJSON *root, priv_info_t *priv)
 		cJSON_AddStringToObject(response, "run_time", "未知");
 	}
 	fclose(fp);
+	fp = NULL;
 
 	fp = fopen("/bsp_version", "rb");
 	if (fp != NULL) {
@@ -831,6 +832,8 @@ static int system_runtime_info(cJSON *root, priv_info_t *priv)
 	} else {
 		cJSON_AddStringToObject(response, "bsp_version", "未知");
 	}
+	fclose(fp);
+	fp = NULL;
 
 	cJSON_AddStringToObject(response, "hardware_version", "V1.2");
 
@@ -843,6 +846,8 @@ static int system_runtime_info(cJSON *root, priv_info_t *priv)
 	} else {
 		cJSON_AddStringToObject(response, "serial_number", "20160820010001");
 	}
+	fclose(fp);
+	fp = NULL;
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
