@@ -31,7 +31,11 @@
 #include "data_write_thread.h"
 #include "beep_thread.h"
 #include "version.h"
+#include "logger.h"
 
+/**
+  @brief    主函数私有成员结构
+ */
 typedef struct {
 	db_access_t		*sys_db_handle;
 	db_access_t		*data_db_handle;
@@ -39,49 +43,40 @@ typedef struct {
 	preference_t	*pref_handle;
 } priv_info_t;
 
+/**
+  @brief    主线程是否正常运行状态标记
+ */
 static int runnable = 1;
 
-static void print_snmp_protocol(protocol_t *snmp_protocol)
-{
-    printf("#############################################\n");
-    printf("protocol_id:%d\n", snmp_protocol->protocol_id);
-    printf("protocol_description:%s\n", snmp_protocol->protocol_name);
-    printf("get_cmd_info func %p\n", snmp_protocol->get_property);
-    printf("cal_dev_data func %p\n", snmp_protocol->calculate_data);
-    printf("#############################################\n");
-}
+/**
+  @brief    信号捕获函数
+  @param    signum 信号编号
+  @return
 
-static void print_param_value(list_t *param_value_list)
-{
-    int len = param_value_list->get_list_size(param_value_list);
-    param_value_t *param_value = NULL;
-    int i = 0;
-    for (i = 0; i < len; i++) {
-        printf("len %d\n", len);
-        param_value = param_value_list->get_index_value(param_value_list, i);
-        printf("param_id %d\n", param_value->param_id);
-        printf("param_value %.1f\n", param_value->param_value);
-    }
-}
-
+  根据信号值判断是否要退出程序
+ */
 static void signal_processing(int signum)
 {
         switch (signum) {
         case SIGKILL:
                 runnable = 0;
-                //printf("signum[%d]\n", signum);
                 break;
         case SIGTERM:
         case SIGINT:
         case SIGSEGV:
                 runnable = 0;
-                //printf("signum[%d]\n", signum);
                 break;
         default:
                 break;
         }
 }
 
+/**
+  @brief    设置信号处理函数
+  @param    signum 信号编号
+  @param	func(int) 信号处理函数指针
+  @return
+ */
 static void set_signal_handler(int signum, void func(int))
 {
         struct sigaction sigAction;
@@ -92,6 +87,11 @@ static void set_signal_handler(int signum, void func(int))
         sigaction(signum, &sigAction, NULL);
 }
 
+/**
+  @brief    启用硬件看门狗
+  @return	0	启用硬件看门狗成功
+			-1	启用硬件看门狗失败
+ */
 static int watchdog_open(void)
 {
     int fd = open("/dev/watchdog",O_RDWR);
@@ -103,11 +103,23 @@ static int watchdog_open(void)
     return fd;
 }
 
+/**
+  @brief    喂硬件看门狗
+  @param	fd 硬件看门狗设备文件句柄
+  @return
+ */
 static void watchdog_feed(int fd)
 {
     ioctl(fd, WDIOC_KEEPALIVE);
 }
 
+/**
+  @brief    设置硬件看门狗超时时长
+  @param	fd 硬件看门狗设备文件句柄
+  @param	timeout 超时时间，因驱动中限制，不得超过30秒
+  @return	-1	设置失败
+			0	设置成功
+ */
 static int watchdog_set_timeout(int fd, unsigned long timeout)
 {
     if (ioctl(fd, WDIOC_SETTIMEOUT, &timeout) < 0) {
@@ -118,6 +130,11 @@ static int watchdog_set_timeout(int fd, unsigned long timeout)
     return 0;
 }
 
+/**
+  @brief    创建数据表
+  @param	priv 私有成员指针
+  @return
+ */
 void create_data_table(priv_info_t *priv)
 {
 	char error_msg[512] = {0};
@@ -215,6 +232,11 @@ void create_data_table(priv_info_t *priv)
     priv->data_db_handle->action(priv->data_db_handle, sql, error_msg);
 }
 
+/**
+  @brief    创建或重建串口配置表、协议库支持设备表、协议库设备参数信息表
+  @param	priv 私有成员指针
+  @return
+ */
 void update_uart_cfg(priv_info_t *priv)
 {
 	//初始化
@@ -344,6 +366,11 @@ void update_uart_cfg(priv_info_t *priv)
     protocol_list = NULL;
 }
 
+/**
+  @brief    创建或重建DI信息表
+  @param	priv 私有成员指针
+  @return
+ */
 void create_di_cfg(priv_info_t *priv)
 {
 	//初始化 di 配置表
@@ -381,6 +408,11 @@ void create_di_cfg(priv_info_t *priv)
 	}
 }
 
+/**
+  @brief    创建或重建用户信息表、短信报警和邮件报警联系人表
+  @param	priv 私有成员指针
+  @return
+ */
 static void create_user(priv_info_t *priv)
 {
 	//初始化 用户表
@@ -449,6 +481,11 @@ static void create_user(priv_info_t *priv)
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 }
 
+/**
+  @brief    初始化DO输出口
+  @param	priv 私有成员指针
+  @return
+ */
 static void init_do_output(priv_info_t *priv)
 {
 	do_param_t param = priv->pref_handle->get_do_param(priv->pref_handle);
@@ -461,6 +498,13 @@ static void init_do_output(priv_info_t *priv)
     }
 }
 
+/**
+  @brief    生成设备断电报警信息并推送到邮件和短信报警信息队列
+  @param	sms_rb_handle 短信报警队列
+  @param	email_rb_handle 邮件报警队列
+  @param	alarm_pool_handle 报警信息内存池
+  @return
+ */
 static void send_alarm_msg(ring_buffer_t	*sms_rb_handle,
 						   ring_buffer_t	*email_rb_handle,
 						   mem_pool_t		*alarm_pool_handle)
@@ -505,6 +549,10 @@ static void send_alarm_msg(ring_buffer_t	*sms_rb_handle,
 	tmp_alarm_msg = NULL;
 }
 
+/**
+  @brief    输出程序版本信息到/tmp/version文件中
+  @return
+ */
 static void create_version_info(void)
 {
 	char current_timing[32] = {0};
@@ -521,14 +569,19 @@ static void create_version_info(void)
 	sprintf(tmp, "%s\n%s\n%s\n", APP_VERSION, get_protocol_version(), current_timing);
 
 	FILE *fp = fopen("/tmp/version", "wb");
-	fwrite(tmp, 1, strlen(tmp), fp);
+	int ret = fwrite(tmp, 1, strlen(tmp), fp);
 	fclose(fp);
 	fp = NULL;
 }
 
+/**
+  @brief    主程序入口
+  @return
+ */
 int main(void)
 {
 	create_version_info();
+	snmp_log_init(INFO);
 
 	priv_info_t *priv = (priv_info_t *)calloc(1, sizeof(priv_info_t));
 	priv->pref_handle = preference_create();
@@ -545,6 +598,7 @@ int main(void)
 		create_data_table(priv);
 		update_uart_cfg(priv);
 		file_remove("/opt/app/recovery_default");
+		snmp_log(WARN, "recovery to default setting\n");
 	}
 
 	ring_buffer_t *rb_handle = ring_buffer_create(32);
@@ -663,6 +717,8 @@ int main(void)
 	beep_thread_param.pref_handle	= priv->pref_handle;
 	beep_thread->start(beep_thread, (void *)&beep_thread_param);
 
+	snmp_log(WARN, "All threads running, application start\n");
+
 	/* 使能电源管理模块 */
 	unsigned char power_status = 0;
 	drv_gpio_open(POFF_PIN);
@@ -673,12 +729,13 @@ int main(void)
 	int power_off_cnt = 0;
 	int alarm_flag = 0;
 
+	/* 打开看门狗 */
     int fd = watchdog_open();
     if (fd < 0) {
         exit(1);
     }
     unsigned long timeout = 30;
-    watchdog_set_timeout(fd, timeout);
+    watchdog_set_timeout(fd, timeout);	/* 设置看门狗超时时间，不得超过30秒 */
 
 	int reboot_flag = 0;
     while (runnable) {
@@ -691,6 +748,7 @@ int main(void)
 			if (alarm_flag == 0) {
 				alarm_flag = 1;
 				send_alarm_msg(sms_rb_handle, email_rb_handle, alarm_pool_handle);
+				snmp_log(WARN, "Power supply off\n");
 			}
 			power_off_cnt++;
 			if (power_off_cnt > 20) {
@@ -710,6 +768,7 @@ int main(void)
 			if (fp != NULL) {
 				fclose(fp);
 				reboot_flag = 1;
+				snmp_log(WARN, "Mannual reboot the device\n");
 				break;
 			}
 		}
