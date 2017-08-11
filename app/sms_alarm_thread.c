@@ -17,7 +17,7 @@
 #include "modem.h"
 
 #define MAX_QUEUE_NUMBER	(16)
-#define MAX_SMS_USER_NUM	(10)
+#define MAX_SMS_USER_NUM	(16)
 
 typedef struct {
 	char	name[32];
@@ -271,20 +271,20 @@ static void *sms_alarm_process(void *arg)
 	char sca_code[32] = {0};
 	while (ret != 0) {
 		count++;
-		if (count > 20) {
+		if (count >= 10) {
 			break;
 		}
 
 		printf("try to get sca time: %d\n", count);
 		if (priv->modem->connected(priv->modem)) {
 			printf("conntected modem failed\n");
-			sleep(1);
+			sleep(2);
 			continue;
 		}
 
 		if (priv->modem->get_sca(priv->modem, sca_code)) {
 			printf("get sca failed\n");
-			sleep(1);
+			sleep(2);
 			continue;
 		}
 
