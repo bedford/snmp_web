@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+/**
+ * @brief   DI线程参数
+ */
 typedef struct
 {
 	thread_t	*self;
@@ -20,6 +23,11 @@ typedef struct
 	void 		*alarm_pool_handle;
 } di_thread_param_t;
 
+/**
+ * @brief   di_thread_create 创建DI线程对象
+ *
+ * @return
+ */
 thread_t *di_thread_create(void);
 
 #ifdef __cplusplus

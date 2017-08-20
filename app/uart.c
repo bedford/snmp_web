@@ -14,7 +14,6 @@ static char *device_name[] = {
     "/dev/ttySAC0",
     "/dev/ttySAC1",
     "/dev/ttySAC2",
-    //"/dev/ttyUSB0",
     "/dev/ttySAC3",
 };
 
@@ -24,8 +23,8 @@ typedef struct {
 } priv_info_t;
 
 /**
- * [set_uart_param 串口初始化时，设置相应的参数]
- * @param priv [实例私有成员数据]
+ * @brief   set_uart_param  串口初始化时，设置相应的参数
+ * @param   priv            实例私有成员数据
  */
 static void set_uart_param(priv_info_t *priv)
 {
@@ -118,9 +117,9 @@ static void set_uart_param(priv_info_t *priv)
 }
 
 /**
- * [uart_open 打开串口设备文件]
- * @param  thiz [实例本身]
- * @return      [是否打开成功]
+ * @brief   uart_open   打开串口设备文件
+ * @param   thiz        实例本身
+ * @return              是否打开成功
  */
 static int uart_open(uart_t *thiz)
 {
@@ -140,12 +139,12 @@ static int uart_open(uart_t *thiz)
 }
 
 /**
- * [uart_read 读串口数据]
- * @param  thiz    [实例本身]
- * @param  buf     [读数据缓存]
- * @param  len     [期望读取数据长度]
- * @param  timeout [超时时间]
- * @return         [是否读取成功或读到的数据长度]
+ * @brief   uart_read   读串口数据
+ * @param   thiz        实例本身
+ * @param   buf         读数据缓存
+ * @param   len         期望读取数据长度
+ * @param   timeout     超时时间
+ * @return              是否读取成功或读到的数据长度
  */
 static int uart_read(uart_t *thiz, char *buf, int len, int timeout)
 {
@@ -175,11 +174,11 @@ static int uart_read(uart_t *thiz, char *buf, int len, int timeout)
 }
 
 /**
- * [uart_write 往串口中写数据]
- * @param  thiz [实例本身]
- * @param  buf  [写数据缓存]
- * @param  len  [数据长度]
- * @return      [是否写入成功]
+ * @brief   uart_write  往串口中写数据
+ * @param   thiz        实例本身
+ * @param   buf         写数据缓存
+ * @param   len         数据长度
+ * @return              是否写入成功
  */
 static int uart_write(uart_t *thiz, const char *buf, int len, int timeout)
 {
@@ -209,8 +208,8 @@ static int uart_write(uart_t *thiz, const char *buf, int len, int timeout)
 }
 
 /**
- * [uart_destroy 释放实例内存并关闭串口设备文件]
- * @param thiz [实例本身]
+ * @brief   uart_destroy    释放实例内存并关闭串口设备文件
+ * @param   thiz            实例本身
  */
 static void uart_destroy(uart_t *thiz)
 {
@@ -226,6 +225,11 @@ static void uart_destroy(uart_t *thiz)
     }
 }
 
+/**
+ * @brief   uart_create 创建串口对象 
+ * @param   param
+ * @return
+ */
 uart_t *uart_create(uart_param_t *param)
 {
     uart_t *thiz = calloc(1, sizeof(uart_t) + sizeof(priv_info_t));

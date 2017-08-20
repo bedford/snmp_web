@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+/**
+ * @brief   邮件报警发送线程参数
+ */
 typedef struct
 {
 	thread_t	*self;
@@ -20,6 +23,10 @@ typedef struct
 	void 		*alarm_pool_handle;
 } email_alarm_thread_param_t;
 
+/**
+ * @brief   email_alarm_thread_create 创建邮件报警线程对象
+ * @return
+ */
 thread_t *email_alarm_thread_create(void);
 
 #ifdef __cplusplus

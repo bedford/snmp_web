@@ -19,6 +19,12 @@ typedef struct
 
 } priv_info;
 
+/**
+ * @brief   ring_buffer_push    将data放入环形缓冲 
+ * @param   thiz
+ * @param   data
+ * @return
+ */
 int ring_buffer_push(ring_buffer_t *thiz, void *data)
 {
         int ret = -1;
@@ -38,6 +44,12 @@ int ring_buffer_push(ring_buffer_t *thiz, void *data)
         return ret;
 }
 
+/**
+ * @brief   ring_buffer_pop 从环形缓冲中取出data 
+ * @param   thiz
+ * @param   data
+ * @return
+ */
 int ring_buffer_pop(ring_buffer_t *thiz, void **data)
 {
         int ret = -1;
@@ -57,6 +69,10 @@ int ring_buffer_pop(ring_buffer_t *thiz, void **data)
         return ret;
 }
 
+/**
+ * @brief   ring_buffer_destroy 销毁环形缓冲对象 
+ * @param   thiz
+ */
 void ring_buffer_destroy(ring_buffer_t *thiz)
 {
         if (thiz != NULL) {
@@ -73,6 +89,11 @@ void ring_buffer_destroy(ring_buffer_t *thiz)
         }
 }
 
+/**
+ * @brief   ring_buffer_create  创建环形缓冲对象 
+ * @param   size
+ * @return
+ */
 ring_buffer_t *ring_buffer_create(int size)
 {
         ring_buffer_t *thiz = NULL;

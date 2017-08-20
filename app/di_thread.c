@@ -68,6 +68,13 @@ typedef struct {
 	di_param_t		di_param[4];
 } priv_info_t;
 
+/**
+ * @brief   alarm_data_record   DI报警记录处理
+ *
+ * @param   priv                私有变量结构体指针
+ * @param   index               DI序号
+ * @param   value               DI输入值
+ */
 static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 {
 	msg_t *msg = NULL;
@@ -158,6 +165,13 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 	tmp_alarm_msg = NULL;
 }
 
+/**
+ * @brief   history_data_record DI历史记录处理
+ *
+ * @param   priv                私有变量结构体指针
+ * @param   index               DI序号
+ * @param   value               DI输入值
+ */
 static void history_data_record(priv_info_t *priv, int index, unsigned char value)
 {
 	msg_t *msg = NULL;
@@ -183,6 +197,11 @@ static void history_data_record(priv_info_t *priv, int index, unsigned char valu
 	msg = NULL;
 }
 
+/**
+ * @brief   update_di_param 更新DI参数
+ *
+ * @param   priv            私有变量结构体指针
+ */
 static void update_di_param(priv_info_t *priv)
 {
 	char sql[256] = {0};
@@ -216,6 +235,14 @@ static void update_di_param(priv_info_t *priv)
 	param = NULL;
 }
 
+/**
+ * @brief   update_di_realdata  更新DI实时状态到共享内存中
+ *
+ * @param   priv                私有变量结构体指针
+ * @param   di_data             DI描述信息
+ * @param   index               DI序号
+ * @param   value               DI输入值
+ */
 static void update_di_realdata(priv_info_t *priv, element_data_t *di_data, int index, unsigned char value)
 {
 	di_param_t *param = &(priv->di_param[index]);
@@ -243,6 +270,13 @@ static void update_di_realdata(priv_info_t *priv, element_data_t *di_data, int i
 	}
 }
 
+/**
+ * @brief   di_process  DI处理线程入口
+ *
+ * @param   arg         DI线程参数
+ *
+ * @return
+ */
 static void *di_process(void *arg)
 {
 	di_thread_param_t *thread_param = (di_thread_param_t *)arg;
@@ -353,6 +387,11 @@ static void *di_process(void *arg)
 	return (void *)0;
 }
 
+/**
+ * @brief   di_thread_destroy   销毁DI线程对象资源
+ *
+ * @param   thiz                DI线程对象指针
+ */
 static void di_thread_destroy(thread_t *thiz)
 {
     if (thiz != NULL) {
@@ -368,6 +407,11 @@ static void di_thread_destroy(thread_t *thiz)
     }
 }
 
+/**
+ * @brief   di_thread_create 创建DI处理线程对象
+ *
+ * @return  线程对象指针
+ */
 thread_t *di_thread_create(void)
 {
 	thread_t *thiz = (thread_t *)calloc(1, sizeof(thread_t) + sizeof(priv_info_t));

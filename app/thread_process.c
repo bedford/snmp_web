@@ -5,11 +5,21 @@
 
 #include "thread_process.h"
 
+/**
+ * @brief   thread_terminate    结束线程
+ * @param   thiz
+ */
 void thread_terminate(thread_t *thiz)
 {
         thiz->thread_status = 0;
 }
 
+/**
+ * @brief   thread_start    启动线程 
+ * @param   thiz
+ * @param   arg
+ * @return
+ */
 int thread_start(thread_t *thiz, void *arg)
 {
         int ret = -1;
@@ -33,6 +43,10 @@ int thread_start(thread_t *thiz, void *arg)
         return ret;
 }
 
+/**
+ * @brief   thread_join 等待线程结束 
+ * @param   thiz
+ */
 void thread_join(thread_t *thiz)
 {
         if (thiz->thread_status) {
@@ -44,6 +58,10 @@ void thread_join(thread_t *thiz)
         }
 }
 
+/**
+ * @brief   thread_destroy  销毁线程对象 
+ * @param   thiz
+ */
 void thread_destroy(thread_t *thiz)
 {
         if (thiz != NULL) {

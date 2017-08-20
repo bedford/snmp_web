@@ -16,6 +16,14 @@
 #include "shm_object.h"
 #include "semaphore.h"
 
+/**
+  @brief    蜂鸣器线程处理函数
+  @param    beep_thread_param_t 线程参数对象指针
+  @return
+
+  通过读取共享内存中RS232串口数据、RS485串口数据和DI输入数据，
+  如存在报警的状态，同时使能蜂鸣器报警的情况下，打开蜂鸣器报警
+ */
 static void *beep_process(void *arg)
 {
 	beep_thread_param_t *thread_param = (beep_thread_param_t *)arg;
@@ -147,6 +155,10 @@ static void *beep_process(void *arg)
 	return (void *)0;
 }
 
+/**
+  @brief    创建蜂鸣器线程对象
+  @return   线程对象指针
+ */
 thread_t *beep_thread_create(void)
 {
 	thread_t *thiz = (thread_t *)calloc(1, sizeof(thread_t));

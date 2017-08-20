@@ -19,11 +19,17 @@
 #define MAX_QUEUE_NUMBER	(16)
 #define MAX_SMS_USER_NUM	(16)
 
+/**
+ * @brief   联系人信息声明
+ */
 typedef struct {
 	char	name[32];
 	char	phone_num[16];
 } sms_contact_t;
 
+/**
+ * @brief   私有成员变量
+ */
 typedef struct {
 	int				sms_contact_cnt;
 	sms_contact_t	sms_user_array[MAX_SMS_USER_NUM];
@@ -46,6 +52,11 @@ typedef struct {
 	mem_pool_t 		*alarm_pool_handle;
 } priv_info_t;
 
+/** 
+ * @brief   clear_ring_buffer   清除环形缓冲 
+ * @param   rb_handle
+ * @param   mpool_handle
+ */
 static void clear_ring_buffer(ring_buffer_t *rb_handle,
 							  mem_pool_t 	*mpool_handle)
 {
@@ -62,6 +73,11 @@ static void clear_ring_buffer(ring_buffer_t *rb_handle,
 	}
 }
 
+/**
+ * @brief   update_queue    新插入短信报警队列 
+ * @param   priv
+ * @param   msg
+ */
 static void update_queue(priv_info_t *priv, alarm_msg_t *msg)
 {
 	int i = 0;
@@ -75,6 +91,11 @@ static void update_queue(priv_info_t *priv, alarm_msg_t *msg)
 	}
 }
 
+/**
+ * @brief   update_queue    更新短信报警队列 
+ * @param   priv
+ * @param   msg
+ */
 static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 {
 	int i = 0;
@@ -115,6 +136,10 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 	}
 }
 
+/**
+ * @brief   update_sms_contact 更新短信报警人信息
+ * @param   priv
+ */
 static void update_sms_contact(priv_info_t *priv)
 {
 	priv->sms_contact_cnt = 0;
@@ -139,6 +164,11 @@ static void update_sms_contact(priv_info_t *priv)
 	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 }
 
+/**
+ * @brief   send_to_contact 给短信报警联系人发送短信 
+ * @param   priv
+ * @param   alarm_msg
+ */
 static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 {
 	char sca_code[32] = {0};
@@ -217,6 +247,10 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 	}
 }
 
+/**
+ * @brief   send_alarm_sms  检测短信报警队列,确认是否需要发送短信报警 
+ * @param   priv
+ */
 static void send_alarm_sms(priv_info_t *priv)
 {
     struct timeval current_time;
@@ -248,6 +282,11 @@ static void send_alarm_sms(priv_info_t *priv)
 	}
 }
 
+/**
+ * @brief   sms_alarm_process 短信报警处理线程
+ * @param   arg
+ * @return
+ */
 static void *sms_alarm_process(void *arg)
 {
 	sms_alarm_thread_param_t *thread_param = (sms_alarm_thread_param_t *)arg;
@@ -325,6 +364,10 @@ static void *sms_alarm_process(void *arg)
 	return (void *)0;
 }
 
+/**
+ * @brief   sms_alarm_thread_create 短信报警线程对象创建 
+ * @return
+ */
 thread_t *sms_alarm_thread_create(void)
 {
 	thread_t *thiz = (thread_t *)calloc(1, sizeof(thread_t) + sizeof(priv_info_t));

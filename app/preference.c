@@ -31,6 +31,13 @@ typedef struct {
 	do_param_t		do_param;
 } priv_info_t;
 
+/**
+ * @brief   write_profile   修改INI配置文件内存缓存值 
+ * @param   dic
+ * @param   section
+ * @param   key
+ * @param   value
+ */
 static void write_profile(dictionary    *dic,
                           const char    *section,
                           const char    *key,
@@ -46,6 +53,11 @@ static void write_profile(dictionary    *dic,
     iniparser_set(dic, tmp, value);
 }
 
+/**
+ * @brief   dump_profile    将INI文件内存缓存回写到配置文件 
+ * @param   dic
+ * @param   filename
+ */
 static void dump_profile(dictionary *dic, char *filename)
 {
     FILE *fp = fopen(filename, "w");
@@ -56,6 +68,11 @@ static void dump_profile(dictionary *dic, char *filename)
     }
 }
 
+/**
+ * @brief   load_system_param   加载标记配置项 
+ * @param   priv
+ * @return
+ */
 static int load_system_param(priv_info_t *priv)
 {
 	priv->init_flag = iniparser_getint(priv->dic, "SYSTEM:init_flag", 1);
@@ -70,6 +87,10 @@ static int load_system_param(priv_info_t *priv)
 	return 0;
 }
 
+/**
+ * @brief   load_sms_send_param 短信和邮件发送次数及间隔配置 
+ * @param   priv
+ */
 static void load_sms_send_param(priv_info_t *priv)
 {
 	priv->send_sms_times		= iniparser_getint(priv->dic, "SMS:send_times", 3);
@@ -78,6 +99,10 @@ static void load_sms_send_param(priv_info_t *priv)
 	priv->send_email_interval	= iniparser_getint(priv->dic, "EMAIL:send_interval", 1);
 }
 
+/**
+ * @brief   load_email_server_param 邮件服务器配置 
+ * @param   priv
+ */
 static void load_email_server_param(priv_info_t *priv)
 {
 	strncpy(priv->email_server_param.smtp_server,
@@ -95,6 +120,10 @@ static void load_email_server_param(priv_info_t *priv)
 	priv->email_server_param.port = iniparser_getint(priv->dic, "EMAIL:port", 25);
 }
 
+/**
+ * @brief   load_do_param DO配置信息 
+ * @param   priv
+ */
 static void load_do_param(priv_info_t *priv)
 {
 	priv->do_param.beep_enable = iniparser_getint(priv->dic, "DO:beep_alarm_enable", 0);

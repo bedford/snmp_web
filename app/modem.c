@@ -6,6 +6,9 @@
 #include "uart.h"
 #include "modem.h"
 
+/**
+ * @brief   AT命令枚举
+ */
 enum
 {
     AT = 0,
@@ -16,20 +19,23 @@ enum
     AT_CSCA,
 };
 
+/**
+ * @brief   私有成员
+ */
 typedef struct
 {
-    uart_t  *uart;
-    char    sca[16];
-    char    sca_pdu[16];
+    uart_t  *uart;          /* 串口句柄指针 */
+    char    sca[16];        /* 短信中心 */
+    char    sca_pdu[16];    /* 短信中心PDU码 */
 } priv_info_t;
 
 #define AT_CMD_TAILER_LEN   (1)
 
 /**
- * [utf8_to_unicode utf8转成unicode]
- * @param  utf8    [utf8格式字符串地址]
- * @param  unicode [返回的unicode值]
- * @return         [该字符占的字节数，以便对整个字符串进行移位处理]
+ * @brief   utf8_to_unicode utf8转成unicode
+ * @param   utf8            utf8格式字符串地址
+ * @param   unicode         返回的unicode值
+ * @return                  该字符占的字节数，以便对整个字符串进行移位处理
  */
 static int utf8_to_unicode(const char *utf8, unsigned int *unicode)
 {
@@ -54,6 +60,11 @@ static int utf8_to_unicode(const char *utf8, unsigned int *unicode)
     return ret;
 }
 
+/**
+ * @brief   utf8_string_convert utf8字符串转换成unicode编码 
+ * @param   utf8_string         源utf8字符串指针
+ * @param   dst                 目标编码指针
+ */
 static void utf8_string_convert(char *utf8_string, char *dst)
 {
     char *p = utf8_string;
@@ -77,8 +88,8 @@ static void utf8_string_convert(char *utf8_string, char *dst)
 }
 
 /**
- * [send_tailer 发送AT指令结束符0x0D]
- * @param uart [串口操作句柄]
+ * @brief   send_tailer 发送AT指令结束符0x0D
+ * @param   uart        串口操作句柄
  */
 static inline void send_tailer(uart_t *uart)
 {
@@ -86,12 +97,24 @@ static inline void send_tailer(uart_t *uart)
     uart->write(uart, tailer, AT_CMD_TAILER_LEN, 1);
 }
 
+/**
+ * @brief   send_ascii  发送ASCII码 
+ * @param   uart        串口操作句柄
+ * @param   buf         发送缓存指针
+ */
 static inline void send_ascii(uart_t *uart, const char *buf)
 {
     int len = strlen(buf);
     uart->write(uart, buf, len, 3);
 }
 
+/**
+ * @brief   at_cmd_implement    AT指针返回数据处理 
+ * @param   priv                私有成员变量
+ * @param   cmd                 发送的AT指令
+ * @param   cmd_index           发送的AT指令检举编号
+ * @return
+ */
 static int at_cmd_implement(priv_info_t *priv, const char *cmd, unsigned int cmd_index)
 {
     uart_t *uart = priv->uart;
@@ -141,6 +164,11 @@ static int at_cmd_implement(priv_info_t *priv, const char *cmd, unsigned int cmd
     return ret;
 }
 
+/**
+ * @brief   phone_to_pdu    电话号码转换成PDU编码格式 
+ * @param   src             电话号码字符串
+ * @param   dst             PDU编码格式目标串
+ */
 static void phone_to_pdu(char *src, char *dst)
 {
     char tmp[16] = {0};
@@ -162,6 +190,11 @@ static void phone_to_pdu(char *src, char *dst)
     }
 }
 
+/**
+ * @brief   modem_connected 通过发送AT指令,确认SMS模块是否正常 
+ * @param   thiz            SMS模块对象指针
+ * @return
+ */
 static int modem_connected(modem_t *thiz)
 {
     priv_info_t *priv = (priv_info_t *)thiz->priv;
@@ -174,6 +207,12 @@ static int modem_connected(modem_t *thiz)
     return ret;
 }
 
+/**
+ * @brief   modem_get_sca   获取短信中心号码
+ * @param   thiz
+ * @param   sca
+ * @return
+ */
 static int modem_get_sca(modem_t *thiz, char *sca)
 {
     priv_info_t *priv = (priv_info_t *)thiz->priv;
@@ -188,6 +227,12 @@ static int modem_get_sca(modem_t *thiz, char *sca)
     return ret;
 }
 
+/**
+ * @brief   modem_set_mode  设置短信发送模式 
+ * @param   thiz
+ * @param   sms_mode
+ * @return
+ */
 static int modem_set_mode(modem_t *thiz, sms_mode_t sms_mode)
 {
     priv_info_t *priv = (priv_info_t *)thiz->priv;
@@ -202,6 +247,12 @@ static int modem_set_mode(modem_t *thiz, sms_mode_t sms_mode)
     return ret;
 }
 
+/**
+ * @brief   append_packet   读取短信发送返回结果 
+ * @param   priv
+ * @param   sms_packet
+ * @return
+ */
 static int append_packet(priv_info_t *priv, char *sms_packet)
 {
     uart_t *uart = priv->uart;
@@ -220,6 +271,13 @@ static int append_packet(priv_info_t *priv, char *sms_packet)
     return -1;
 }
 
+/**
+ * @brief   send_sms    发送短信 
+ * @param   priv        私有成员变量
+ * @param   phone_num   接收人手机号码
+ * @param   content     短信内容
+ * @return
+ */
 static int send_sms(priv_info_t *priv, char *phone_num, char *content)
 {
     static unsigned char pdu_flag = 0;
@@ -297,12 +355,23 @@ static int send_sms(priv_info_t *priv, char *phone_num, char *content)
     return 0;
 }
 
+/**
+ * @brief   modem_send_sms  发送短信外部调用接口 
+ * @param   thiz
+ * @param   phone_num
+ * @param   content
+ * @return
+ */
 static int modem_send_sms(modem_t *thiz, char *phone_num, char *content)
 {
     priv_info_t *priv = (priv_info_t *)thiz->priv;
     return send_sms(priv, phone_num, content);
 }
 
+/**
+ * @brief   modem_destroy   销毁短信发送对象 
+ * @param   thiz
+ */
 static void modem_destroy(modem_t *thiz)
 {
     if (thiz != NULL) {
@@ -318,6 +387,10 @@ static void modem_destroy(modem_t *thiz)
     }
 }
 
+/**
+ * @brief   modem_create    创建短信发送对象 
+ * @return
+ */
 modem_t *modem_create(void)
 {
     modem_t *thiz = calloc(1, sizeof(modem_t) + sizeof(priv_info_t));

@@ -11,6 +11,15 @@ typedef struct
     sqlite3     *db;
 } priv_info;
 
+/**
+ * @brief   execute_no_query 数据库非查询类操作接口
+ *
+ * @param   thiz    数据库访问句柄
+ * @param   sql     输入的SQL语句
+ * @param   err_msg 返回的错误提示信息
+ *
+ * @return
+ */
 static int execute_no_query(db_access_t *thiz, const char *sql, char *err_msg)
 {
     priv_info *priv = (priv_info *)thiz->priv;
@@ -42,35 +51,17 @@ static int execute_no_query(db_access_t *thiz, const char *sql, char *err_msg)
     return 0;
 }
 
+/**
+ * @brief   execute_query   数据库查询操作接口
+ *
+ * @param   thiz            数据库访问句柄
+ * @param   sql             查询SQL语句
+ * @param   query_result    返回的错误提示信息
+ *
+ * @return
+ */
 static int execute_query(db_access_t *thiz, const char *sql, query_result_t *query_result)
 {
-#if 0
-    int ret = -1;
-    int row = 0;
-    int column = 0;
-    char *errMsg = NULL;
-    char **result;
-    priv_info *priv = (priv_info *)thiz->priv;
-
-    ret = sqlite3_get_table(priv->db, sql, &result, &row, &column, &errMsg);
-    if (ret != SQLITE_OK) {
-        fprintf(stderr, "errmsg:%s, sql %s\n", sqlite3_errmsg(priv->db), sql);
-        sqlite3_free(errMsg);
-        return -1;
-    }
-
-    //printf("sql:%s\n row %d, column %d\n", sql, row, column);
-    if (row > 0) {
-        int i = 1;
-        for (i = 1; i < (row + 1); i++) {
-            strcpy(list->filename[list->size], result[i * column + 1]);
-            list->size++;
-        }
-    }
-    sqlite3_free_table(result);
-
-    return 0;
-#else
 	priv_info *priv = (priv_info *)thiz->priv;
 	char *error_msg = NULL;
 	int ret = sqlite3_get_table(priv->db, sql, &(query_result->result), &(query_result->row),
@@ -82,9 +73,16 @@ static int execute_query(db_access_t *thiz, const char *sql, query_result_t *que
 	}
 
 	return 0;
-#endif
 }
 
+/**
+ * @brief   db_free_table   释放查询接口申请的内存
+ *
+ * @param   thiz            数据库操作句柄
+ * @param   result          查询返回结果内存指针
+ *
+ * @return
+ */
 static int db_free_table(db_access_t *thiz, char **result)
 {
 	sqlite3_free_table(result);
@@ -92,6 +90,11 @@ static int db_free_table(db_access_t *thiz, char **result)
 	return 0;
 }
 
+/**
+ * @brief   db_access_destroy   销毁数据库操作句柄
+ *
+ * @param   thiz
+ */
 static void db_access_destroy(db_access_t *thiz)
 {
     if (thiz != NULL) {
@@ -107,6 +110,13 @@ static void db_access_destroy(db_access_t *thiz)
     }
 }
 
+/**
+ * @brief   db_access_create    创建数据库操作对象句柄
+ *
+ * @param   file_name           数据库文件名称
+ *
+ * @return
+ */
 db_access_t *db_access_create(const char *file_name)
 {
         db_access_t *thiz = NULL;

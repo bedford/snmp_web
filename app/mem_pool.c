@@ -12,6 +12,9 @@
 static const int MPOOL_BUFFER_ALIGN_BIT = 3;
 static const int MPOOL_NODE_ALIGN_BIT   = 2;
 
+/**
+ * @brief   共享内存节点声明
+ */
 typedef struct
 {
         dll_node_t      node;
@@ -19,6 +22,9 @@ typedef struct
         unsigned int    in_use;
 } mpool_node_t;
 
+/**
+ * @brief   私有成员
+ */
 typedef struct
 {
         unsigned int    start_addr;
@@ -32,6 +38,12 @@ typedef struct
 
 } priv_info;
 
+/**
+ * @brief   pool_mem_alloc      根据所需要的大小向系统申请内存
+ * @param   alignment_in_bits
+ * @param   size                内存大小
+ * @return
+ */
 static void *pool_mem_alloc(unsigned int alignment_in_bits, unsigned int size)
 {
         unsigned int size_required = size + (1 << alignment_in_bits) - 1;
@@ -46,6 +58,13 @@ static void *pool_mem_alloc(unsigned int alignment_in_bits, unsigned int size)
         return (void *)mem;
 }
 
+/**
+ * @brief   mpool_init      内存池初始化
+ * @param   priv
+ * @param   buffer_size     内存大小
+ * @param   buffer_count    内存块数量
+ * @return
+ */
 static int mpool_init(priv_info *priv,
                       unsigned int buffer_size,
                       unsigned int buffer_count)
@@ -85,6 +104,11 @@ static int mpool_init(priv_info *priv,
         return 0;
 }
 
+/**
+ * @brief   mpool_alloc 向内存池申请内存
+ * @param   thiz
+ * @return
+ */
 static void *mpool_alloc(mem_pool_t *thiz)
 {
         void *ret = 0;
@@ -106,6 +130,12 @@ static void *mpool_alloc(mem_pool_t *thiz)
         return ret;
 }
 
+/**
+ * @brief   mpool_free 释放内存回内存池
+ * @param   thiz
+ * @param   p_buf
+ * @return
+ */
 static int mpool_free(mem_pool_t *thiz, void *p_buf)
 {
         unsigned int free_addr = (unsigned int)p_buf;
@@ -160,6 +190,10 @@ static void mpool_dump(mem_pool_t *thiz)
         }
 }
 
+/**
+ * @brief   mpool_release 内存池内存释放
+ * @param   thiz
+ */
 static void mpool_release(mem_pool_t *thiz)
 {
         if (thiz != NULL) {
@@ -181,6 +215,10 @@ static void mpool_release(mem_pool_t *thiz)
         }
 }
 
+/**
+ * @brief   mpool_destroy 内存池对象销毁
+ * @param   thiz
+ */
 static void mpool_destroy(mem_pool_t *thiz)
 {
         if (thiz != NULL) {
@@ -197,6 +235,12 @@ static void mpool_destroy(mem_pool_t *thiz)
         }
 }
 
+/**
+ * @brief   mem_pool_create 内存池对象创建
+ * @param   buffer_size     单个内存大小
+ * @param   buffer_count    内存块数量
+ * @return
+ */
 mem_pool_t *mem_pool_create(unsigned int buffer_size, unsigned int buffer_count)
 {
         if ((buffer_size < sizeof(unsigned int))

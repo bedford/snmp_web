@@ -13,6 +13,12 @@
 #include "mem_pool.h"
 #include "ring_buffer.h"
 
+/**
+ * @brief   clear_ring_buffer   data.db数据库操作命令环形缓冲队列清理
+ * @param   data_db_handle      data.db数据库操作句柄
+ * @param   rb_handle           环形缓冲句柄
+ * @param   mpool_handle        数据库操作命令内存池句柄
+ */
 static void clear_ring_buffer(db_access_t	*data_db_handle,
 							  ring_buffer_t *rb_handle,
 							  mem_pool_t 	*mpool_handle)
@@ -31,8 +37,23 @@ static void clear_ring_buffer(db_access_t	*data_db_handle,
 	}
 }
 
+/**
+ * @brief   历史记录保存时间
+ */
 #define HISTORY_DATA_TIMEOUT	(7 * 24 * 60 * 60)
+
+
+/**
+ * @brief   报警记录保存时间
+ */
 #define ALARM_DATA_TIMEOUT		(15 * 24 * 60 * 60)
+
+
+/**
+ * @brief   clean_old_data 清除旧的数据
+ *
+ * @param   data_db_handle
+ */
 static void clean_old_data(db_access_t *data_db_handle)
 {
 	char sql[1024] = {0};
@@ -75,6 +96,11 @@ static void clean_old_data(db_access_t *data_db_handle)
 	data_db_handle->action(data_db_handle, sql, error_msg);
 }
 
+/**
+ * @brief   data_in_db_process  data.db数据库文件操作线程
+ * @param   arg                 线程运行参数
+ * @return
+ */
 static void *data_in_db_process(void *arg)
 {
 	data_write_thread_param_t *thread_param = (data_write_thread_param_t *)arg;
@@ -118,6 +144,10 @@ static void *data_in_db_process(void *arg)
 	return (void *)0;
 }
 
+/**
+ * @brief   data_write_thread_create data.db操作线程创建
+ * @return
+ */
 thread_t *data_write_thread_create(void)
 {
 	thread_t *thiz = (thread_t *)calloc(1, sizeof(thread_t));

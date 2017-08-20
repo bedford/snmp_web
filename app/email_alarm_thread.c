@@ -21,11 +21,17 @@
 #define MAX_QUEUE_NUMBER	(16)
 #define MAX_EMAIL_USER_NUM	(10)
 
+/**
+ * @brief   邮件联系人
+ */
 typedef struct {
 	char	name[32];
 	char	email_addr[32];
 } email_contact_t;
 
+/**
+ * @brief   私有成员变量
+ */
 typedef struct {
 	int				email_contact_cnt;
 	email_contact_t	email_user_array[MAX_EMAIL_USER_NUM];
@@ -49,6 +55,11 @@ typedef struct {
 	smtp_t			*smtp_handle;
 } priv_info_t;
 
+/**
+ * @brief   clear_ring_buffer   清除邮件报警环形缓存
+ * @param   rb_handle           环形缓存句柄
+ * @param   mpool_handle        报警信息内存池句柄 
+ */
 static void clear_ring_buffer(ring_buffer_t *rb_handle,
 							  mem_pool_t 	*mpool_handle)
 {
@@ -65,7 +76,12 @@ static void clear_ring_buffer(ring_buffer_t *rb_handle,
 	}
 }
 
-static void update_queue(priv_info_t *priv, alarm_msg_t *msg)
+/**
+ * @brief   insert_queue    插入一个新的邮件报警信息到队列中
+ * @param   priv            私有成员指针
+ * @param   msg             邮件报警信息
+ */
+static void insert_queue(priv_info_t *priv, alarm_msg_t *msg)
 {
 	int i = 0;
 	for (i = 0; i < MAX_QUEUE_NUMBER; i++) {
@@ -78,7 +94,12 @@ static void update_queue(priv_info_t *priv, alarm_msg_t *msg)
 	}
 }
 
-static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
+/**
+ * @brief   update_alarm_queue  更新邮件报警队列
+ * @param   priv                私有变量指针
+ * @param   alarm_msg           报警信息
+ */
+static void update_alarm_queue(priv_info_t *priv, alarm_msg_t *alarm_msg)
 {
 	int i = 0;
 	alarm_msg_t *msg = NULL;
@@ -112,12 +133,16 @@ static void update_alarm_table(priv_info_t *priv, alarm_msg_t *alarm_msg)
 			    msg->send_times = priv->send_times;
             }
 
-			update_queue(priv, msg);
+			insert_queue(priv, msg);
 			msg = NULL;
 		}
 	}
 }
 
+/**
+ * @brief   update_email_contact 更新邮件报警联系人信息
+ * @param   priv
+ */
 static void update_email_contact(priv_info_t *priv)
 {
 	priv->email_contact_cnt = 0;
@@ -142,6 +167,12 @@ static void update_email_contact(priv_info_t *priv)
 	priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 }
 
+/**
+ * @brief   send_to_contact 发送邮件
+ *
+ * @param   priv
+ * @param   alarm_msg
+ */
 static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 {
 	priv->smtp_handle = smtp_create();
@@ -227,7 +258,11 @@ static void send_to_contact(priv_info_t *priv, alarm_msg_t *alarm_msg)
 	priv->smtp_handle = NULL;
 }
 
-static void send_alarm_email(priv_info_t *priv)
+/**
+ * @brief   check_alarm_email_queue 检查邮件报警队列状态，确定是否需要发送邮件
+ * @param   priv
+ */
+static void check_alarm_email_queue(priv_info_t *priv)
 {
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
@@ -258,6 +293,11 @@ static void send_alarm_email(priv_info_t *priv)
 	}
 }
 
+/**
+ * @brief   email_alarm_process 邮件发送线程入口
+ * @param   arg
+ * @return
+ */
 static void *email_alarm_process(void *arg)
 {
 	email_alarm_thread_param_t *thread_param = (email_alarm_thread_param_t *)arg;
@@ -289,7 +329,7 @@ static void *email_alarm_process(void *arg)
 		priv->send_interval = priv->pref_handle->get_send_email_interval(priv->pref_handle);
 
 		if (priv->email_rb_handle->pop(priv->email_rb_handle, (void **)&alarm_msg) == 0) {
-			update_alarm_table(priv, alarm_msg);
+			update_alarm_queue(priv, alarm_msg);
 
 			if (lf_queue_push(queue, alarm_msg) < 0) {
 				printf("##############  push to lock-free queue failed ##############\n");
@@ -308,7 +348,7 @@ static void *email_alarm_process(void *arg)
 			update_email_contact(priv);
 		}
 
-		send_alarm_email(priv);
+		check_alarm_email_queue(priv);
 		alarm_msg = NULL;
 	}
 
@@ -322,6 +362,10 @@ static void *email_alarm_process(void *arg)
 	return (void *)0;
 }
 
+/**
+ * @brief   email_alarm_thread_create 创建邮件发送线程对象
+ * @return
+ */
 thread_t *email_alarm_thread_create(void)
 {
 	thread_t *thiz = (thread_t *)calloc(1, sizeof(thread_t) + sizeof(priv_info_t));

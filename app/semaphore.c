@@ -35,16 +35,31 @@ static int set_semvalue(int sem_id)
     return 0;
 }
 
+/**
+ * @brief   semaphore_p 多进程信号量P操作 
+ * @param   sem_id
+ * @return
+ */
 int semaphore_p(int sem_id)
 {
     return pv(sem_id, -1);
 }
 
+/**
+ * @brief   semaphore_v 多进程信号量V操作 
+ * @param   sem_id
+ * @return
+ */
 int semaphore_v(int sem_id)
 {
     return pv(sem_id, 1);
 }
 
+/**
+ * @brief   semaphore_create    创建信号量 
+ * @param   key
+ * @return
+ */
 int semaphore_create(int key)
 {
     int ret = semget((key_t)key, 1, IPC_EXCL | IPC_CREAT);
@@ -59,6 +74,10 @@ int semaphore_create(int key)
     return ret;
 }
 
+/**
+ * @brief   semaphore_destory   销毁信号量 
+ * @param   sem_id
+ */
 void semaphore_destory(int sem_id)
 {
     union semun sem_union;

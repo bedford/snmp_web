@@ -7,6 +7,9 @@
 extern "C" {
 #endif
 
+/**
+ * @brief  data.db数据库操作线程初始化参数
+ */
 typedef struct
 {
 	thread_t	*self;

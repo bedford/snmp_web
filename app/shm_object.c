@@ -47,6 +47,12 @@ static int get_shm(key_t key, size_t size, void **addr)
         return -1;
 }
 
+/**
+ * @brief   shm_object_get  获取共享内存数据 
+ * @param   thiz
+ * @param   unit
+ * @return
+ */
 static int shm_object_get(shm_object_t *thiz, void *unit)
 {
     if (!thiz || !unit) {
@@ -61,6 +67,12 @@ static int shm_object_get(shm_object_t *thiz, void *unit)
     return 0;
 }
 
+/**
+ * @brief   shm_object_put  更新共享内存数据 
+ * @param   thiz
+ * @param   unit
+ * @return
+ */
 static int shm_object_put(shm_object_t *thiz, void *unit)
 {
     if (!thiz || !unit) {
@@ -75,6 +87,10 @@ static int shm_object_put(shm_object_t *thiz, void *unit)
     return 0;
 }
 
+/**
+ * @brief   shm_object_destroy  销毁共享内存对象 
+ * @param   thiz
+ */
 static void shm_object_destroy(shm_object_t *thiz)
 {
     if (thiz != NULL) {
@@ -92,6 +108,12 @@ static void shm_object_destroy(shm_object_t *thiz)
     }
 }
 
+/**
+ * @brief   shm_object_create   多进程共享数据对象创建 
+ * @param   shm_key
+ * @param   size
+ * @return
+ */
 shm_object_t *shm_object_create(key_t shm_key, unsigned int size)
 {
     if (!size || !shm_key) {

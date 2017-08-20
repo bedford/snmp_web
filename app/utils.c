@@ -1,6 +1,11 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+/**
+ * @brief   file_exist 检查文件是否存在
+ * @param   file_name
+ * @return
+ */
 int file_exist(const char *file_name)
 {
     int ret = -1;
@@ -11,6 +16,11 @@ int file_exist(const char *file_name)
     return ret;
 }
 
+/**
+ * @brief   file_remove 删除文件 
+ * @param   file_name
+ * @return
+ */
 int file_remove(const char *file_name)
 {
     int ret = -1;

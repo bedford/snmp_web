@@ -47,6 +47,9 @@ typedef struct
 	char			reserved[4];
 } alarm_msg_t;
 
+/**
+ * @brief   邮件服务器
+ */
 typedef struct {
 	char			smtp_server[32];
 	char			email_addr[32];
