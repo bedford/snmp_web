@@ -654,39 +654,34 @@ static void *rs485_process(void *arg)
 		param_cnt = 0;
 		for (index = 0; index < property_list_size; index++) {
 			property = property_list->get_index_value(property_list, index);
-	        memset(buf, 0, sizeof(buf));
-    		//print_buf(property->cmd.cmd_code, property->cmd.cmd_len);
 			if (update_alarm_param_flag) {
 				update_alarm_param(priv, property);
 			}
 
+			memset(buf, 0, sizeof(buf));
+			print_com_info(3, protocol->protocol_name, 0, property->cmd.cmd_code, property->cmd.cmd_len, 0);
 			drv_gpio_write(RS485_ENABLE, 1);
-	        if (uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2)
-                    == property->cmd.cmd_len) {
-            	usleep(20000);
-            	drv_gpio_write(RS485_ENABLE, 0);
-
-	            int len = uart->read(uart, buf, property->cmd.check_len, 2);
-	            printf("read len %d\n", len);
-	            //print_buf(buf, len);
-	            if (len == property->cmd.check_len) {
-	                list_t *value_list = list_create(sizeof(param_value_t));
-	                protocol->calculate_data(property, buf, len, value_list);
-	                //print_param_value(value_list);
+			ret = uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2);
+			usleep(8000);
+			drv_gpio_write(RS485_ENABLE, 0);
+			if (ret == property->cmd.cmd_len) {
+				int len = uart->read(uart, buf, property->cmd.check_len, 2);
+				list_t *value_list = list_create(sizeof(param_value_t));
+				ret = protocol->calculate_data(property, buf, len, value_list);
+				if (ret == 0) {
 					if (property->last_param_value == NULL) {
 						create_last_param_value_list(priv, property, value_list,
 							(db_access_t *)thread_param->data_db_handle);
 					} else {
 						param_cnt = compare_values(priv, property, value_list, param_cnt);
 					}
-	                value_list->destroy_list(value_list);
-	                value_list = NULL;
+
 					com_fail_count = 0;
 					if (com_fail_flag) {
 						com_fail_flag = 0;
 						record_com_fail(priv, 0);
 					}
-	            } else if (len == 0) {
+				} else if (ret == ERR_RETURN_LEN_ZERO) {
 					priv->rs485_realdata->cnt = 0;
 					if (com_fail_flag == 0) {
 						com_fail_count++;
@@ -695,7 +690,10 @@ static void *rs485_process(void *arg)
 							record_com_fail(priv, 1);
 						}
 					}
-                }
+				}
+				print_com_info(3, protocol->protocol_name, 1, buf, len, ret);
+				value_list->destroy_list(value_list);
+				value_list = NULL;
 	        } else {
 	            printf("write cmd failed------------\n");
 	        }
