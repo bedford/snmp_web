@@ -11,6 +11,11 @@ extern "C" {
 #define MAX_PROTOCOL_LEN	(128)
 #define MIN_PROTOCOL_LEN	(32)
 
+#define ERR_RETURN_LEN_ZERO         (100)   /* 读取到的数据长度为0 */
+#define ERR_RETURN_LEN_UNMATCH      (101)   /* 读取到的数据长度不匹配 */
+#define ERR_RETURN_CRC_UNMATCH      (102)   /* 读取到的数据CRC校验错误 */
+#define ERR_RETURN_ADDRESS_UNMATCH  (103)   /* MODBUS地址和读指令不匹配 */
+
 typedef struct
 {
     cmd_t   cmd;            	/* 读数据指令 */

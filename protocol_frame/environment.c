@@ -96,15 +96,19 @@ static int calculate_device_status(cmd_t    *cmd,
                                    list_t   *valid_value)
 {
     int ret = -1;
+    if (data_len == 0) {
+        return ERR_RETURN_LEN_ZERO;
+    }
+
     if (data_len != cmd->check_len) { //包长度校验
         printf("file %s, func %s, line %d, data len %d, check %d\n",
                 __FILE__, __func__, __LINE__, data_len, cmd->check_len);
-        return ret;
+        return ERR_RETURN_LEN_UNMATCH;
     }
 
     if ((data[0] != cmd->cmd_code[0]) && (data[1] != cmd->cmd_code[1])) {   //包头地址和命令校验
         printf("file %s, func %s, line %d\n", __FILE__, __func__, __LINE__);
-        return ret;
+        return ERR_RETURN_ADDRESS_UNMATCH;
     }
 
     unsigned short crc = create_crc16_code(data, cmd->check_len - 2);
@@ -114,7 +118,7 @@ static int calculate_device_status(cmd_t    *cmd,
             && ((unsigned char)data[data_len - 2] != crc_low)) { //CRC校验异常
         printf("file %s, func %s, line %d, crc low %x, crc high %x, %x, %x\n",
                 __FILE__, __func__, __LINE__, crc_low, crc_high, data[data_len - 1], data[data_len - 2]);
-        return ret;
+        return ERR_RETURN_CRC_UNMATCH;
     }
 
     param_desc_t *desc = NULL;

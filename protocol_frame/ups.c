@@ -173,13 +173,16 @@ static int calculate_device_status(cmd_t    *cmd,
                                    list_t   *valid_value)
 {
     int ret = -1;
+    if (data_len == 0) {
+        return ERR_RETURN_LEN_ZERO;
+    }
 
     if (data_len != cmd->check_len) { //包长度校验
-        return ret;
+        return ERR_RETURN_LEN_UNMATCH;
     }
 
     if ((data[0] != '(') && (data[data_len - 1] != 0x0d)) { //包头,包尾校验
-        return ret;
+        return ERR_RETURN_ADDRESS_UNMATCH;
     }
 
     param_desc_t *desc = NULL;
