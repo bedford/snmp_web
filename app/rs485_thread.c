@@ -659,7 +659,7 @@ static void *rs485_process(void *arg)
 			}
 
 			memset(buf, 0, sizeof(buf));
-			print_com_info(3, protocol->protocol_name, 0, property->cmd.cmd_code, property->cmd.cmd_len, 0);
+			print_com_info(3, protocol->protocol_desc, 0, property->cmd.cmd_code, property->cmd.cmd_len, 0);
 			drv_gpio_write(RS485_ENABLE, 1);
 			ret = uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2);
 			usleep(8000);
@@ -691,7 +691,7 @@ static void *rs485_process(void *arg)
 						}
 					}
 				}
-				print_com_info(3, protocol->protocol_name, 1, buf, len, ret);
+				print_com_info(3, protocol->protocol_desc, 1, buf, len, ret);
 				value_list->destroy_list(value_list);
 				value_list = NULL;
 	        } else {
