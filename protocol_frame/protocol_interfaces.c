@@ -2,16 +2,16 @@
 
 #include "protocol_interfaces.h"
 #include "ups.h"
-#include "environment.h"
+#include "environment_k25.h"
 
-static char *version_string = "OAO010_plus_ups_20170713";
+static char *version_string = "OAO010_K25_plus_ups_20170823";
 
 int init_protocol_lib(list_t *protocol_list)
 {
     /* 设备注册函数调用 */
     ups_register(protocol_list);
 
-    environment_register(protocol_list);
+    environment_k25_register(protocol_list);
     //external_io_register(protocol_list);
     /* 后面添加类型设备协议注册函数即可 */
 

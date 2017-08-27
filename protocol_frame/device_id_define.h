@@ -30,7 +30,8 @@ enum _UPS_SUB_TYPE
 /* 温湿度检测设备次类型枚举 */
 enum _TEMP_HUM_SUB_TYPE
 {
-    OAO_210 = 0x01,
+    OAO_210_K20 = 0x01,
+    OAO_210_K25 = 0x02,
 };
 
 /* 外接IO传感器次类型枚举 */

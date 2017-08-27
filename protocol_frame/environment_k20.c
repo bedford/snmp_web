@@ -7,7 +7,7 @@
 #include "protocol_interfaces.h"
 #include "device_id_define.h"
 
-#include "environment.h"
+#include "environment_k20.h"
 #include "crc16.h"
 
 enum
@@ -201,13 +201,13 @@ static void release_environment_property(list_t *property_list)
     property_list = NULL;
 }
 
-int environment_register(list_t *protocol_list)
+int environment_k20_register(list_t *protocol_list)
 {
     protocol_t protocol;
 
-    protocol.protocol_id = TEMP_HUM_DEVICE | OAO_210;
-    strcpy(protocol.protocol_name, "oao-210");
-    strcpy(protocol.protocol_desc, "OAO-210温湿度");
+    protocol.protocol_id = TEMP_HUM_DEVICE | OAO_210_K20;
+    strcpy(protocol.protocol_name, "oao-210-K20");
+    strcpy(protocol.protocol_desc, "OAO-210 K20温湿度");
 
     protocol.get_property       = get_environment_property;
     protocol.calculate_data     = calculate_device_data;

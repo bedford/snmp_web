@@ -1,5 +1,5 @@
-#ifndef _ENVIROMENT_H_
-#define _ENVIROMENT_H_
+#ifndef _ENVIROMENT_K20_H_
+#define _ENVIROMENT_K20_H_
 
 #include "list.h"
 
@@ -14,7 +14,7 @@ extern "C" {
  *
  * @return
  */
-int environment_register(list_t *protocol_list);
+int environment_k20_register(list_t *protocol_list);
 
 #ifdef __cplusplus
 }
