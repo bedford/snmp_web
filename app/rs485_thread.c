@@ -637,7 +637,6 @@ static void *rs485_process(void *arg)
 
     uart_t *uart = uart_create(&(priv->uart_param));
     uart->open(uart);
-	drv_gpio_open(RS485_ENABLE);
 
     list_t *property_list = list_create(sizeof(property_t));
     protocol->get_property(property_list);
@@ -660,10 +659,7 @@ static void *rs485_process(void *arg)
 
 			memset(buf, 0, sizeof(buf));
 			print_com_info(3, protocol->protocol_desc, 0, property->cmd.cmd_code, property->cmd.cmd_len, 0);
-			drv_gpio_write(RS485_ENABLE, 1);
 			ret = uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2);
-			usleep(8000);
-			drv_gpio_write(RS485_ENABLE, 0);
 			if (ret == property->cmd.cmd_len) {
 				int len = uart->read(uart, buf, property->cmd.check_len, 2);
 				list_t *value_list = list_create(sizeof(param_value_t));
@@ -711,7 +707,6 @@ static void *rs485_process(void *arg)
             update_alarm_param_flag = priv->pref_handle->get_rs485_alarm_flag(priv->pref_handle);
         }
 	}
-	drv_gpio_close(RS485_ENABLE);
 
     property = NULL;
     protocol->release_property(property_list);
