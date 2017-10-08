@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 /**
- * @brief   GPIO序号枚举定义 
+ * @brief   GPIO序号枚举定义
  */
 enum GPIO_NAME {
     DIGITAL_IN_0 = 0,   /* DI1 */
@@ -25,6 +25,9 @@ enum GPIO_NAME {
     WATCHDOG_PIN,       /* 外加的硬件看门狗喂狗引脚(已去除) */
 
     RS485_ENABLE,       /* RS485读\写切换使能引脚 */
+
+    COM2_SELECTOR,      /* 串口2 RS485或RS232选通状态引脚 0：RS485；1：RS232*/
+    COM2_RS485_ENABLE,  /* 串口2 RS485 读写切换使能引脚 */
 
     MAX_GPIO_NAME,
 };
@@ -60,7 +63,7 @@ int drv_gpio_write(unsigned int gpio_name, unsigned char val);
 int drv_gpio_read(unsigned int gpio_name, unsigned char *pval);
 
 /**
- * @brief   drv_gpio_close  关闭指定GPIO 
+ * @brief   drv_gpio_close  关闭指定GPIO
  * @param   gpio_name       GPIO序号
  * @return
  */

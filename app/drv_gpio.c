@@ -26,13 +26,13 @@
 
 typedef struct
 {
-    int   fd;         /* IO文件描述符 */
-    unsigned int  port;       /* 端口,如GPA,GPB,GPC, 则GPA为0 */
-    unsigned int  pin;        /* 对应端口的顺序号,从0~31 */
+    int             fd;         /* IO文件描述符 */
+    unsigned int    port;       /* 端口,如GPA,GPB,GPC, 则GPA为0 */
+    unsigned int    pin;        /* 对应端口的顺序号,从0~31 */
     unsigned char   direction;  /* 0:out, 1:in */
     unsigned char   edge;       /* 0:无,电平触平; 1:上升沿; 2:下降沿; 3:兼用上升沿和下降沿两种 */
     unsigned char   cur_val;    /* 当前值 */
-    char    *name;      /* GPIO的名称 */
+    char            *name;      /* GPIO的名称 */
 } gpio_info_t;
 
 static gpio_info_t gpio_info[] = {
@@ -53,15 +53,19 @@ static gpio_info_t gpio_info[] = {
     {   -1,     5,      5,      1,      0,      0,      "GPF5"  },  /* GPF5 */
     /* 看门狗喂狗引脚 */
     {   -1,     2,      14,     0,      0,      0,      "GPC14" },  /* GPC14 */
-    /* RS485使能端口 */
+    /* COM3 RS485使能端口 */
     {   -1,     3,      11,     0,      0,      0,      "GPD11" },  /* GPD11 */
+    /* RS485或RS232选通状态引脚 */
+    {   -1,     4,      13,     1,      0,      0,      "GPE13" },  /* GPE13 */
+    /* COM2 RS485 读写切换使能引脚 */
+    {   -1,     9,      13,     0,      0,      0,      "GPL13" },  /* GPL13 */
 };
 
 int drv_gpio_open(enum GPIO_NAME gpio_name)
 {
-    int   ret = RET_OK;
-    int   tmp_fd  = -1;
-    int   pin_num = 0;
+    int     ret = RET_OK;
+    int     tmp_fd  = -1;
+    int     pin_num = 0;
     char    fname[64] = {0};
 
     if (gpio_name >= MAX_GPIO_NAME) {
