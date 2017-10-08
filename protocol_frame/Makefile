@@ -4,7 +4,7 @@ TEST_TARGET = protocol_test
 CC = arm-linux-gcc
 CFLAGS += -O3 -fPIC
 
-LIB_OBJS := list.o crc16.o ups.o environment_k25.o protocol_interfaces.o
+LIB_OBJS := list.o crc16.o ups.o environment_k25.o external_io_860.o external_io_816d.o protocol_interfaces.o
 #LIB_OBJS := list.o crc16.o ups.o external_io.o protocol_interfaces.o
 
 INC_FLAGS	+= -I.
