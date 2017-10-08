@@ -2640,7 +2640,7 @@ static int mib_download(req_buf_t *req_buf, priv_info_t *priv, const char *filen
 	drv_gpio_read(COM2_SELECTOR, &com2_status);
 	drv_gpio_close(COM2_SELECTOR);
 	if (com2_status == 1) {	/* RS232 */
-		sprintf(sql, "SELECT * FROM %s WHERE com_index=1 and seq_iddex=1", "protocol_cfg");
+		sprintf(sql, "SELECT * FROM %s WHERE com_index=1 and seq_index=1", "protocol_cfg");
 	} else {
 		sprintf(sql, "SELECT * FROM %s WHERE com_index=1 and protocol_id>0 ORDER BY id", "protocol_cfg");
 	}
