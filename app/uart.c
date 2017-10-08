@@ -188,6 +188,7 @@ static int uart_write(uart_t *thiz, const char *buf, int len, int timeout)
 
     priv_info_t *priv = (priv_info_t *)thiz->priv;
 
+    tcflush(priv->fd, TCIOFLUSH);
     unsigned int processed = 0;
     time_t start = time(NULL);
     while (processed < len) {
