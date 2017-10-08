@@ -20,7 +20,7 @@ enum
 *
 * @return
 */
-static cmd_t get_status_cmd(void)
+static cmd_t get_status_cmd(unsigned char rs485_addr)
 {
     cmd_t tmp_cmd;
     memset(&tmp_cmd, 0, sizeof(cmd_t));
@@ -28,7 +28,7 @@ static cmd_t get_status_cmd(void)
     tmp_cmd.cmd_id  = READ_STATUS_CMD;
     sprintf(tmp_cmd.cmd_name, "%s", "读温湿度实时状态");
 
-    tmp_cmd.cmd_code[0]  = 0x01;
+    tmp_cmd.cmd_code[0]  = rs485_addr; //0x01;
     tmp_cmd.cmd_code[1]  = 0x03;
     tmp_cmd.cmd_code[2]  = 0x00;
     tmp_cmd.cmd_code[3]  = 0x00;
@@ -166,11 +166,11 @@ static int calculate_device_data(property_t *property, char *data, int len, list
     return ret;
 }
 
-static int get_environment_property(list_t *property_list)
+static int get_environment_property(list_t *property_list, unsigned char rs485_addr)
 {
     property_t property;
 	memset(&property, 0, sizeof(property_t));
-    property.cmd = get_status_cmd();
+    property.cmd = get_status_cmd(rs485_addr);
     property.param_desc = environment_status_param_desc();
 	property.last_param_value = NULL;
 
@@ -199,9 +199,22 @@ int environment_k25_register(list_t *protocol_list)
 {
     protocol_t protocol;
 
-    protocol.protocol_id = TEMP_HUM_DEVICE | OAO_210_K25;
-    strcpy(protocol.protocol_name, "oao-210-k25");
-    strcpy(protocol.protocol_desc, "OAO-210 K25温湿度");
+    strcpy(protocol.protocol_name, "oao-210-k25-2");
+    strcpy(protocol.protocol_desc, "OAO-210 K25温湿度02");
+    protocol.rs485_addr = 0x02;
+    protocol.protocol_id = TEMP_HUM_DEVICE | OAO_210_K25 | protocol.rs485_addr;
+
+    protocol.get_property       = get_environment_property;
+    protocol.calculate_data     = calculate_device_data;
+    protocol.release_property   = release_environment_property;
+
+    protocol_list->push_back(protocol_list, &protocol);
+
+    /* 以下为地址为2的温湿度传感器初始化 */
+    strcpy(protocol.protocol_name, "oao-210-k25-3");
+    strcpy(protocol.protocol_desc, "OAO-210 K25温湿度03");
+    protocol.rs485_addr = 0x03;
+    protocol.protocol_id = TEMP_HUM_DEVICE | OAO_210_K25 | protocol.rs485_addr;
 
     protocol.get_property       = get_environment_property;
     protocol.calculate_data     = calculate_device_data;

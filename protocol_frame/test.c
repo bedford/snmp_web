@@ -61,11 +61,11 @@ int main(void)
     list_t *value_list = list_create(sizeof(param_value_t));
     protocol->calculate_data(property, data, sizeof(data), value_list);
 #else
-    protocol_t *protocol = get_protocol_handle(protocol_list, EXTERNAL_IO | 0x01);
+    protocol_t *protocol = get_protocol_handle(protocol_list, EXTERNAL_IO | OAO_860 | 0x01);
     print_snmp_protocol(protocol);
 
     list_t *property_list = list_create(sizeof(property_t));
-    protocol->get_property(property_list);
+    protocol->get_property(property_list, protocol->rs485_addr);
 
     property_t *property = property_list->get_index_value(property_list, 1);
 

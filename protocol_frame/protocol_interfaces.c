@@ -3,8 +3,10 @@
 #include "protocol_interfaces.h"
 #include "ups.h"
 #include "environment_k25.h"
+#include "external_io_860.h"
+#include "external_io_816d.h"
 
-static char *version_string = "OAO010_K25_plus_ups_20170823";
+static char *version_string = "multi_ups_20170920";
 
 int init_protocol_lib(list_t *protocol_list)
 {
@@ -12,7 +14,12 @@ int init_protocol_lib(list_t *protocol_list)
     ups_register(protocol_list);
 
     environment_k25_register(protocol_list);
-    //external_io_register(protocol_list);
+
+    //environment_k20_register(protocol_list);
+
+    external_io_860_register(protocol_list);
+
+    external_io_816d_register(protocol_list);
     /* 后面添加类型设备协议注册函数即可 */
 
     return 0;

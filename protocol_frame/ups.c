@@ -243,8 +243,9 @@ static int calculate_device_data(property_t *property, char *data, int len, list
     return ret;
 }
 
-static int get_ups_property(list_t *property_list)
+static int get_ups_property(list_t *property_list, unsigned char rs485_addr)
 {
+    rs485_addr = rs485_addr;
     property_t property;
     property.cmd = ups_status_cmd();
     property.param_desc = ups_status_param_desc();
