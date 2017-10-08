@@ -84,16 +84,6 @@
 	</style>
 </head>
 <body onbeforeunload="leave_page()">
-	<div class="table-uart-body">
-		<table id="uart_status">
-			<tr>
-				<td>RS232串口读写状态</td>
-				<td id="rs232_rw_status">异常</td>
-				<td>RS485串口读写状态</td>
-				<td id="rs485_rw_status">异常</td>
-			</tr>
-		</table>
-	</div>
 	<div id="table-box">
 		<div class="table-head">
 			<table>
@@ -162,17 +152,20 @@
 
 		function display_real_data(msg, device_type, status) {
 			$('#real_data').empty();
-			if (msg.rs232_enable == 1) {
-				if (msg.rs232_count > 0) {
-					$.each(msg.real_data_rs232, function(i, item) {
+			if (msg.rs232_data.protocol_cnt > 0) {
+				for (var i = 0; i < msg.rs232_data.protocol_cnt; i++) {
+					var data = msg.rs232_data.protocol_data[i];
+					for (var j = 0; j < data.item_cnt; j++) {
+						var item = data.real_data[j];
+
 						if ((device_type != '全部') && (device_type != item.protocol_id)) {
-							return true;
+							continue;
 						}
 
 						if (status != '全部') {
 							if (((status == '0') && (item.alarm_type != '0'))
 								|| ((status != '0') && (item.alarm_type == '0'))) {
-								return true;
+								continue;
 							}
 						}
 
@@ -201,29 +194,24 @@
 						}
 
 						$("#real_data").append(html);
-					});
-					$('#rs232_rw_status').text("正常");
-					$('#rs232_rw_status').css("background-color", "#35e60a");
-				} else {
-					$('#rs232_rw_status').text("异常");
-					$('#rs232_rw_status').css("background-color", "#f01818");
+					}
 				}
-			} else {
-				$('#rs232_rw_status').text("未启用");
-				$('#rs232_rw_status').css("background-color", "#35e60a");
 			}
 
-			if (msg.rs485_enable == 1) {
-				if (msg.rs485_count > 0) {
-					$.each(msg.real_data_rs485, function(i, item) {
+			if (msg.rs485_data.protocol_cnt > 0) {
+				for (var i = 0; i < msg.rs485_data.protocol_cnt; i++) {
+					var data = msg.rs485_data.protocol_data[i];
+					for (var j = 0; j < data.item_cnt; j++) {
+						var item = data.real_data[j];
+
 						if ((device_type != '全部') && (device_type != item.protocol_id)) {
-							return true;
+							continue;
 						}
 
 						if (status != '全部') {
 							if (((status == '0') && (item.alarm_type != '0'))
 								|| ((status != '0') && (item.alarm_type == '0'))) {
-								return true;
+								continue;
 							}
 						}
 
@@ -252,16 +240,8 @@
 						}
 
 						$("#real_data").append(html);
-					});
-					$('#rs485_rw_status').text("正常");
-					$('#rs485_rw_status').css("background-color", "#35e60a");
-				} else {
-					$('#rs485_rw_status').text("异常");
-					$('#rs485_rw_status').css("background-color", "#f01818");
+					}
 				}
-			} else {
-				$('#rs485_rw_status').text("未启用");
-				$('#rs485_rw_status').css("background-color", "#35e60a");
 			}
 		}
 
