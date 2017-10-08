@@ -86,6 +86,7 @@ static void *beep_process(void *arg)
 	unsigned char value = 0;
 	drv_gpio_write(DIGITAL_OUT_0, value);
 	int i = 0;
+	int index = 0;
 	while (thiz->thread_status) {
 		alarm_flag = 0;
 
@@ -104,22 +105,26 @@ static void *beep_process(void *arg)
 		ret = rs232_shm_handle->shm_get(rs232_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs232_sem_id);
 		if (ret == 0) {
-			for (i = 0; i < uart_realdata->cnt; i++) {
-                if (uart_realdata->data[i].alarm_type != 0) {
-                    alarm_flag = 1;
-                }
-            }
+			for (index = 0; index < uart_realdata->protocol_cnt; index++) {
+				for (i = 0; i < uart_realdata->realdata[index].cnt; i++) {
+					if (uart_realdata->realdata[index].data[i].alarm_type != 0) {
+						alarm_flag = 1;
+					}
+				}
+			}
         }
 
 		semaphore_p(rs485_sem_id);
 		ret = rs485_shm_handle->shm_get(rs485_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs485_sem_id);
 		if (ret == 0) {
-			for (i = 0; i < uart_realdata->cnt; i++) {
-                if (uart_realdata->data[i].alarm_type != 0) {
-                    alarm_flag = 1;
-                }
-            }
+			for (index = 0; index < uart_realdata->protocol_cnt; index++) {
+				for (i = 0; i < uart_realdata->realdata[index].cnt; i++) {
+					if (uart_realdata->realdata[index].data[i].alarm_type != 0) {
+						alarm_flag = 1;
+					}
+				}
+			}
         }
 
 		do_param = pref_handle->get_do_param(pref_handle);
