@@ -22,6 +22,7 @@
 #include "common_type.h"
 #include "shm_object.h"
 #include "semaphore.h"
+#include "drv_gpio.h"
 
 #define INI_FILE_NAME	"/opt/app/param.ini"
 #define MIB_FILE_NAME	"/tmp/JT_Gaurd.mib"
@@ -173,6 +174,28 @@ static int get_uart_param(cJSON *root, priv_info_t *priv)
     		cJSON_AddItemToArray(sub_dir, child);
     	}
 	}
+	db_handle->free_table(db_handle, query_result.result);
+
+	unsigned char com2_status = 0;
+	drv_gpio_open(COM2_SELECTOR);
+	drv_gpio_read(COM2_SELECTOR, &com2_status);
+	drv_gpio_close(COM2_SELECTOR);
+	cJSON_AddNumberToObject(response, "com_selector", com2_status);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s WHERE port=1", "uart_cfg");
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+	if (query_result.row > 0) {
+		sub_dir = cJSON_CreateObject();
+		cJSON_AddItemToObject(response, "rs232_cfg", sub_dir);
+    	cJSON_AddNumberToObject(sub_dir, "port", atoi(query_result.result[query_result.column]));
+		cJSON_AddNumberToObject(sub_dir, "baud", atoi(query_result.result[query_result.column + 1]));
+		cJSON_AddNumberToObject(sub_dir, "data_bits", atoi(query_result.result[query_result.column + 2]));
+		cJSON_AddNumberToObject(sub_dir, "stops_bits", atoi(query_result.result[query_result.column + 3]));
+		cJSON_AddNumberToObject(sub_dir, "parity", atoi(query_result.result[query_result.column + 4]));
+	}
+	db_handle->free_table(db_handle, query_result.result);
 
 	memset(sql, 0, sizeof(sql));
 	sprintf(sql, "SELECT * FROM %s WHERE port=2", "uart_cfg");
@@ -180,31 +203,36 @@ static int get_uart_param(cJSON *root, priv_info_t *priv)
 	db_handle->query(db_handle, sql, &query_result);
 	if (query_result.row > 0) {
 		sub_dir = cJSON_CreateObject();
-    	cJSON_AddItemToObject(response, "rs232_cfg", sub_dir);
+    	cJSON_AddItemToObject(response, "rs485_cfg", sub_dir);
     	cJSON_AddNumberToObject(sub_dir, "port", atoi(query_result.result[query_result.column]));
-		cJSON_AddNumberToObject(sub_dir, "protocol_id", atoi(query_result.result[query_result.column + 1]));
-		cJSON_AddNumberToObject(sub_dir, "baud", atoi(query_result.result[query_result.column + 2]));
-		cJSON_AddNumberToObject(sub_dir, "data_bits", atoi(query_result.result[query_result.column + 3]));
-		cJSON_AddNumberToObject(sub_dir, "stops_bits", atoi(query_result.result[query_result.column + 4]));
-		cJSON_AddNumberToObject(sub_dir, "parity", atoi(query_result.result[query_result.column + 5]));
-		cJSON_AddNumberToObject(sub_dir, "enable", atoi(query_result.result[query_result.column + 6]));
+		cJSON_AddNumberToObject(sub_dir, "baud", atoi(query_result.result[query_result.column + 1]));
+		cJSON_AddNumberToObject(sub_dir, "data_bits", atoi(query_result.result[query_result.column + 2]));
+		cJSON_AddNumberToObject(sub_dir, "stops_bits", atoi(query_result.result[query_result.column + 3]));
+		cJSON_AddNumberToObject(sub_dir, "parity", atoi(query_result.result[query_result.column + 4]));
 	}
+	db_handle->free_table(db_handle, query_result.result);
 
 	memset(sql, 0, sizeof(sql));
-	sprintf(sql, "SELECT * FROM %s WHERE port=3", "uart_cfg");
+	sprintf(sql, "SELECT * FROM %s", "protocol_cfg");
 	memset(&query_result, 0, sizeof(query_result_t));
 	db_handle->query(db_handle, sql, &query_result);
 	if (query_result.row > 0) {
-		sub_dir = cJSON_CreateObject();
-    	cJSON_AddItemToObject(response, "rs485_cfg", sub_dir);
-    	cJSON_AddNumberToObject(sub_dir, "port", atoi(query_result.result[query_result.column]));
-		cJSON_AddNumberToObject(sub_dir, "protocol_id", atoi(query_result.result[query_result.column + 1]));
-		cJSON_AddNumberToObject(sub_dir, "baud", atoi(query_result.result[query_result.column + 2]));
-		cJSON_AddNumberToObject(sub_dir, "data_bits", atoi(query_result.result[query_result.column + 3]));
-		cJSON_AddNumberToObject(sub_dir, "stops_bits", atoi(query_result.result[query_result.column + 4]));
-		cJSON_AddNumberToObject(sub_dir, "parity", atoi(query_result.result[query_result.column + 5]));
-		cJSON_AddNumberToObject(sub_dir, "enable", atoi(query_result.result[query_result.column + 6]));
+		cJSON_AddNumberToObject(response, "protocol_cnt", query_result.row);
+    	sub_dir = cJSON_CreateArray();
+    	cJSON_AddItemToObject(response, "protocol_cfg", sub_dir);
+
+		child = NULL;
+		int i = 1;
+		for (i = 1; i < (query_result.row + 1); i++) {
+	    	child = cJSON_CreateObject();
+			cJSON_AddNumberToObject(child, "id", atoi(query_result.result[i * query_result.column]));
+			cJSON_AddNumberToObject(child, "com_index", atoi(query_result.result[i * query_result.column + 1]));
+			cJSON_AddNumberToObject(child, "seq_index", atoi(query_result.result[i * query_result.column + 2]));
+			cJSON_AddStringToObject(child, "protocol_id", query_result.result[i * query_result.column + 3]);
+    		cJSON_AddItemToArray(sub_dir, child);
+		}
 	}
+	db_handle->free_table(db_handle, query_result.result);
 
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -437,36 +465,58 @@ static int set_uart_param(cJSON *root, priv_info_t *priv)
     cJSON *cfg = cJSON_GetObjectItem(root, "cfg");
 	cJSON *rs232_cfg = cJSON_GetObjectItem(cfg, "rs232_cfg");
 
-	int protocol_id = atoi(cJSON_GetObjectItem(rs232_cfg, "protocol_id")->valuestring);
 	int baud = atoi(cJSON_GetObjectItem(rs232_cfg, "baud")->valuestring);
 	int data_bits = atoi(cJSON_GetObjectItem(rs232_cfg, "data_bits")->valuestring);
 	int stops_bits = atoi(cJSON_GetObjectItem(rs232_cfg, "stops_bits")->valuestring);
 	int parity = atoi(cJSON_GetObjectItem(rs232_cfg, "parity")->valuestring);
-	int enable = atoi(cJSON_GetObjectItem(rs232_cfg, "enable")->valuestring);
 
 	char sql[512] = {0};
 	char error_msg[256] = {0};
-	sprintf(sql, "UPDATE %s SET protocol_id=%d, baud=%d, data_bits=%d, \
-		stops_bits=%d, parity=%d, enable=%d WHERE port=2",
-		"uart_cfg", protocol_id, baud, data_bits, stops_bits, parity, enable);
+	sprintf(sql, "UPDATE %s SET baud=%d, data_bits=%d, stops_bits=%d, parity=%d WHERE port=1",
+		"uart_cfg", baud, data_bits, stops_bits, parity);
 	db_handle->action(db_handle, sql, error_msg);
 
 	cJSON *rs485_cfg = cJSON_GetObjectItem(cfg, "rs485_cfg");
-	protocol_id = atoi(cJSON_GetObjectItem(rs485_cfg, "protocol_id")->valuestring);
 	baud = atoi(cJSON_GetObjectItem(rs485_cfg, "baud")->valuestring);
 	data_bits = atoi(cJSON_GetObjectItem(rs485_cfg, "data_bits")->valuestring);
 	stops_bits = atoi(cJSON_GetObjectItem(rs485_cfg, "stops_bits")->valuestring);
 	parity = atoi(cJSON_GetObjectItem(rs485_cfg, "parity")->valuestring);
-	enable = atoi(cJSON_GetObjectItem(rs485_cfg, "enable")->valuestring);
 
 	memset(sql, 0, sizeof(sql));
-	sprintf(sql, "UPDATE %s SET protocol_id=%d, baud=%d, data_bits=%d, \
-		stops_bits=%d, parity=%d, enable=%d WHERE port=3",
-		"uart_cfg", protocol_id, baud, data_bits, stops_bits, parity, enable);
+	sprintf(sql, "UPDATE %s SET baud=%d, data_bits=%d, stops_bits=%d, parity=%d WHERE port=2",
+		"uart_cfg", baud, data_bits, stops_bits, parity);
 	db_handle->action(db_handle, sql, error_msg);
 
-    cJSON *response;
+	cJSON *response;
     response = cJSON_CreateObject();
+    cJSON *array_item = cJSON_GetObjectItem(cfg, "protocol_cfg");
+    if (array_item != NULL) {
+        int size = cJSON_GetArraySize(array_item);
+        int i = 0;
+		int ret = 0;
+		cJSON *object = NULL;
+		int id = 0;
+		int com_index = 0;
+		int seq_index = 0;
+		int protocol_id = 0;
+        for (i = 0; i < size; i++) {
+            object = cJSON_GetArrayItem(array_item, i);
+			id = cJSON_GetObjectItem(object, "id")->valueint;
+			com_index = cJSON_GetObjectItem(object, "com_index")->valueint;
+			seq_index = cJSON_GetObjectItem(object, "seq_index")->valueint;
+			protocol_id = atoi(cJSON_GetObjectItem(object, "protocol_id")->valuestring);
+			memset(sql, 0, sizeof(sql));
+			sprintf(sql, "UPDATE %s SET com_index=%d, seq_index=%d, protocol_id=%d WHERE id=%d",
+					"protocol_cfg", com_index, seq_index, protocol_id, id);
+			ret = db_handle->action(db_handle, sql, error_msg);
+			if (ret != 0) {
+				cJSON_AddStringToObject(response, "sql", sql);
+				cJSON_AddStringToObject(response, "error_msg", error_msg);
+			}
+		}
+        object = NULL;
+    }
+
     cJSON_AddNumberToObject(response, "status", 1);
     req_buf->fb_buf = cJSON_Print(response);
     cJSON_Delete(response);
@@ -760,9 +810,9 @@ static int system_recovery(cJSON *root, priv_info_t *priv)
     write_profile(dic, "EMAIL", "send_times", "3");
     write_profile(dic, "EMAIL", "send_interval", "1");
     write_profile(dic, "EMAIL", "port", "25");
-    write_profile(dic, "EMAIL", "smtp_server", "");
-    write_profile(dic, "EMAIL", "email_addr", "");
-    write_profile(dic, "EMAIL", "password", "");
+    write_profile(dic, "EMAIL", "smtp_server", "smtp.163.com");
+    write_profile(dic, "EMAIL", "email_addr", "jitonemu@163.com");
+    write_profile(dic, "EMAIL", "password", "Emu9000E");
 
     write_profile(dic, "DO", "beep_alarm_enable", "0");
     write_profile(dic, "DO", "do2_name", "");
@@ -1842,10 +1892,14 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 		}
 	} while(0);
 
-    cJSON *response = cJSON_CreateObject();
+	cJSON *response = cJSON_CreateObject();
+	cJSON *uart_object = NULL;
+	cJSON *protocol_dir = NULL;
+	cJSON *protocol_object = NULL;
 	cJSON *sub_dir = NULL;
 	cJSON *child = NULL;
 	int i = 0;
+	int j = 0;
 	if (ret == -1) {
 		cJSON_AddNumberToObject(response, "count", 1000);
 	} else {
@@ -1853,64 +1907,76 @@ static int query_real_uart_data(cJSON *root, priv_info_t *priv)
 		ret = rs232_shm_handle->shm_get(rs232_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs232_sem_id);
 		if (ret == 0) {
-			cJSON_AddNumberToObject(response, "rs232_enable", uart_realdata->enable);
-			cJSON_AddNumberToObject(response, "rs232_count", uart_realdata->cnt);
-			sub_dir = cJSON_CreateArray();
-			cJSON_AddItemToObject(response, "real_data_rs232", sub_dir);
-			for (i = 0; i < uart_realdata->cnt; i++) {
-				child = cJSON_CreateObject();
-				cJSON_AddNumberToObject(child, "protocol_id", uart_realdata->data[i].protocol_id);
-				cJSON_AddStringToObject(child, "protocol_desc", uart_realdata->data[i].protocol_desc);
-				cJSON_AddStringToObject(child, "param_desc", uart_realdata->data[i].param_desc);
-				cJSON_AddNumberToObject(child, "param_type", uart_realdata->data[i].param_type);
-				cJSON_AddNumberToObject(child, "alarm_type", uart_realdata->data[i].alarm_type);
-				if (uart_realdata->data[i].param_type == 1) {
-					char tmp[64] = {0};
-					sprintf(tmp, "%.1f%s", uart_realdata->data[i].analog_value, uart_realdata->data[i].param_unit);
-					cJSON_AddStringToObject(child, "analog_value", tmp);
-					cJSON_AddStringToObject(child, "enum_value", "-");
-					cJSON_AddStringToObject(child, "enum_cn_desc", "-");
-				} else {
-					cJSON_AddStringToObject(child, "analog_value", "-");
-					cJSON_AddNumberToObject(child, "enum_value", uart_realdata->data[i].enum_value);
-					cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->data[i].enum_cn_desc);
+			uart_object = cJSON_CreateObject();
+			cJSON_AddItemToObject(response, "rs232_data", uart_object);
+			cJSON_AddNumberToObject(uart_object, "protocol_cnt", uart_realdata->protocol_cnt);
+			protocol_dir = cJSON_CreateArray();
+			cJSON_AddItemToObject(uart_object, "protocol_data", protocol_dir);
+			for (j = 0; j < uart_realdata->protocol_cnt; j++) {
+				protocol_object = cJSON_CreateObject();
+				cJSON_AddNumberToObject(protocol_object, "item_cnt", uart_realdata->realdata[j].cnt);
+				sub_dir = cJSON_CreateArray();
+				cJSON_AddItemToObject(protocol_object, "real_data", sub_dir);
+				for (i = 0; i < uart_realdata->realdata[j].cnt; i++) {
+					child = cJSON_CreateObject();
+					cJSON_AddNumberToObject(child, "protocol_id", uart_realdata->realdata[j].data[i].protocol_id);
+					cJSON_AddStringToObject(child, "protocol_desc", uart_realdata->realdata[j].data[i].protocol_desc);
+					cJSON_AddStringToObject(child, "param_desc", uart_realdata->realdata[j].data[i].param_desc);
+					cJSON_AddNumberToObject(child, "param_type", uart_realdata->realdata[j].data[i].param_type);
+					cJSON_AddNumberToObject(child, "alarm_type", uart_realdata->realdata[j].data[i].alarm_type);
+					if (uart_realdata->realdata[j].data[i].param_type == 1) {
+						char tmp[64] = {0};
+						sprintf(tmp, "%.2f%s", uart_realdata->realdata[j].data[i].analog_value, uart_realdata->realdata[j].data[i].param_unit);
+						cJSON_AddStringToObject(child, "analog_value", tmp);
+						cJSON_AddStringToObject(child, "enum_value", "-");
+						cJSON_AddStringToObject(child, "enum_cn_desc", "-");
+					} else {
+						cJSON_AddStringToObject(child, "analog_value", "-");
+						cJSON_AddNumberToObject(child, "enum_value", uart_realdata->realdata[j].data[i].enum_value);
+						cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->realdata[j].data[i].enum_cn_desc);
+					}
+					cJSON_AddItemToArray(sub_dir, child);
 				}
-				cJSON_AddItemToArray(sub_dir, child);
+				cJSON_AddItemToArray(protocol_dir, protocol_object);
 			}
-		} else {
-			cJSON_AddNumberToObject(response, "rs232_count", 0);
 		}
 
 		semaphore_p(rs485_sem_id);
 		ret = rs485_shm_handle->shm_get(rs485_shm_handle, (void *)uart_realdata);
 		semaphore_v(rs485_sem_id);
 		if (ret == 0) {
-			cJSON_AddNumberToObject(response, "rs485_enable", uart_realdata->enable);
-			cJSON_AddNumberToObject(response, "rs485_count", uart_realdata->cnt);
-			sub_dir = cJSON_CreateArray();
-			cJSON_AddItemToObject(response, "real_data_rs485", sub_dir);
-			for (i = 0; i < uart_realdata->cnt; i++) {
-				child = cJSON_CreateObject();
-				cJSON_AddNumberToObject(child, "protocol_id", uart_realdata->data[i].protocol_id);
-				cJSON_AddStringToObject(child, "protocol_desc", uart_realdata->data[i].protocol_desc);
-				cJSON_AddStringToObject(child, "param_desc", uart_realdata->data[i].param_desc);
-				cJSON_AddNumberToObject(child, "param_type", uart_realdata->data[i].param_type);
-				cJSON_AddNumberToObject(child, "alarm_type", uart_realdata->data[i].alarm_type);
-				if (uart_realdata->data[i].param_type == 1) {
-					char tmp[64] = {0};
-					sprintf(tmp, "%.1f%s", uart_realdata->data[i].analog_value, uart_realdata->data[i].param_unit);
-					cJSON_AddStringToObject(child, "analog_value", tmp);
-					cJSON_AddStringToObject(child, "enum_value", "-");
-					cJSON_AddStringToObject(child, "enum_cn_desc", "-");
-				} else {
-					cJSON_AddStringToObject(child, "analog_value", "-");
-					cJSON_AddNumberToObject(child, "enum_value", uart_realdata->data[i].enum_value);
-					cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->data[i].enum_cn_desc);
+			uart_object = cJSON_CreateObject();
+			cJSON_AddItemToObject(response, "rs485_data", uart_object);
+			cJSON_AddNumberToObject(uart_object, "protocol_cnt", uart_realdata->protocol_cnt);
+			protocol_dir = cJSON_CreateArray();
+			cJSON_AddItemToObject(uart_object, "protocol_data", protocol_dir);
+			for (j = 0; j < uart_realdata->protocol_cnt; j++) {
+				protocol_object = cJSON_CreateObject();
+				cJSON_AddNumberToObject(protocol_object, "item_cnt", uart_realdata->realdata[j].cnt);
+				sub_dir = cJSON_CreateArray();
+				cJSON_AddItemToObject(protocol_object, "real_data", sub_dir);
+				for (i = 0; i < uart_realdata->realdata[j].cnt; i++) {
+					child = cJSON_CreateObject();
+					cJSON_AddNumberToObject(child, "protocol_id", uart_realdata->realdata[j].data[i].protocol_id);
+					cJSON_AddStringToObject(child, "protocol_desc", uart_realdata->realdata[j].data[i].protocol_desc);
+					cJSON_AddStringToObject(child, "param_desc", uart_realdata->realdata[j].data[i].param_desc);
+					cJSON_AddNumberToObject(child, "param_type", uart_realdata->realdata[j].data[i].param_type);
+					cJSON_AddNumberToObject(child, "alarm_type", uart_realdata->realdata[j].data[i].alarm_type);
+					if (uart_realdata->realdata[j].data[i].param_type == 1) {
+						char tmp[64] = {0};
+						sprintf(tmp, "%.2f%s", uart_realdata->realdata[j].data[i].analog_value, uart_realdata->realdata[j].data[i].param_unit);
+						cJSON_AddStringToObject(child, "analog_value", tmp);
+						cJSON_AddStringToObject(child, "enum_value", "-");
+						cJSON_AddStringToObject(child, "enum_cn_desc", "-");
+					} else {
+						cJSON_AddStringToObject(child, "analog_value", "-");
+						cJSON_AddNumberToObject(child, "enum_value", uart_realdata->realdata[j].data[i].enum_value);
+						cJSON_AddStringToObject(child, "enum_cn_desc", uart_realdata->realdata[j].data[i].enum_cn_desc);
+					}
+					cJSON_AddItemToArray(sub_dir, child);
 				}
-				cJSON_AddItemToArray(sub_dir, child);
+				cJSON_AddItemToArray(protocol_dir, protocol_object);
 			}
-		} else {
-			cJSON_AddNumberToObject(response, "rs485_count", 0);
 		}
 	}
 
@@ -1971,7 +2037,7 @@ static int query_real_di_data(cJSON *root, priv_info_t *priv)
 			for (i = 0; i < di_realdata->cnt; i++) {
 				child = cJSON_CreateObject();
 				char tmp[32] = {0};
-				sprintf(tmp, "%.1f", di_realdata->data[i].analog_value);
+				sprintf(tmp, "%.2f", di_realdata->data[i].analog_value);
 				cJSON_AddNumberToObject(child, "protocol_id", di_realdata->data[i].protocol_id);
 				cJSON_AddStringToObject(child, "protocol_name", di_realdata->data[i].protocol_name);
 				cJSON_AddStringToObject(child, "protocol_desc", di_realdata->data[i].protocol_desc);
@@ -2043,18 +2109,38 @@ static int query_support_device(cJSON *root, priv_info_t *priv)
 	db_access_t *db_handle = priv->sys_db_handle;
 
 	char sql[256] = {0};
-	sprintf(sql, "SELECT * FROM %s WHERE enable=1 ORDER BY protocol_id", "uart_cfg");
+	unsigned char com2_status = 0;
+	drv_gpio_open(COM2_SELECTOR);
+	drv_gpio_read(COM2_SELECTOR, &com2_status);
+	drv_gpio_close(COM2_SELECTOR);
+	if (com2_status == 1) {	/* RS232 */
+		sprintf(sql, "SELECT * FROM %s WHERE com_index=1 and seq_index=1", "protocol_cfg");
+	} else {
+		sprintf(sql, "SELECT * FROM %s WHERE com_index=1 and protocol_id>0 ORDER BY id", "protocol_cfg");
+	}
 
 	query_result_t query_result;
 	memset(&query_result, 0, sizeof(query_result_t));
 	db_handle->query(db_handle, sql, &query_result);
 
-	unsigned int protocol_id_array[2] = {0};
+	unsigned int protocol_id_array[8] = {0};
 	unsigned int protocol_id_cnt = 0;
 	int i = 0;
 	if (query_result.row > 0) {
 		for (i = 0; i < query_result.row; i++) {
-			protocol_id_array[i] = atoi(query_result.result[(i + 1 ) * query_result.column + 1]);
+			protocol_id_array[protocol_id_cnt] = atoi(query_result.result[(i + 1 ) * query_result.column + 3]);
+			protocol_id_cnt++;
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s WHERE com_index=2 and protocol_id>0 ORDER BY id", "protocol_cfg");
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+	if (query_result.row > 0) {
+		for (i = 0; i < query_result.row; i++) {
+			protocol_id_array[protocol_id_cnt] = atoi(query_result.result[(i + 1 ) * query_result.column + 3]);
 			protocol_id_cnt++;
 		}
 	}
@@ -2222,30 +2308,30 @@ static int set_protocol_alarm_param(cJSON *root, priv_info_t *priv)
             if (strlen(cJSON_GetObjectItem(object, "up_limit")->valuestring) == 0) {
 				sprintf(up_limit, "up_limit=''");
 			} else {
-                sprintf(up_limit, "up_limit=%.1f", atof(cJSON_GetObjectItem(object, "up_limit")->valuestring));
+                sprintf(up_limit, "up_limit=%.2f", atof(cJSON_GetObjectItem(object, "up_limit")->valuestring));
             }
 
             if (strlen(cJSON_GetObjectItem(object, "up_free")->valuestring) == 0) {
 				sprintf(up_free, "up_free=''");
 			} else {
-                sprintf(up_free, "up_free=%.1f", atof(cJSON_GetObjectItem(object, "up_free")->valuestring));
+                sprintf(up_free, "up_free=%.2f", atof(cJSON_GetObjectItem(object, "up_free")->valuestring));
             }
 
             if (strlen(cJSON_GetObjectItem(object, "low_limit")->valuestring) == 0) {
                 sprintf(low_limit, "low_limit=''");
 			} else {
-                sprintf(low_limit, "low_limit=%.1f", atof(cJSON_GetObjectItem(object, "low_limit")->valuestring));
+                sprintf(low_limit, "low_limit=%.2f", atof(cJSON_GetObjectItem(object, "low_limit")->valuestring));
             }
 
             if (strlen(cJSON_GetObjectItem(object, "low_free")->valuestring) == 0) {
                 sprintf(low_free, "low_free=''");
 			} else {
-                sprintf(low_free, "low_free=%.1f", atof(cJSON_GetObjectItem(object, "low_free")->valuestring));
+                sprintf(low_free, "low_free=%.2f", atof(cJSON_GetObjectItem(object, "low_free")->valuestring));
             }
 
 			update_threshold = atof(cJSON_GetObjectItem(object, "update_threshold")->valuestring);
 			memset(sql, 0, sizeof(sql));
-			sprintf(sql, "UPDATE %s SET %s, %s, %s, %s, update_threshold=%.1f WHERE id=%d",
+			sprintf(sql, "UPDATE %s SET %s, %s, %s, %s, update_threshold=%.2f WHERE id=%d",
 					"parameter", up_limit, up_free, low_limit, low_free, update_threshold, id);
             cJSON_AddStringToObject(response, "sql", sql);
 			db_handle->action(db_handle, sql, error_msg);
@@ -2549,16 +2635,36 @@ static int mib_download(req_buf_t *req_buf, priv_info_t *priv, const char *filen
 	db_handle->free_table(db_handle, query_result.result);
 
 	memset(sql, 0, sizeof(sql));
-	sprintf(sql, "SELECT * FROM %s WHERE enable=1 ORDER BY protocol_id", "uart_cfg");
+	unsigned char com2_status = 0;
+	drv_gpio_open(COM2_SELECTOR);
+	drv_gpio_read(COM2_SELECTOR, &com2_status);
+	drv_gpio_close(COM2_SELECTOR);
+	if (com2_status == 1) {	/* RS232 */
+		sprintf(sql, "SELECT * FROM %s WHERE com_index=1 and seq_iddex=1", "protocol_cfg");
+	} else {
+		sprintf(sql, "SELECT * FROM %s WHERE com_index=1 and protocol_id>0 ORDER BY id", "protocol_cfg");
+	}
 
 	memset(&query_result, 0, sizeof(query_result_t));
 	db_handle->query(db_handle, sql, &query_result);
 
-	unsigned int protocol_id_array[2] = {0};
+	unsigned int protocol_id_array[8] = {0};
 	unsigned int protocol_id_cnt = 0;
 	if (query_result.row > 0) {
 		for (i = 0; i < query_result.row; i++) {
-			protocol_id_array[i] = atoi(query_result.result[(i + 1 ) * query_result.column + 1]);
+			protocol_id_array[protocol_id_cnt] = atoi(query_result.result[(i + 1 ) * query_result.column + 3]);
+			protocol_id_cnt++;
+		}
+	}
+	db_handle->free_table(db_handle, query_result.result);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s WHERE com_index=2 and protocol_id>0 ORDER BY id", "protocol_cfg");
+	memset(&query_result, 0, sizeof(query_result_t));
+	db_handle->query(db_handle, sql, &query_result);
+	if (query_result.row > 0) {
+		for (i = 0; i < query_result.row; i++) {
+			protocol_id_array[protocol_id_cnt] = atoi(query_result.result[(i + 1 ) * query_result.column + 3]);
 			protocol_id_cnt++;
 		}
 	}
