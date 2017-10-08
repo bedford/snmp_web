@@ -166,7 +166,7 @@
 		</table>
 	</div>
 
-	<div class="jq-dialog" id="hint_dialog" title="密码修改成功">
+	<div class="jq-dialog" id="hint_dialog" title="提示信息">
 		<label id="hint_detail"></label>
 	</div>
 
@@ -411,6 +411,17 @@
 						data    : data,
 						success : function(msg) {
 							show_user_list(msg);
+							$('#hint_detail').html("新增用户成功!");
+							$('#hint_dialog').dialog({
+								resizable: false,
+								height: 160,
+								modal: true,
+								buttons: {
+									"确定": function() {
+										$(this).dialog("close");
+									}
+								}
+							});
 						},
 					});
 		}
