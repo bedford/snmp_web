@@ -246,6 +246,10 @@ void update_uart_cfg(priv_info_t *priv)
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
 	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "DROP TABLE IF EXISTS %s", "protocol_cfg");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+	memset(sql, 0, sizeof(sql));
 	sprintf(sql, "DROP TABLE IF EXISTS %s", "support_list");
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
@@ -256,12 +260,18 @@ void update_uart_cfg(priv_info_t *priv)
 	memset(sql, 0, sizeof(sql));
     sprintf(sql, "create table if not exists %s \
 	    (port INTEGER PRIMARY KEY, \
-	     protocol_id INTEGER, \
 	     baud INTEGER, \
 	     data_bits INTEGER, \
 	     stops_bits INTEGER, \
-	     parity INTEGER, \
-	     enable INTEGER)", "uart_cfg");
+	     parity INTEGER)", "uart_cfg");
+	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "create table if not exists %s \
+		(id INTEGER PRIMARY KEY AUTOINCREMENT, \
+		com_index INTEGER, \
+		seq_index INTEGER, \
+		protocol_id INTEGER)", "protocol_cfg");
     priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
 	memset(sql, 0, sizeof(sql));
@@ -297,26 +307,42 @@ void update_uart_cfg(priv_info_t *priv)
 
 	memset(sql, 0, sizeof(sql));
     sprintf(sql, "INSERT INTO %s \
-            (port, protocol_id, baud, data_bits, stops_bits, parity, enable) \
-			VALUES (%d, %d, %d, %d, %d, %d, %d)",
-			"uart_cfg", 2, 0, 3, 8, 1, 0, 0);
+            (port, baud, data_bits, stops_bits, parity) \
+			VALUES (%d, %d, %d, %d, %d)",
+			"uart_cfg", 1, 3, 8, 1, 0);
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
 
     memset(sql, 0, sizeof(sql));
     sprintf(sql, "INSERT INTO %s \
-            (port, protocol_id, baud, data_bits, stops_bits, parity, enable) \
-			VALUES (%d, %d, %d, %d, %d, %d, %d)",
-			"uart_cfg", 3, 0, 3, 8, 1, 0, 0);
+            (port, baud, data_bits, stops_bits, parity) \
+			VALUES (%d, %d, %d, %d, %d)",
+			"uart_cfg", 2, 3, 8, 1, 0);
 	priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+
+	int i = 0;
+	for (i = 0; i < 4; i++) {
+		memset(sql, 0, sizeof(sql));
+		sprintf(sql, "INSERT INTO %s \
+				(com_index, seq_index, protocol_id) VALUES (%d, %d, %d)",
+				"protocol_cfg", 1, i + 1, 0);
+		priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	}
+
+	for (i = 0; i < 4; i++) {
+		memset(sql, 0, sizeof(sql));
+		sprintf(sql, "INSERT INTO %s \
+				(com_index, seq_index, protocol_id) VALUES (%d, %d, %d)",
+				"protocol_cfg", 2, i + 1, 0);
+		priv->sys_db_handle->action(priv->sys_db_handle, sql, error_msg);
+	}
 
 	list_t *protocol_list = list_create(sizeof(protocol_t));
 	init_protocol_lib(protocol_list);
 	int list_size = protocol_list->get_list_size(protocol_list);
-	int i = 0;
 	protocol_t *tmp = NULL;
 	for (i = 0; i < list_size; i++) {
 		tmp = protocol_list->get_index_value(protocol_list, i);
-	    memset(sql, 0, sizeof(sql));
+		memset(sql, 0, sizeof(sql));
 	    sprintf(sql, "INSERT INTO %s (list_index, protocol_id, protocol_name, protocol_desc) \
 				VALUES (%d, %d, '%s', '%s')",
 				"support_list", i, tmp->protocol_id, tmp->protocol_name, tmp->protocol_desc);
@@ -326,7 +352,7 @@ void update_uart_cfg(priv_info_t *priv)
 	for (i = 0; i < list_size; i++) {
 		tmp = protocol_list->get_index_value(protocol_list, i);
 		list_t *property_list = list_create(sizeof(property_t));
-		tmp->get_property(property_list);
+		tmp->get_property(property_list, tmp->rs485_addr);
 
 		int property_list_size = property_list->get_list_size(property_list);
 		property_t *property = NULL;
@@ -657,6 +683,11 @@ int main(void)
 	email_alarm_param.alarm_pool_handle		= alarm_pool_handle;
 	email_alarm_thread->start(email_alarm_thread, (void *)&email_alarm_param);
 
+	unsigned char com2_status = 0;
+	drv_gpio_open(COM2_SELECTOR);
+	drv_gpio_read(COM2_SELECTOR, &com2_status);
+	drv_gpio_close(COM2_SELECTOR);
+
 	thread_t *rs232_thread = rs232_thread_create();
 	if (!rs232_thread) {
 		printf("create rs232 thread failed\n");
@@ -672,6 +703,7 @@ int main(void)
 	rs232_thread_param.email_rb_handle	= email_rb_handle;
 	rs232_thread_param.alarm_pool_handle = alarm_pool_handle;
 	rs232_thread_param.data_db_handle	= priv->data_db_handle;
+	rs232_thread_param.com_selector		= com2_status;
 	rs232_thread->start(rs232_thread, (void *)&rs232_thread_param);
 
 	thread_t *rs485_thread = rs485_thread_create();
