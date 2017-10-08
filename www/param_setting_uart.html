@@ -18,7 +18,7 @@
 		width: 95%;
 		background: #e5e5e5;
 		overflow: hidden;
-		margin-top: 10px;
+		margin-top: 5px;
 	}
 
 	.confirm_btn {
@@ -34,7 +34,7 @@
 
 	#table{
 		width:100%;
-		height: 80%;
+		height: 50%;
 	}
 
 	table {
@@ -43,7 +43,7 @@
 		background: #117daf;
 		font-size: 14px;
 		display: inline-block;
-		margin: 20px;
+		margin: 10px;
 	}
 
 	table tr.first{
@@ -53,7 +53,7 @@
 
 	table tr td.t1{
 		width: 40%;
-		text-align: left;
+		text-align: center;
 	}
 
 	table tr td > select {
@@ -63,27 +63,44 @@
 </head>
 <body>
 	<div class="uart_box">
-		<span style="width:150px;font-size:16px;">串口设置</span>
+		<span style="width:150px;">串口1设置-</span>
+		<label id=com1_name>RS232</label>
 		<div class="horizental_split"></div>
-   		<div id="table">
-			<table id="RS232_param">
-				<tr class="first" ><td colspan="2" style="text-align: center;">RS232参数项</td></tr>
-				<tr><td class="t1">协议类型</td><td><select id="rs232_protocol_select"><option value="0"></option></select></td></tr>
+   		<div id="table1">
+			<table id="COM1_param">
+				<tr class="first" ><td colspan="2" style="text-align: center;">串口1参数项</td></tr>
 				<tr><td class="t1">波特率</td><td><select id="rs232_baudrate_select"></select></td></tr>
 				<tr><td class="t1">数据位</td><td><select id="rs232_databits"></select></td></tr>
 				<tr><td class="t1">停止位</td><td><select id="rs232_stopbits"></select></td></tr>
 				<tr><td class="t1">校验方式</td><td><select id="rs232_parity"></select></td></tr>
-				<tr><td colspan="2"><label><input type="checkbox" id="rs232_checkbox">是否启用RS232串口</label></td></td></tr>
 			</table>
 
-			<table id="RS485_param">
-				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>RS485参数项</td></tr>
-				<tr><td class="t1">协议类型</td><td><select id="rs485_protocol_select"><option value="0"></option></select></td></tr>
+			<table id="COM1_protocol">
+				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>协议库选项</td></tr>
+				<tr><td class="t1">设备1协议</td><td><select id="com1-protocol-select-1"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备2协议</td><td><select id="com1-protocol-select-2"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备3协议</td><td><select id="com1-protocol-select-3"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备4协议</td><td><select id="com1-protocol-select-4"><option value="0"></option></select></td></tr>
+			</table>
+		</div>
+
+		<span style="width:150px;">串口2设置-RS485</span>
+		<div class="horizental_split"></div>
+   		<div id="table2">
+			<table id="COM2_param">
+				<tr class="first" ><td colspan="2" style="text-align: center;">串口2参数项</td></tr>
 				<tr><td class="t1">波特率</td><td><select id="rs485_baudrate_select"></select></td></tr>
 				<tr><td class="t1">数据位</td><td><select id="rs485_databits"></select></td></tr>
 				<tr><td class="t1">停止位</td><td><select id="rs485_stopbits"></select></td></tr>
 				<tr><td class="t1">校验方式</td><td><select id="rs485_parity"></select></td></tr>
-				<tr><td colspan="2"><label><input type="checkbox" id="rs485_checkbox">是否启用RS485串口</label></td></td></tr>
+			</table>
+
+			<table id="COM2_protocol">
+				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>协议库选项</td></tr>
+				<tr><td class="t1">设备1协议</td><td><select id="com2-protocol-select-1"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备2协议</td><td><select id="com2-protocol-select-2"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备3协议</td><td><select id="com2-protocol-select-3"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备4协议</td><td><select id="com2-protocol-select-4"><option value="0"></option></select></td></tr>
 			</table>
     		<input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_uart_param()">
 		</div>
@@ -103,32 +120,48 @@
         }
 
 		/* 串口及设置相关 */
-		function display_uart_param(io_param) {
-			for (var i in io_param.support_list) {
-			    $('#rs232_protocol_select').append('<option value="'+ io_param.support_list[i].protocol_id
-					+ '">' + io_param.support_list[i].protocol_desc + '</option>');
-				$('#rs485_protocol_select').append('<option value="'+ io_param.support_list[i].protocol_id
-					+ '">' + io_param.support_list[i].protocol_desc + '</option>');
+		function display_uart_param(uart_param) {
+			for (var i in uart_param.support_list) {
+			    $('#com1-protocol-select-1').append('<option value="'+ uart_param.support_list[i].protocol_id
+					+ '">' + uart_param.support_list[i].protocol_desc + '</option>');
+				$('#com1-protocol-select-2').append('<option value="'+ uart_param.support_list[i].protocol_id
+					+ '">' + uart_param.support_list[i].protocol_desc + '</option>');
+			    $('#com1-protocol-select-3').append('<option value="'+ uart_param.support_list[i].protocol_id
+					+ '">' + uart_param.support_list[i].protocol_desc + '</option>');
+				$('#com1-protocol-select-4').append('<option value="'+ uart_param.support_list[i].protocol_id
+					+ '">' + uart_param.support_list[i].protocol_desc + '</option>');
+
+			    $('#com2-protocol-select-1').append('<option value="'+ uart_param.support_list[i].protocol_id
+					+ '">' + uart_param.support_list[i].protocol_desc + '</option>');
+				$('#com2-protocol-select-2').append('<option value="'+ uart_param.support_list[i].protocol_id
+					+ '">' + uart_param.support_list[i].protocol_desc + '</option>');
+			    $('#com2-protocol-select-3').append('<option value="'+ uart_param.support_list[i].protocol_id
+					+ '">' + uart_param.support_list[i].protocol_desc + '</option>');
+				$('#com2-protocol-select-4').append('<option value="'+ uart_param.support_list[i].protocol_id
+					+ '">' + uart_param.support_list[i].protocol_desc + '</option>');
 			}
 
-			$('#rs232_protocol_select').val(io_param.rs232_cfg.protocol_id);
-			$('#rs232_baudrate_select').val(io_param.rs232_cfg.baud);
-			$('#rs232_databits').val(io_param.rs232_cfg.data_bits);
-			$('#rs232_stopbits').val(io_param.rs232_cfg.stops_bits);
-			$('#rs232_parity').val(io_param.rs232_cfg.parity);
+			$('#rs232_baudrate_select').val(uart_param.rs232_cfg.baud);
+			$('#rs232_databits').val(uart_param.rs232_cfg.data_bits);
+			$('#rs232_stopbits').val(uart_param.rs232_cfg.stops_bits);
+			$('#rs232_parity').val(uart_param.rs232_cfg.parity);
 
-			$('#rs485_protocol_select').val(io_param.rs485_cfg.protocol_id);
-			$('#rs485_baudrate_select').val(io_param.rs485_cfg.baud);
-			$('#rs485_databits').val(io_param.rs485_cfg.data_bits);
-			$('#rs485_stopbits').val(io_param.rs485_cfg.stops_bits);
-			$('#rs485_parity').val(io_param.rs485_cfg.parity);
+			$('#rs485_baudrate_select').val(uart_param.rs485_cfg.baud);
+			$('#rs485_databits').val(uart_param.rs485_cfg.data_bits);
+			$('#rs485_stopbits').val(uart_param.rs485_cfg.stops_bits);
+			$('#rs485_parity').val(uart_param.rs485_cfg.parity);
 
-			if (io_param.rs232_cfg.enable == 1) {
-				$('#rs232_checkbox').attr("checked", true);
+			if (uart_param.com_selector == 0) {
+				$('#com1_name').text('RS485');
 			}
 
-			if (io_param.rs485_cfg.enable == 1) {
-				$('#rs485_checkbox').attr("checked", true);
+			for (var index = 0; index < 8; index++) {
+				if ((uart_param.com_selector == 1) && (uart_param.protocol_cfg[index].com_index == 1) && (uart_param.protocol_cfg[index].seq_index != 1)) {
+					$('#com'+uart_param.protocol_cfg[index].com_index+'-protocol-select-'+uart_param.protocol_cfg[index].seq_index).val(0);
+					$('#com'+uart_param.protocol_cfg[index].com_index+'-protocol-select-'+uart_param.protocol_cfg[index].seq_index).attr("disabled", true);
+				} else {
+					$('#com'+uart_param.protocol_cfg[index].com_index+'-protocol-select-'+uart_param.protocol_cfg[index].seq_index).val(uart_param.protocol_cfg[index].protocol_id);
+				}
 			}
 		}
 
@@ -195,11 +228,6 @@
 			rs232_cfg.data_bits = $('#rs232_databits').val();
 			rs232_cfg.stops_bits = $('#rs232_stopbits').val();
 			rs232_cfg.parity = $('#rs232_parity').val();
-			if ($('#rs232_checkbox').is(':checked')) {
-				rs232_cfg.enable = '1';
-			} else {
-				rs232_cfg.enable = '0';
-			}
 
 			var rs485_cfg = new Object();
 			rs485_cfg.protocol_id = $('#rs485_protocol_select').val();
@@ -210,64 +238,108 @@
 			rs485_cfg.data_bits = $('#rs485_databits').val();
 			rs485_cfg.stops_bits = $('#rs485_stopbits').val();
 			rs485_cfg.parity = $('#rs485_parity').val();
-			if ($('#rs485_checkbox').is(':checked')) {
-				rs485_cfg.enable = '1';
-			} else {
-				rs485_cfg.enable = '0';
+
+			var newArray = new Array();
+			for (var index = 0; index < 8; index++) {
+				var obj = new Object();
+				obj.id = index + 1;
+				obj.com_index = parseInt(index / 4) + 1;
+				obj.seq_index = (index % 4) + 1;
+				obj.protocol_id = $('#com'+obj.com_index+'-protocol-select-'+obj.seq_index).val();
+				newArray[index] = obj;
 			}
 
-			var cfg = new Object();
-			cfg.rs232_cfg = rs232_cfg;
-			cfg.rs485_cfg = rs485_cfg;
+			var repeat = 0;
+			for (var i = 1; i < 8; i++) {
+				if (newArray[i].protocol_id == 0) {
+					continue;
+				}
 
-			json.cfg = cfg;
-			$('#confirm_btn').attr("disabled", "disabled");
-			var data = $.toJSON(json);
-		    $.ajax({
-		                url     : "/cgi-bin/common.cgi",
-		                type    : "POST",
-		                dataType: "json",
-		                data    : data,
-		                success : function(msg) {
-		                    $('#confirm_btn').removeAttr("disabled");
-							var html = '';
-							if (msg.status == 1) {
-								html = '设置成功，重启设备后生效，需立即重启请按"确认"键';
-							} else {
-								html = '设置失败';
-							}
-							$('#hint_detail').html(html);
-							$('#hint_dialog').dialog({
-								resizable: false,
-								height: 200,
-								modal: true,
-								buttons: {
-									"确定": function() {
-										$(this).dialog("close");
-										reboot();
-									},
-									取消: function() {
-										$(this).dialog("close");
-									}
+				for (var j = 0; j < i; j++) {
+					if (newArray[j].protocol_id == 0) {
+						continue;
+					}
+
+					if (newArray[j].protocol_id == newArray[i].protocol_id) {
+						repeat = 1;
+						break;
+					}
+				}
+
+				if (repeat == 1) {
+					break;
+				}
+			}
+
+			if (repeat == 1) {
+				$('#confirm_btn').removeAttr("disabled");
+				var html = '协议库不能重复，请重新选择！！';
+				$('#hint_detail').html(html);
+				$('#hint_dialog').dialog({
+					resizable: false,
+					height: 200,
+					modal: true,
+					buttons: {
+						"确定": function() {
+							$(this).dialog("close");
+						}
+					}
+				});
+			} else {
+				var cfg = new Object();
+				cfg.rs232_cfg = rs232_cfg;
+				cfg.rs485_cfg = rs485_cfg;
+				cfg.protocol_cfg = newArray;
+
+				json.cfg = cfg;
+				$('#confirm_btn').attr("disabled", "disabled");
+				var data = $.toJSON(json);
+				$.ajax({
+							url     : "/cgi-bin/common.cgi",
+							type    : "POST",
+							dataType: "json",
+							data    : data,
+							success : function(msg) {
+								$('#confirm_btn').removeAttr("disabled");
+								var html = '';
+								if (msg.status == 1) {
+									html = '设置成功，重启设备后生效，需立即重启请按"确认"键';
+								} else {
+									html = '设置失败';
 								}
-							});
-		                },
-						error : function(msg) {
-		                    $('#confirm_btn').removeAttr("disabled");
-							var html = '操作失败';
-							$('#hint_detail').html(html);
-							$('#hint_dialog').dialog({
-								resizable: false,
-								height: 160,
-								modal: true,
-								buttons: {
-									"确定": function() {
-										$(this).dialog("close");
+								$('#hint_detail').html(html);
+								$('#hint_dialog').dialog({
+									resizable: false,
+									height: 200,
+									modal: true,
+									buttons: {
+										"确定": function() {
+											$(this).dialog("close");
+											reboot();
+										},
+										取消: function() {
+											$(this).dialog("close");
+										}
 									}
-								}
-							});
-						},
-					});
+								});
+							},
+							error : function(msg) {
+								$('#confirm_btn').removeAttr("disabled");
+								var html = '操作失败';
+								$('#hint_detail').html(html);
+								$('#hint_dialog').dialog({
+									resizable: false,
+									height: 160,
+									modal: true,
+									buttons: {
+										"确定": function() {
+											$(this).dialog("close");
+										}
+									}
+								});
+							},
+						});
+			}
 		}
 
 	function init_web() {
