@@ -23,7 +23,7 @@ typedef struct
 	list_t  *last_param_value;	/* 上一次的参数值列表 */
 } property_t;
 
-typedef int (*_get_property)(list_t *property_list);
+typedef int (*_get_property)(list_t *property_list, unsigned char rs485_addr);
 typedef int (*_calculate_data)(property_t *property, char *data, int len, list_t *valid_value);
 typedef void (*_release_property)(list_t *property_list);
 
@@ -32,9 +32,10 @@ typedef void (*_release_property)(list_t *property_list);
  */
 typedef struct
 {
-	unsigned int 	    protocol_id;
-	unsigned char	    protocol_name[MIN_PROTOCOL_LEN];		/* 协议库名称 */
-	unsigned char	    protocol_desc[MIN_PROTOCOL_LEN];		/* 协议库描述 */
+    unsigned int        protocol_id;                        /* 协议库编号 */
+    unsigned char       protocol_name[MIN_PROTOCOL_LEN];    /* 协议库名称 */
+    unsigned char       protocol_desc[MIN_PROTOCOL_LEN];    /* 协议库描述 */
+    unsigned char       rs485_addr;                         /* RS485地址 */
 
 	_get_property       get_property;
     _release_property   release_property;
@@ -68,7 +69,7 @@ void deinit_protocol_lib(list_t *list);
 /**
  * @brief   get_protocol_version 获取协议库版本号
  *
- * @return  
+ * @return
  */
 char *get_protocol_version(void);
 

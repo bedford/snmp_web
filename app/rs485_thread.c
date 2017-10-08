@@ -14,7 +14,6 @@
 #include "uart.h"
 #include "preference.h"
 
-#include "drv_gpio.h"
 #include "types.h"
 #include "ring_buffer.h"
 #include "mem_pool.h"
@@ -28,21 +27,20 @@ typedef struct {
 	ring_buffer_t	*rb_handle;
 	mem_pool_t		*mpool_handle;
 	preference_t	*pref_handle;
-	protocol_t 		*protocol;
+
+	protocol_t 		*protocol[4];
+	int				protocol_cnt;
 
 	ring_buffer_t	*sms_rb_handle;
 	ring_buffer_t	*email_rb_handle;
 	mem_pool_t		*alarm_pool_handle;
 
-	uart_realdata_t *rs485_realdata;
+	uart_realdata_t *rs485_data;
 
 	int				sem_id;
 	shm_object_t	*shm_handle;
 
 	uart_param_t	uart_param;
-	int 			protocol_id;
-	int 			rs485_enable;
-
 	struct timeval	last_record_time;
 } priv_info_t;
 
@@ -65,11 +63,11 @@ static void print_param_value(list_t *param_value_list)
         //printf("len %d\n", len);
         param_value = param_value_list->get_index_value(param_value_list, i);
         printf("param_id %d\n", param_value->param_id);
-        printf("param_value %.1f\n", param_value->param_value);
+        printf("param_value %.2f\n", param_value->param_value);
     }
 }
 
-static void create_last_param_value_list(priv_info_t *priv, property_t *property, list_t *valid_value, db_access_t *data_db_handle)
+static void create_last_param_value_list(priv_info_t *priv, unsigned int index, property_t *property, list_t *valid_value, db_access_t *data_db_handle)
 {
 	list_t *last_value_list = list_create(sizeof(param_value_t));
 	list_t *desc_list = property->param_desc;
@@ -96,8 +94,8 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 		}
         sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
 			param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc) \
-			VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
-                priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
+			VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.2f, '%s', %d, '%s', '%s')", "data_record",
+                priv->protocol[index]->protocol_id, priv->protocol[index]->protocol_name, priv->protocol[index]->protocol_desc,
                 current_value->param_id, param_desc->param_name, param_desc->param_desc, param_desc->param_type,
 				current_value->param_value, param_desc->param_unit, current_value->enum_value,
                 param_desc->param_enum[current_value->enum_value].en_desc, param_desc->param_enum[current_value->enum_value].cn_desc);
@@ -112,7 +110,7 @@ static void create_last_param_value_list(priv_info_t *priv, property_t *property
 	gettimeofday(&(priv->last_record_time), NULL);
 }
 
-static int compare_values(priv_info_t *priv, property_t *property, list_t *valid_value, int offset)
+static int compare_values(priv_info_t *priv, unsigned int index, property_t *property, list_t *valid_value, int offset)
 {
 	struct timeval current_time;
 	gettimeofday(&current_time, NULL);
@@ -269,21 +267,21 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
-						priv->protocol->protocol_name,
+						priv->protocol[index]->protocol_name,
 						param_detail->param_desc, "上限报警解除");
 					break;
 				case 0x2:
 					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
-						priv->protocol->protocol_name,
+						priv->protocol[index]->protocol_name,
 						param_detail->param_desc, "下限报警解除");
 					break;
 				case 0x4:
 					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
-						priv->protocol->protocol_name,
+						priv->protocol[index]->protocol_name,
 						param_detail->param_desc,
 						(current_value->enum_value == 1) ? "低电平报警解除" : "高电平报警解除");
 					break;
@@ -294,18 +292,18 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			} else {
 				switch (alarm_status & 0x0F) {
 				case 0x1:
-					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%.1f%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%.2f%s%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
-						priv->protocol->protocol_name,
+						priv->protocol[index]->protocol_name,
 						param_detail->param_desc, current_value->param_value,
 						param_detail->param_unit, ",超过阈值");
 					break;
 				case 0x2:
-					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%.1f%s%s",
+					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%.2f%s%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
-						priv->protocol->protocol_name,
+						priv->protocol[index]->protocol_name,
 						param_detail->param_desc, current_value->param_value,
 						param_detail->param_unit, ",低于阈值");
 					break;
@@ -313,7 +311,7 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 					sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s,%s:%s",
 						tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 						tm->tm_hour, tm->tm_min, tm->tm_sec,
-						priv->protocol->protocol_name,
+						priv->protocol[index]->protocol_name,
 						param_detail->param_desc,
 						(current_value->enum_value == 1) ? "高电平报警" : "低电平报警");
 					break;
@@ -329,8 +327,8 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			}
             sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
 				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc, alarm_desc) \
-				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
-	                priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
+				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.2f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
+	                priv->protocol[index]->protocol_id, priv->protocol[index]->protocol_name, priv->protocol[index]->protocol_desc,
 	                current_value->param_id, param_detail->param_name, param_detail->param_desc, param_detail->param_type,
 	                current_value->param_value, param_detail->param_unit, current_value->enum_value,
 	                param_detail->param_enum[current_value->enum_value].en_desc,
@@ -359,9 +357,9 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			} else {
 				alarm_msg->alarm_type = ALARM_RAISE;
 			}
-			alarm_msg->protocol_id = priv->protocol->protocol_id;
-			strcpy(alarm_msg->protocol_name, priv->protocol->protocol_name);
-			strcpy(alarm_msg->protocol_desc, priv->protocol->protocol_desc);
+			alarm_msg->protocol_id = priv->protocol[index]->protocol_id;
+			strcpy(alarm_msg->protocol_name, priv->protocol[index]->protocol_name);
+			strcpy(alarm_msg->protocol_desc, priv->protocol[index]->protocol_desc);
 			alarm_msg->param_id = current_value->param_id;
 			strcpy(alarm_msg->param_name, param_detail->param_name);
 			strcpy(alarm_msg->param_desc, param_detail->param_desc);
@@ -395,8 +393,8 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			}
 			sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
 				param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc) \
-				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s')", "data_record",
-					priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
+				VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.2f, '%s', %d, '%s', '%s')", "data_record",
+					priv->protocol[index]->protocol_id, priv->protocol[index]->protocol_name, priv->protocol[index]->protocol_desc,
 					current_value->param_id, param_detail->param_name, param_detail->param_desc, param_detail->param_type,
 					current_value->param_value, param_detail->param_unit, current_value->enum_value,
 					param_detail->param_enum[current_value->enum_value].en_desc, param_detail->param_enum[current_value->enum_value].cn_desc);
@@ -407,26 +405,26 @@ static int compare_values(priv_info_t *priv, property_t *property, list_t *valid
 			msg = NULL;
 		}
 
-        priv->rs485_realdata->data[i + offset].protocol_id = priv->protocol->protocol_id;
-		strcpy(priv->rs485_realdata->data[i + offset].protocol_name, priv->protocol->protocol_name);
-		strcpy(priv->rs485_realdata->data[i + offset].protocol_desc, priv->protocol->protocol_desc);
-		priv->rs485_realdata->data[i + offset].param_id = current_value->param_id;
-		strcpy(priv->rs485_realdata->data[i + offset].param_name, param_detail->param_name);
-		strcpy(priv->rs485_realdata->data[i + offset].param_desc, param_detail->param_desc);
-		priv->rs485_realdata->data[i + offset].param_type = param_detail->param_type;
-		priv->rs485_realdata->data[i + offset].analog_value = current_value->param_value;
-		strcpy(priv->rs485_realdata->data[i + offset].param_unit, param_detail->param_unit);
-		priv->rs485_realdata->data[i + offset].enum_value = current_value->enum_value;
-		strcpy(priv->rs485_realdata->data[i + offset].enum_en_desc, param_detail->param_enum[current_value->enum_value].en_desc);
-		strcpy(priv->rs485_realdata->data[i + offset].enum_cn_desc, param_detail->param_enum[current_value->enum_value].cn_desc);
-		priv->rs485_realdata->data[i + offset].alarm_type = alarm_status;
+        priv->rs485_data->realdata[index].data[i + offset].protocol_id = priv->protocol[index]->protocol_id;
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].protocol_name, priv->protocol[index]->protocol_name);
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].protocol_desc, priv->protocol[index]->protocol_desc);
+		priv->rs485_data->realdata[index].data[i + offset].param_id = current_value->param_id;
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].param_name, param_detail->param_name);
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].param_desc, param_detail->param_desc);
+		priv->rs485_data->realdata[index].data[i + offset].param_type = param_detail->param_type;
+		priv->rs485_data->realdata[index].data[i + offset].analog_value = current_value->param_value;
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].param_unit, param_detail->param_unit);
+		priv->rs485_data->realdata[index].data[i + offset].enum_value = current_value->enum_value;
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].enum_en_desc, param_detail->param_enum[current_value->enum_value].en_desc);
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].enum_cn_desc, param_detail->param_enum[current_value->enum_value].cn_desc);
+		priv->rs485_data->realdata[index].data[i + offset].alarm_type = alarm_status;
 	}
-	priv->rs485_realdata->cnt = list_size + offset;
+	priv->rs485_data->realdata[index].cnt = list_size + offset;
 
 	return list_size + offset;
 }
 
-static int record_com_fail(priv_info_t *priv, int alarm_status)
+static int record_com_fail(priv_info_t *priv, unsigned int index, int alarm_status)
 {
 	msg_t *msg = NULL;
 	alarm_msg_t *alarm_msg = NULL;
@@ -441,12 +439,12 @@ static int record_com_fail(priv_info_t *priv, int alarm_status)
 		sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s",
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 			tm->tm_hour, tm->tm_min, tm->tm_sec,
-			priv->protocol->protocol_name, "设备通信失败解除");
+			priv->protocol[index]->protocol_name, "设备通信失败解除");
 	} else {
 		sprintf(alarm_desc, "[%04d-%02d-%02d %02d:%02d:%02d]%s:%s",
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 			tm->tm_hour, tm->tm_min, tm->tm_sec,
-			priv->protocol->protocol_name, "设备通信失败");
+			priv->protocol[index]->protocol_name, "设备通信失败");
 	}
 
 	msg = (msg_t *)priv->mpool_handle->mpool_alloc(priv->mpool_handle);
@@ -456,8 +454,8 @@ static int record_com_fail(priv_info_t *priv, int alarm_status)
 	}
 	sprintf(msg->buf, "INSERT INTO %s (protocol_id, protocol_name, protocol_desc, param_id, \
 		param_name, param_desc, param_type, analog_value, unit, enum_value, enum_en_desc, enum_cn_desc, alarm_desc) \
-		VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.1f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
-			priv->protocol->protocol_id, priv->protocol->protocol_name, priv->protocol->protocol_desc,
+		VALUES (%d, '%s', '%s', %d, '%s', '%s', %d, %.2f, '%s', %d, '%s', '%s', '%s')", "alarm_record",
+			priv->protocol[index]->protocol_id, priv->protocol[index]->protocol_name, priv->protocol[index]->protocol_desc,
 			0, "", "", PARAM_TYPE_ENUM, 0.0, "", alarm_status, (alarm_status == 0) ? "com_normal" : "com_fail",
 			(alarm_status == 0) ? "通信恢复" : "通信失败", alarm_desc);
 
@@ -485,9 +483,9 @@ static int record_com_fail(priv_info_t *priv, int alarm_status)
 	} else {
 		alarm_msg->alarm_type = ALARM_RAISE;
 	}
-	alarm_msg->protocol_id = priv->protocol->protocol_id;
-	strcpy(alarm_msg->protocol_name, priv->protocol->protocol_name);
-	strcpy(alarm_msg->protocol_desc, priv->protocol->protocol_desc);
+	alarm_msg->protocol_id = priv->protocol[index]->protocol_id;
+	strcpy(alarm_msg->protocol_name, priv->protocol[index]->protocol_name);
+	strcpy(alarm_msg->protocol_desc, priv->protocol[index]->protocol_desc);
 	alarm_msg->param_id = 0;
 	strcpy(alarm_msg->param_name, "");
 	strcpy(alarm_msg->param_desc, "");
@@ -518,12 +516,12 @@ static int record_com_fail(priv_info_t *priv, int alarm_status)
 	return 0;
 }
 
-static void update_alarm_param(priv_info_t *priv, property_t *property)
+static void update_alarm_param(priv_info_t *priv, unsigned int index, property_t *property)
 {
 	char sql[256] = {0};
 	query_result_t query_result;
 	sprintf(sql, "SELECT * FROM %s WHERE protocol_id=%d AND cmd_id=%d order by id",
-			"parameter", priv->protocol->protocol_id, property->cmd.cmd_id);
+			"parameter", priv->protocol[index]->protocol_id, property->cmd.cmd_id);
 
 	memset(&query_result, 0, sizeof(query_result_t));
 	priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
@@ -580,31 +578,41 @@ static void *rs485_process(void *arg)
 	priv->email_rb_handle = (ring_buffer_t *)thread_param->email_rb_handle;
 	priv->alarm_pool_handle = (mem_pool_t *)thread_param->alarm_pool_handle;
 
+	unsigned int protocol_id[4] = {0};
+
     char sql[256] = {0};
 	query_result_t query_result;
-	sprintf(sql, "SELECT * FROM %s WHERE port=3", "uart_cfg");
+	sprintf(sql, "SELECT * FROM %s WHERE port=2", "uart_cfg");
     memset(&query_result, 0, sizeof(query_result_t));
     priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
-    if (query_result.row <= 0) {
-		priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
-		return (void *)0;
-    }
+    priv->uart_param.baud = atoi(query_result.result[query_result.column + 1]);
+    priv->uart_param.bits = atoi(query_result.result[query_result.column + 2]);
+    priv->uart_param.stops = atoi(query_result.result[query_result.column + 3]);
+    priv->uart_param.parity = atoi(query_result.result[query_result.column + 4]);
+    printf("baud %d, bits %d, stops %d, parity %d\n",
+            priv->uart_param.baud, priv->uart_param.bits,
+            priv->uart_param.stops, priv->uart_param.parity);
+    priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 
-    priv->protocol_id = atoi(query_result.result[query_result.column + 1]);
-    priv->uart_param.baud = atoi(query_result.result[query_result.column + 2]);
-    priv->uart_param.bits = atoi(query_result.result[query_result.column + 3]);
-    priv->uart_param.stops = atoi(query_result.result[query_result.column + 4]);
-    priv->uart_param.parity = atoi(query_result.result[query_result.column + 5]);
-    priv->rs485_enable = atoi(query_result.result[query_result.column + 6]);
-    printf("protocol_id %d, baud %d, bits %d, stops %d, parity %d, enable %d\n",
-            priv->protocol_id, priv->uart_param.baud, priv->uart_param.bits,
-            priv->uart_param.stops, priv->uart_param.parity, priv->rs485_enable);
+	int i = 0;
+	memset(sql, 0, sizeof(sql));
+	sprintf(sql, "SELECT * FROM %s WHERE com_index=2", "protocol_cfg");
+    memset(&query_result, 0, sizeof(query_result_t));
+	priv->sys_db_handle->query(priv->sys_db_handle, sql, &query_result);
+	for (i = 1; i < (query_result.row + 1); i++) {
+		protocol_id[i - 1] = atoi(query_result.result[query_result.column * i + 3]);
+	}
     priv->sys_db_handle->free_table(priv->sys_db_handle, query_result.result);
 
     list_t *protocol_list = list_create(sizeof(protocol_t));
-    init_protocol_lib(protocol_list);
-    protocol_t *protocol = NULL;
-    protocol = get_protocol_handle(protocol_list, priv->protocol_id);
+	init_protocol_lib(protocol_list);
+	for (i = 0; i < 4; i++) {
+		if (protocol_id[i] != 0) {
+			priv->protocol[priv->protocol_cnt] = get_protocol_handle(protocol_list, protocol_id[i]);
+			print_snmp_protocol(priv->protocol[priv->protocol_cnt]);
+			priv->protocol_cnt += 1;
+		}
+	}
 
 	priv->shm_handle = shm_object_create(RS485_SHM_KEY, sizeof(uart_realdata_t));
 	int ret = 0;
@@ -613,8 +621,7 @@ static void *rs485_process(void *arg)
 		ret = -1;
 	}
 
-	while ((protocol == NULL) || (priv->rs485_enable == 0)
-			|| (ret < 0)) {
+	while (priv->protocol_cnt == 0) {
 		sleep(3);
 
 		if (thiz->thread_status == 0) {
@@ -625,87 +632,99 @@ static void *rs485_process(void *arg)
 			return (void *)0;
 		}
 
-		priv->rs485_realdata->enable = 0;
-		priv->rs485_realdata->cnt = 0;
+		priv->rs485_data->realdata[0].cnt = 0;
+		priv->rs485_data->realdata[1].cnt = 0;
+		priv->rs485_data->realdata[2].cnt = 0;
+		priv->rs485_data->realdata[3].cnt = 0;
+		priv->rs485_data->protocol_cnt = priv->protocol_cnt;
 		semaphore_p(priv->sem_id);
-		priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs485_realdata));
+		priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs485_data));
 		semaphore_v(priv->sem_id);
 	}
 
-	priv->protocol = protocol;
-    print_snmp_protocol(protocol);
+	list_t *com_property[4] = {0};
+	list_t *property_list = NULL;
+	for (i = 0; i < priv->protocol_cnt; i++) {
+		property_list = list_create(sizeof(property_t));
+		priv->protocol[i]->get_property(property_list, priv->protocol[i]->rs485_addr);
+		com_property[i] = property_list;
+		property_list = NULL;
+	}
 
     uart_t *uart = uart_create(&(priv->uart_param));
-    uart->open(uart);
-
-    list_t *property_list = list_create(sizeof(property_t));
-    protocol->get_property(property_list);
-	int property_list_size = property_list->get_list_size(property_list);
+	uart->open(uart);
 
 	int index = 0;
 	char buf[256] = {0};
     property_t *property = NULL;
 	int update_alarm_param_flag = 1;
 	int param_cnt = 0;
-	int com_fail_count = 0;
-	int com_fail_flag = 0;
+	int com_fail_count[4] = {0};
+	int com_fail_flag[4] = {0};
+	protocol_t *protocol = NULL;
+	int property_list_size = 0;
 	while (thiz->thread_status) {
-		param_cnt = 0;
-		for (index = 0; index < property_list_size; index++) {
-			property = property_list->get_index_value(property_list, index);
-			if (update_alarm_param_flag) {
-				update_alarm_param(priv, property);
-			}
+		for (i = 0; i < priv->protocol_cnt; i++) {
+			protocol = priv->protocol[i];
+			property_list = com_property[i];
+			property_list_size = property_list->get_list_size(property_list);
+			param_cnt = 0;
+			for (index = 0; index < property_list_size; index++) {
+				property = property_list->get_index_value(property_list, index);
+				if (update_alarm_param_flag) {
+					update_alarm_param(priv, i, property);
+				}
 
-			memset(buf, 0, sizeof(buf));
-			print_com_info(3, protocol->protocol_desc, 0, property->cmd.cmd_code, property->cmd.cmd_len, 0);
-			ret = uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2);
-			if (ret == property->cmd.cmd_len) {
-				int len = uart->read(uart, buf, property->cmd.check_len, 2);
-				list_t *value_list = list_create(sizeof(param_value_t));
-				ret = protocol->calculate_data(property, buf, len, value_list);
-				if (ret == 0) {
-					if (property->last_param_value == NULL) {
-						create_last_param_value_list(priv, property, value_list,
-							(db_access_t *)thread_param->data_db_handle);
-					} else {
-						param_cnt = compare_values(priv, property, value_list, param_cnt);
-					}
+				memset(buf, 0, sizeof(buf));
+				print_com_info(1, protocol->protocol_desc, 0, property->cmd.cmd_code, property->cmd.cmd_len, 0);
+				ret = uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2);
+				if (ret == property->cmd.cmd_len) {
+					int len = uart->read(uart, buf, property->cmd.check_len, 2);
+					list_t *value_list = list_create(sizeof(param_value_t));
+					ret = protocol->calculate_data(property, buf, len, value_list);
+					if (ret == 0) {
+						if (property->last_param_value == NULL) {
+							create_last_param_value_list(priv, i, property, value_list,
+								(db_access_t *)thread_param->data_db_handle);
+						} else {
+							param_cnt = compare_values(priv, i, property, value_list, param_cnt);
+						}
 
-					com_fail_count = 0;
-					if (com_fail_flag) {
-						com_fail_flag = 0;
-						record_com_fail(priv, 0);
-					}
-				} else if (ret == ERR_RETURN_LEN_ZERO) {
-					priv->rs485_realdata->cnt = 0;
-					if (com_fail_flag == 0) {
-						com_fail_count++;
-						if (com_fail_count > 1) {
-							com_fail_flag = 1;
-							record_com_fail(priv, 1);
+						com_fail_count[i] = 0;
+						if (com_fail_flag[i]) {
+							com_fail_flag[i] = 0;
+							record_com_fail(priv, i, 0);
+						}
+					} else if (ret == ERR_RETURN_LEN_ZERO) {
+                        priv->rs485_data->realdata[i].cnt = 0;
+						if (com_fail_flag[i] == 0) {
+							com_fail_count[i] += 1;
+							if (com_fail_count[i] > 1) {
+								com_fail_flag[i] = 1;
+								record_com_fail(priv, i, 1);
+							}
 						}
 					}
+					print_com_info(1, protocol->protocol_desc, 1, buf, len, ret);
+					value_list->destroy_list(value_list);
+					value_list = NULL;
+				} else {
+					printf("write cmd failed------------\n");
 				}
-				print_com_info(3, protocol->protocol_desc, 1, buf, len, ret);
-				value_list->destroy_list(value_list);
-				value_list = NULL;
-	        } else {
-	            printf("write cmd failed------------\n");
-	        }
-			sleep(1);
+				sleep(1);
+			}
 		}
-		priv->rs485_realdata->enable = 1;
+		priv->rs485_data->protocol_cnt = priv->protocol_cnt;
 		semaphore_p(priv->sem_id);
-		priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs485_realdata));
+		priv->shm_handle->shm_put(priv->shm_handle, (void *)(priv->rs485_data));
 		semaphore_v(priv->sem_id);
 
-        if (update_alarm_param_flag) {
-            update_alarm_param_flag = 0;
-            priv->pref_handle->set_rs485_alarm_flag(priv->pref_handle, 0);
-        } else {
-            update_alarm_param_flag = priv->pref_handle->get_rs485_alarm_flag(priv->pref_handle);
-        }
+		if (update_alarm_param_flag) {
+			update_alarm_param_flag = 0;
+			priv->pref_handle->set_rs485_alarm_flag(priv->pref_handle, 0);
+		} else {
+			update_alarm_param_flag = priv->pref_handle->get_rs485_alarm_flag(priv->pref_handle);
+		}
 	}
 
     property = NULL;
@@ -731,9 +750,9 @@ static void rs485_thread_destroy(thread_t *thiz)
 {
     if (thiz != NULL) {
         priv_info_t *priv = (priv_info_t *)thiz->priv;
-		if (priv->rs485_realdata) {
-			memset(priv->rs485_realdata, 0, sizeof(uart_realdata_t));
-			priv->rs485_realdata = NULL;
+		if (priv->rs485_data) {
+			memset(priv->rs485_data, 0, sizeof(uart_realdata_t));
+			priv->rs485_data = NULL;
 		}
 
         memset(thiz, 0, sizeof(thread_t) + sizeof(priv_info_t));
@@ -758,8 +777,8 @@ thread_t *rs485_thread_create(void)
         thiz->destroy	= rs485_thread_destroy;
 
         priv_info_t *priv = (priv_info_t *)thiz->priv;
-		priv->rs485_realdata = calloc(1, sizeof(uart_realdata_t));
-		if (priv->rs485_realdata == NULL) {
+		priv->rs485_data = calloc(1, sizeof(uart_realdata_t));
+		if (priv->rs485_data == NULL) {
 			rs485_thread_destroy(thiz);
 			thiz = NULL;
 		}

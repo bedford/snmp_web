@@ -14,11 +14,11 @@
 #define RS485_SHM_KEY       (6781)
 #define DI_SHM_KEY          (6782)
 
-
 #define SHM_KEY_TRAP_ALARM  (6789)
 
 #define MIN_BUF_SIZE        (32)
-#define UART_DATA_MAX_NUM   (1000)
+#define UART_DATA_MAX_NUM   (256)
+#define PROTOCOL_MAX_NUM    (4)
 
 /**
   @brief    共享内存中RS232、RS485、DI数据单个参数的结构
@@ -40,19 +40,25 @@ typedef struct {
 } element_data_t;
 
 /**
+  @brief    共享内存中同一个协议库当前数据内存结构
+ */
+typedef struct {
+    unsigned int    cnt;                        /* 当前协议有效参数数量 */
+    element_data_t  data[UART_DATA_MAX_NUM];
+} protocol_realdata_t;
+
+/**
   @brief    共享内存中RS232、RS485数据内存结构
  */
 typedef struct {
-    unsigned int    enable;
-    unsigned int    cnt;
-    element_data_t  data[UART_DATA_MAX_NUM];
+    unsigned int        protocol_cnt;               /* 有效协议数量 */
+    protocol_realdata_t realdata[PROTOCOL_MAX_NUM];
 } uart_realdata_t;
 
 /**
   @brief    共享内存中DI数据内存结构
  */
 typedef struct {
-    unsigned int    enable;
     unsigned int    cnt;
     element_data_t  data[4];
 } di_realdata_t;
