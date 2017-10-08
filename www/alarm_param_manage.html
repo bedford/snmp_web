@@ -323,7 +323,6 @@
 		function traverse_alarm_param(msg) {
 			window.array_data = msg.param_list;
 
-			//$('#alarm_param_table tr:gt(0)').remove();
 			$('#alarm_param_table').empty();
 			var html="";
 			$.each(msg.param_list, function(i, item) {
@@ -344,12 +343,8 @@
 			if (device_type == '全部设备') {
 				if (window.support_list_count == 0) {
 					return;
-				}
-
-				if (window.support_list_count == 2) {
-					cfg.device_id = "all";
 				} else {
-					cfg.device_id = window.support_list[0].protocol_id;
+					cfg.device_id = "all";
 				}
 			} else {
 				cfg.device_id = $('#device_name').val();
