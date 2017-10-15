@@ -109,11 +109,15 @@
 	</div>
 
 	<div class="jq-dialog" id="update_success_dialog" title="提示信息">
-		<label id="update_detail"></label>
+		<div style="margin-top:10px;">
+			<p style="text-align:center;" id="update_detail"></p>
+		</div>
 	</div>
 
 	<div class="jq-dialog" id="no_update_dialog" title="提示信息">
-		<label id="nothing_detail"></label>
+		<div style="margin-top:10px;">
+			<p style="text-align:center;" id="nothing_detail"></p>
+		</div>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
@@ -239,9 +243,9 @@
 			var i =  0;
 			$.each(msg.di_param, function(i, item) {
 				html += '<tr id="' + item.id + '"><td>' + item.di_desc + '</td>';
-				html += '<td contenteditable="true">' + item.device_name + '</td>';
-				html += '<td contenteditable="true">' + item.low_desc + '</td>';
-				html += '<td contenteditable="true">' + item.high_desc + '</td>';
+				html += '<td><div contenteditable="true">' + item.device_name + '</div></td>';
+				html += '<td><div contenteditable="true">' + item.low_desc + '</div></td>';
+				html += '<td><div contenteditable="true">' + item.high_desc + '</div></td>';
 
 				if (item.alarm_level == 1) {
 					html += '<td><select id="select_alarm_level_' + i +'"><option value="0">低</option>'

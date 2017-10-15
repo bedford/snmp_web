@@ -113,8 +113,10 @@
         <input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_alarm_param()">
 	</div>
 
-	<div class="jq-dialog" id="hint_dialog" title="提示信息">
-		<label id="hint_detail"></label>
+    <div class="jq-dialog" id="hint_dialog" title="提示信息">
+		<div style="margin-top:10px;">
+			<p style="text-align:center;" id="hint_detail"></p>
+		</div>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
@@ -326,13 +328,18 @@
 			$('#alarm_param_table').empty();
 			var html="";
 			$.each(msg.param_list, function(i, item) {
-				html+='<tr id="'+ item.id + '"><td>' + item.protocol_desc + '</td><td>'
-				+ item.param_desc + '</td><td contenteditable="true">'
-				+ item.up_limit + '</td><td contenteditable="true">'
-				+ item.up_free + '</td><td contenteditable="true">'
-				+ item.low_limit + '</td><td contenteditable="true">'
-				+ item.low_free + '</td><td contenteditable="true">'
-				+ item.update_threshold + '</td></tr>';
+				for (var j = 0; j < window.support_list_count; j++) {
+					if (window.support_list[j].protocol_id == item.protocol_id) {
+						html+='<tr id="'+ item.id + '"><td>' + item.protocol_desc + '</td><td>'
+							+ item.param_desc + '</td><td><div contenteditable="true">'
+							+ item.up_limit + '</div></td><td><div contenteditable="true">'
+							+ item.up_free + '</div></td><td><div contenteditable="true">'
+							+ item.low_limit + '</div></td><td><div contenteditable="true">'
+							+ item.low_free + '</div></td><td><div contenteditable="true">'
+							+ item.update_threshold + '</div></td></tr>';
+						break;
+					}
+				}
 			});
 			$("#alarm_param_table").append(html);
 		}
