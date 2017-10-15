@@ -76,11 +76,11 @@
 			</table>
 
 			<table id="COM1_protocol">
-				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>协议库选项</td></tr>
-				<tr><td class="t1">设备1协议</td><td><select id="com1-protocol-select-1"><option value="0"></option></select></td></tr>
-				<tr><td class="t1">设备2协议</td><td><select id="com1-protocol-select-2"><option value="0"></option></select></td></tr>
-				<tr><td class="t1">设备3协议</td><td><select id="com1-protocol-select-3"><option value="0"></option></select></td></tr>
-				<tr><td class="t1">设备4协议</td><td><select id="com1-protocol-select-4"><option value="0"></option></select></td></tr>
+				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>设备选项</td></tr>
+				<tr><td class="t1">设备1</td><td><select id="com1-protocol-select-1"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备2</td><td><select id="com1-protocol-select-2"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备3</td><td><select id="com1-protocol-select-3"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备4</td><td><select id="com1-protocol-select-4"><option value="0"></option></select></td></tr>
 			</table>
 		</div>
 
@@ -96,18 +96,20 @@
 			</table>
 
 			<table id="COM2_protocol">
-				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>协议库选项</td></tr>
-				<tr><td class="t1">设备1协议</td><td><select id="com2-protocol-select-1"><option value="0"></option></select></td></tr>
-				<tr><td class="t1">设备2协议</td><td><select id="com2-protocol-select-2"><option value="0"></option></select></td></tr>
-				<tr><td class="t1">设备3协议</td><td><select id="com2-protocol-select-3"><option value="0"></option></select></td></tr>
-				<tr><td class="t1">设备4协议</td><td><select id="com2-protocol-select-4"><option value="0"></option></select></td></tr>
+				<tr class="first"><td colspan="2" style="text-align: center;" width=120%>设备选项</td></tr>
+				<tr><td class="t1">设备1</td><td><select id="com2-protocol-select-1"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备2</td><td><select id="com2-protocol-select-2"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备3</td><td><select id="com2-protocol-select-3"><option value="0"></option></select></td></tr>
+				<tr><td class="t1">设备4</td><td><select id="com2-protocol-select-4"><option value="0"></option></select></td></tr>
 			</table>
     		<input type="button" class="confirm_btn" id="confirm_btn" value="应用" onclick="set_uart_param()">
 		</div>
 	</div>
 
 	<div class="jq-dialog" id="hint_dialog" title="提示信息">
-		<label id="hint_detail"></label>
+		<div style="margin-top:10px;">
+			<p style="text-align:center;" id="hint_detail"></p>
+		</div>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
@@ -195,7 +197,7 @@
 						success : function(msg) {
 							var html = '';
 							if (msg.status == 1) {
-								html = '重启成功，正在重启中，请稍后再连接设备';
+								html = '正在重启中，请稍后再连接设备';
 							} else {
 								html = '设置失败';
 							}

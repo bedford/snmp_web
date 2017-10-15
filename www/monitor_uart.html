@@ -191,7 +191,14 @@
 							+ '<td style="width:15%;">' + item.enum_value + '</td>'
 							+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
 							+ '<td style="width:15%;">下限报警</td></tr>';
-						}
+						} else if (item.alarm_type == '32') {
+							var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+							+ '<td style="width:15%;">' + item.param_desc + '</td>'
+							+ '<td style="width:15%;">-</td>'
+							+ '<td style="width:15%;">-</td>'
+							+ '<td style="width:15%;">-</td>'
+							+ '<td style="width:15%;">通信异常</td></tr>';
+						} 
 
 						$("#real_data").append(html);
 					}
@@ -237,6 +244,13 @@
 							+ '<td style="width:15%;">' + item.enum_value + '</td>'
 							+ '<td style="width:15%;">' + item.enum_cn_desc + '</td>'
 							+ '<td style="width:15%;">下限报警</td></tr>';
+						} else if (item.alarm_type == '32') {
+							var html = '<tr class="warning"><td style="width:25%;">' + item.protocol_desc + '</td>'
+							+ '<td style="width:15%;">' + item.param_desc + '</td>'
+							+ '<td style="width:15%;">-</td>'
+							+ '<td style="width:15%;">-</td>'
+							+ '<td style="width:15%;">-</td>'
+							+ '<td style="width:15%;">通信异常</td></tr>';
 						}
 
 						$("#real_data").append(html);
