@@ -13,7 +13,8 @@ enum
 	LEVEL_ALARM_ON	= 0x4,	/* 枚举量状态异常报警 */
 	UP_ALARM_OFF	= 0x11,
 	LOW_ALARM_OFF	= 0x12,
-	LEVEL_ALARM_OFF	= 0x14
+	LEVEL_ALARM_OFF	= 0x14,
+	COM_FAULT		= 0x20	/* 通信接口异常 */
 };
 
 /* 入库消息结构 */

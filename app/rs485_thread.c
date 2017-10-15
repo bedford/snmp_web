@@ -41,7 +41,7 @@ typedef struct {
 	shm_object_t	*shm_handle;
 
 	uart_param_t	uart_param;
-	struct timeval	last_record_time;
+	struct timeval	last_record_time[4];
 } priv_info_t;
 
 static void print_snmp_protocol(protocol_t *snmp_protocol)
@@ -107,7 +107,7 @@ static void create_last_param_value_list(priv_info_t *priv, unsigned int index, 
 	}
 
 	property->last_param_value = last_value_list;
-	gettimeofday(&(priv->last_record_time), NULL);
+	gettimeofday(&(priv->last_record_time[index]), NULL);
 }
 
 static int compare_values(priv_info_t *priv, unsigned int index, property_t *property, list_t *valid_value, int offset)
@@ -124,8 +124,8 @@ static int compare_values(priv_info_t *priv, unsigned int index, property_t *pro
 	int list_size = valid_value->get_list_size(valid_value);
 	int i = 0;
 	int timeout_record_flag = 0;
-	if ((current_time.tv_sec - priv->last_record_time.tv_sec) > (60 * 30)) {
-		priv->last_record_time = current_time;
+	if ((current_time.tv_sec - priv->last_record_time[index].tv_sec) > (60 * 30)) {
+		priv->last_record_time[index] = current_time;
 		timeout_record_flag = 1;
 	}
 
@@ -424,6 +424,36 @@ static int compare_values(priv_info_t *priv, unsigned int index, property_t *pro
 	return list_size + offset;
 }
 
+static int communication_fault(priv_info_t *priv, unsigned int index, property_t *property, int offset)
+{
+	list_t *desc_list = property->param_desc;
+	param_desc_t *param_detail = NULL;
+
+	int list_size = desc_list->get_list_size(desc_list);
+	int i = 0;
+	unsigned int alarm_status = NORMAL;
+	for (i = 0; i < list_size; i++) {
+		param_detail = desc_list->get_index_value(desc_list, i);
+
+        priv->rs485_data->realdata[index].data[i + offset].protocol_id = priv->protocol[index]->protocol_id;
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].protocol_name, priv->protocol[index]->protocol_name);
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].protocol_desc, priv->protocol[index]->protocol_desc);
+		priv->rs485_data->realdata[index].data[i + offset].param_id = param_detail->param_id;
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].param_name, param_detail->param_name);
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].param_desc, param_detail->param_desc);
+		priv->rs485_data->realdata[index].data[i + offset].param_type = param_detail->param_type;
+		priv->rs485_data->realdata[index].data[i + offset].analog_value = 0;
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].param_unit, param_detail->param_unit);
+		priv->rs485_data->realdata[index].data[i + offset].enum_value = 0;
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].enum_en_desc, param_detail->param_enum[0].en_desc);
+		strcpy(priv->rs485_data->realdata[index].data[i + offset].enum_cn_desc, param_detail->param_enum[0].cn_desc);
+		priv->rs485_data->realdata[index].data[i + offset].alarm_type = COM_FAULT;
+	}
+	priv->rs485_data->realdata[index].cnt = list_size + offset;
+
+	return list_size + offset;
+}
+
 static int record_com_fail(priv_info_t *priv, unsigned int index, int alarm_status)
 {
 	msg_t *msg = NULL;
@@ -676,7 +706,7 @@ static void *rs485_process(void *arg)
 				}
 
 				memset(buf, 0, sizeof(buf));
-				print_com_info(1, protocol->protocol_desc, 0, property->cmd.cmd_code, property->cmd.cmd_len, 0);
+				print_com_info(2, protocol->protocol_desc, 0, property->cmd.cmd_code, property->cmd.cmd_len, 0);
 				ret = uart->write(uart, property->cmd.cmd_code, property->cmd.cmd_len, 2);
 				if (ret == property->cmd.cmd_len) {
 					int len = uart->read(uart, buf, property->cmd.check_len, 2);
@@ -696,7 +726,7 @@ static void *rs485_process(void *arg)
 							record_com_fail(priv, i, 0);
 						}
 					} else if (ret == ERR_RETURN_LEN_ZERO) {
-                        priv->rs485_data->realdata[i].cnt = 0;
+                        //priv->rs485_data->realdata[i].cnt = 0;
 						if (com_fail_flag[i] == 0) {
 							com_fail_count[i] += 1;
 							if (com_fail_count[i] > 1) {
@@ -704,8 +734,11 @@ static void *rs485_process(void *arg)
 								record_com_fail(priv, i, 1);
 							}
 						}
+						param_cnt = communication_fault(priv, i, property, param_cnt);
+					} else {
+						param_cnt = communication_fault(priv, i, property, param_cnt);
 					}
-					print_com_info(1, protocol->protocol_desc, 1, buf, len, ret);
+					print_com_info(2, protocol->protocol_desc, 1, buf, len, ret);
 					value_list->destroy_list(value_list);
 					value_list = NULL;
 				} else {
