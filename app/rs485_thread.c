@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include <math.h>
 
 #include "protocol_interfaces.h"
 
@@ -144,7 +145,7 @@ static int compare_values(priv_info_t *priv, unsigned int index, property_t *pro
 
 		alarm_status = last_value->status;
 		if (param_detail->param_type == PARAM_TYPE_ANALOG) {
-			if (abs(current_value->param_value - last_value->param_value)
+			if (fabs(current_value->param_value - last_value->param_value)
 						> param_detail->update_threshold) {
 				data_record_flag = 1;
 			}
