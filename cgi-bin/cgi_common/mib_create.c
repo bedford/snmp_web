@@ -157,32 +157,17 @@ unsigned int fill_protocol_mib(unsigned char *buffer, unsigned int offset,
 unsigned int fill_param_mib(unsigned char *buffer, unsigned int offset,
 				char *protocol_name, param_desc_t *param_desc)
 {
-    unsigned char *tmp_buf = buffer + offset;
+	unsigned char *tmp_buf = buffer + offset;
 
-	if (param_desc->param_type == 1) {	//模拟量
-		sprintf(tmp_buf, "%s OBJECT-TYPE\n"
-				"\tSYNTAX DisplayString\n"
-				"\tACCESS read-only\n"
-				"\tSTATUS mandatory\n"
-				"\tDESCRIPTION\n"
-				"\t\t\"%s\"\n"
-				"\t::= { %s %d }\n\n", param_desc->param_name,
-				param_desc->param_name,
-				protocol_name, param_desc->param_id);
-	} else { //枚举量
-		sprintf(tmp_buf, "%s OBJECT-TYPE\n"
-				"\tSYNTAX INTEGER {\n"
-				"\t\tclose(0),\n"
-				"\t\topen(1)\n"
-				"\t}\n"
-				"\tACCESS read-only\n"
-				"\tSTATUS mandatory\n"
-				"\tDESCRIPTION\n"
-				"\t\t\"%s\"\n"
-				"\t::= { %s %d }\n\n", param_desc->param_name,
-				//param_desc->param_enum[0].desc, param_desc->param_enum[1].desc,
-				param_desc->param_name, protocol_name, param_desc->param_id);
-	}
+	sprintf(tmp_buf, "%s OBJECT-TYPE\n"
+			"\tSYNTAX DisplayString\n"
+			"\tACCESS read-only\n"
+			"\tSTATUS mandatory\n"
+			"\tDESCRIPTION\n"
+			"\t\t\"%s\"\n"
+			"\t::= { %s %d }\n\n", param_desc->param_name,
+			param_desc->param_name,
+			protocol_name, param_desc->param_id);
 
 	offset += strlen(tmp_buf);
 
