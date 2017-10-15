@@ -140,7 +140,7 @@ static void alarm_data_record(priv_info_t *priv, int index, unsigned char value)
 	}
 	alarm_msg->protocol_id = LOCAL_DI;
 	strcpy(alarm_msg->protocol_name, "DI");
-	strcpy(alarm_msg->protocol_desc, "干接点输入");
+	strcpy(alarm_msg->protocol_desc, param->di_desc);
 	alarm_msg->param_id = param->id;
 	strcpy(alarm_msg->param_name, param->di_name);
 	strcpy(alarm_msg->param_desc, param->device_name);
