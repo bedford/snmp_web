@@ -12,51 +12,45 @@
 		margin-top: 20px;
 	}
 
-	.table-head {
-		padding-right: 17px;
-		background-color: #4faeda;
-	}
-
 	.table-body {
 		width: 100%;
 		height: 85%;
     	overflow-y: auto;
 	}
 
-	.table-head table,
 	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
 
-	.table-head table tr {
+	.table-body table tr {
 		height: 40px;
 	}
 
-	.table-head table tr th {
+	.table-body table thead {
+		padding-right: 17px;
+		background-color: #4faeda;
+	}
+
+	.table-body table thead tr th {
 		width: 16%;
 		text-align: center;
 		color: #fff;
 	}
 
-	.table-body table tr {
-		height: 40px;
-		background-color: #e4eff5;
+	.table-body table tbody tr td {
+		border: 1px solid #4faeda;
+		text-align: left;
+		width: 16%;
+		color: #393c3d;
 	}
 
-	.table-body tr:nth-child(odd) {
+	.table-body table tbody tr:nth-child(odd) {
 		background-color: #dde6ea;
 	}
 
-	.table-body tr:nth-child(even) {
+	.table-body table tbody tr:nth-child(even) {
 		background-color: #fff;
-	}
-
-	.table-body table tr td {
-		width: 16%;
-		text-align: center;
-		color: #393c3d;
-		border: 1px solid #4faeda;
 	}
 
 	.operation_box {
@@ -151,20 +145,18 @@
 		</div>
 	</div>
 	<div id="table-box">
-		<div class="table-head">
-			<table>
-				<thead>
-					<th style="width:15%;">时间</th>
-					<th style="width:15%;">设备名称</th>
-					<th style="width:10%;">参数名称</th>
-					<th style="width:8%;">参数值</th>
-					<th style="width:7%;">开关量</th>
-					<th style="width:35%;">告警说明</th>
-				</thead>
-			</table>
-		</div>
 		<div class="table-body">
 			<table id="alarm_table">
+                <thead>
+                    <tr>
+                        <th style="width:15%;">时间</th>
+                        <th style="width:15%;">设备名称</th>
+                        <th style="width:10%;">参数名称</th>
+                        <th style="width:8%;">参数值</th>
+                        <th style="width:7%;">开关量</th>
+                        <th style="width:35%;">告警说明</th>
+                    </tr>
+				</thead>
 				<tbody>
 				</tbody>
 			</table>
@@ -172,7 +164,9 @@
 	</div>
 
     <div class="jq-dialog" id="hint_dialog" title="查询结果">
-		<label id="hint_detail"></label>
+		<div style="margin-top:10px;">
+			<p style="text-align:center;" id="hint_detail"></p>
+		</div>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
@@ -198,29 +192,16 @@
 				html+='<td style="width:8%;">' + item.analog_value + '</td>';
 				html+='<td style="width:7%;">' + item.enum_value + '</td>';
 				html+='<td style="width:35%;">' + item.alarm_desc + '</td>';
-				html+='</tr>'
+				html+='</tr>';
 			});
 			$("#alarm_table").append(html);
-
-			window.localStorage.removeItem("alarm_record");
-			window.localStorage.setItem("alarm_record", JSON.stringify(data_list));
 		}
 
 		function export_data() {
-			var collection = window.localStorage.getItem("alarm_record");
-			var data = JSON.parse(collection);
-			var title = new Array("时间", "设备名称", "参数名称", "参数值", "开关量", "告警说明");
-			JSONToExcelConvertor(data, "alarm_record", title);
-		}
-
-		function clear_alarm_record() {
-			window.localStorage.removeItem("alarm_record");
+			$('#alarm_table').tableExport({type:'excel', separator: ';', fileName:'alarm_record', escape:'false'});
 		}
 
 		function alarm_query() {
-			$("#alarm_table").empty();
-			$('#export_btn').removeClass('btn_enable');
-			$('#export_btn').removeAttr("onclick");
 			var json = new Object();
 			json.msg_type = "query_data";
 			json.cmd_type = "query_alarm_record";
@@ -238,6 +219,10 @@
 
 			json.cfg = cfg;
 			var data = $.toJSON(json);
+			$("#alarm_table tr:not(:first)").remove();
+			$('#export_btn').removeClass('btn_enable');
+			$('#export_btn').removeAttr("onclick");
+			$("#query_btn").attr("disabled","disabled");
 			$.ajax({
 			            url     : "/cgi-bin/common.cgi",
 			            type    : "POST",
@@ -263,7 +248,11 @@
 									}
 								});
 							}
+							$("#query_btn").removeAttr("disabled");
 			            },
+						error : function(msg, status) {
+							$("#query_btn").removeAttr("disabled");
+						}
 			        });
 		}
 
@@ -285,6 +274,7 @@
 			load_timepicker_default();
 			load_device_list(display_device_list);
 			load_di_list(dislplay_di_list);
+			alarm_query();
         })
     </script>
 </body>

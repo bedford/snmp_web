@@ -12,51 +12,45 @@
 		margin-top: 20px;
 	}
 
-	.table-head {
-		padding-right: 17px;
-		background-color: #4faeda;
-	}
-
 	.table-body {
 		width: 100%;
 		height: 85%;
     	overflow-y: auto;
 	}
 
-	.table-head table,
 	.table-body table {
 		width: 100%;
 		border-collapse: collapse;
 	}
 
-	.table-head table tr {
+	.table-body table tr {
 		height: 40px;
 	}
 
-	.table-head table tr th {
+	.table-body table thead {
+		padding-right: 17px;
+		background-color: #4faeda;
+	}
+
+	.table-body table thead tr th {
 		width: 16%;
 		text-align: center;
 		color: #fff;
 	}
 
-	.table-body table tr {
-		height: 40px;
-		background-color: #e4eff5;
+	.table-body table tbody tr td {
+		border: 1px solid #4faeda;
+		text-align: left;
+		width: 16%;
+		color: #393c3d;
 	}
 
-	.table-body tr:nth-child(odd) {
+	.table-body table tbody tr:nth-child(odd) {
 		background-color: #dde6ea;
 	}
 
-	.table-body tr:nth-child(even) {
+	.table-body table tbody tr:nth-child(even) {
 		background-color: #fff;
-	}
-
-	.table-body table tr td {
-		width: 16%;
-		text-align: center;
-		color: #393c3d;
-		border: 1px solid #4faeda;
 	}
 
 	.operation_box {
@@ -158,28 +152,28 @@
 		</div>
 	</div>
 	<div id="table-box">
-		<div class="table-head">
-			<table>
-				<thead>
-					<th>时间</th>
-					<th>设备名称</th>
-					<th>参数名称</th>
-					<th>模拟量</th>
-					<th>开关量</th>
-					<th>开关量描述</th>
-				</thead>
-			</table>
-		</div>
 		<div class="table-body">
 			<table id="data_table">
+                <thead>
+                    <tr>
+                        <th style="width:16%;">时间</th>
+                        <th style="width:16%;">设备名称</th>
+                        <th style="width:16%;">参数名称</th>
+                        <th style="width:10%;">模拟量</th>
+                        <th style="width:8%;">开关量</th>
+                        <th style="width:34%;">开关量描述</th>
+                    </tr>
+				</thead>
 				<tbody>
 				</tbody>
 			</table>
 		</div>
 	</div>
 
-	<div class="jq-dialog" id="hint_dialog" title="查询结果">
-		<label id="hint_detail"></label>
+    <div class="jq-dialog" id="hint_dialog" title="查询结果">
+		<div style="margin-top:10px;">
+			<p style="text-align:center;" id="hint_detail"></p>
+		</div>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
@@ -198,30 +192,20 @@
 		function traverse_data_record(data_list) {
 			var html="";
 			$.each(data_list, function(i, item) {
-				html+="<tr>";
-				html+="<td>"+item.created_time+"</td>";
-				html+="<td>"+item.protocol_desc+"</td>";
-				html+="<td>"+item.param_desc+"</td>";
-				html+="<td>"+item.analog_value+"</td>";
-				html+="<td>"+item.enum_value+"</td>";
-				html+="<td>"+item.enum_cn_desc+"</td>";
-				html+="</tr>"
+				html+='<tr>';
+				html+='<td style="width:16%;">'+item.created_time+'</td>';
+				html+='<td style="width:16%;">'+item.protocol_desc+'</td>';
+				html+='<td style="width:16%;">'+item.param_desc+'</td>';
+				html+='<td style="width:10%;">'+item.analog_value+'</td>';
+				html+='<td style="width:8%;">'+item.enum_value+'</td>';
+				html+='<td style="width:34%;">'+item.enum_cn_desc+'</td>';
+				html+='</tr>';
 			});
 			$("#data_table").append(html);
-
-			window.localStorage.removeItem("data_record");
-			window.localStorage.setItem("data_record", JSON.stringify(data_list));
-		}
-
-		function clear_data_record() {
-			window.localStorage.removeItem("data_record");
 		}
 
 		function export_data() {
-			var collection = window.localStorage.getItem("data_record");
-			var data = JSON.parse(collection);
-			var title = new Array("时间", "设备名称", "参数名称", "模拟量", "开关量", "开关量描述");
-			JSONToExcelConvertor(data, "data_record", title);
+			$('#data_table').tableExport({type:'excel', separator: ';', fileName:'data_record', escape:'false'});
 		}
 
 		function data_query() {
@@ -242,7 +226,7 @@
 
 			json.cfg = cfg;
 			var data = $.toJSON(json);
-			$("#data_table").empty();
+			$("#data_table tr:not(:first)").remove();
 			$('#export_btn').removeClass('btn_enable');
 			$('#export_btn').removeAttr("onclick");
 			$("#query_btn").attr("disabled","disabled");
@@ -304,6 +288,7 @@
 			load_timepicker_default();
 			load_device_list(display_device_list);
 			load_di_list(dislplay_di_list);
+			data_query();
         })
     </script>
 </body>
