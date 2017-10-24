@@ -137,8 +137,8 @@
     </div>
 
 	<div class="jq-dialog" id="hint_dialog" title="提示信息">
-		<div style="margin-top:10px;">
-			<p style="text-align:center;" id="hint_detail"></p>
+		<div style="margin-top:5px;">
+			<label id="hint_detail"></label>
 		</div>
 	</div>
 
@@ -319,7 +319,7 @@
 							$('#upgrade_btn').removeAttr("disabled");
 							var html = '';
 							if (msg.status == 0) {
-								html = '升级成功，重启设备后生效，需立即重启请按"确认"键';
+								html = '重启设备后生效，需立即重启请按"确认"键';
 								$('#hint_detail').html(html);
 								$('#hint_dialog').dialog({
 									resizable: false,
