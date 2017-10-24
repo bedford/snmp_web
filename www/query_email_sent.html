@@ -122,7 +122,7 @@
 	<link rel="stylesheet" href="css/cssReset.css">
 	<link rel="stylesheet" href="css/jquery-ui.min.css">
 </head>
-<body onbeforeunload="clear_email_record()">
+<body>
 	<div class="operation_box">
 		<div id="start_time_box">
 			<span>开始时间</span>
@@ -168,17 +168,18 @@
 	</div>
 
     <div class="jq-dialog" id="hint_dialog" title="查询结果">
-		<div style="margin-top:10px;">
-			<p style="text-align:center;" id="hint_detail"></p>
+		<div style="margin-top:5px;">
+			<label id="hint_detail"></label>
 		</div>
 	</div>
 
 	<script src="js/jquery-1.12.0.js"></script>
 	<script src="js/jquery-ui.min.js"></script>
 	<script src="js/jquery.json-2.3.min.js"></script>
-	<script src="js/export_excel.js"></script>
     <script src="js/query_history.js"></script>
 	<script src="js/WdatePicker.js"></script>
+	<script src="js/jquery.base64.js"></script>
+	<script src="js/jquery.table2excel.js"></script>
 
 	<script>
         if (window.sessionStorage.getItem("user_information") == ""
@@ -202,7 +203,14 @@
 		}
 
 		function export_data() {
-			$('#email_table').tableExport({type:'excel', separator: ';', fileName:'email_record', escape:'false'});
+			$('#email_table').table2excel({
+				exclude:".noEx1",
+				name: "Excel Document Name",
+				filename: "email_record",
+				exclude_img: true,
+				exclude_links: true,
+				exclude_inputs: true
+			});
 		}
 
 		function email_sent_query() {
