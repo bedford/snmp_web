@@ -169,7 +169,7 @@ static int compare_values(priv_info_t *priv, unsigned int index, property_t *pro
 							alarm_record_flag = 1;
 						}
 					} else {
-						if (current_value->enum_value < param_detail->up_free) { /* 当前值小于报警上限解除值时报警解除 */
+						if (current_value->enum_value <= param_detail->up_free) { /* 当前值小于报警上限解除值时报警解除 */
 							alarm_status = UP_ALARM_OFF;
 							alarm_record_flag = 1;
 						}
@@ -200,7 +200,7 @@ static int compare_values(priv_info_t *priv, unsigned int index, property_t *pro
 							alarm_record_flag = 1;
 						}
 					} else {
-						if (current_value->enum_value > param_detail->low_free) { /* 当前值大于报警下限解除值时报警解除 */
+						if (current_value->enum_value >= param_detail->low_free) { /* 当前值大于报警下限解除值时报警解除 */
 							alarm_status = LOW_ALARM_OFF;
 							alarm_record_flag = 1;
 						}
@@ -427,9 +427,7 @@ static int compare_values(priv_info_t *priv, unsigned int index, property_t *pro
 
 static int communication_fault(priv_info_t *priv, unsigned int index, property_t *property, int offset)
 {
-	list_t *last_value_list = property->last_param_value;
 	list_t *desc_list = property->param_desc;
-
 	param_desc_t *param_detail = NULL;
 
 	int list_size = desc_list->get_list_size(desc_list);
@@ -733,7 +731,6 @@ static void *rs232_process(void *arg)
                             record_com_fail(priv, i, 0);
                         }
                     } else if (ret == ERR_RETURN_LEN_ZERO) {
-                        //priv->rs232_data->realdata[i].cnt = 0;
                         if (com_fail_flag[i] == 0) {
                             com_fail_count[i] += 1;
                             if (com_fail_count[i] > 1) {

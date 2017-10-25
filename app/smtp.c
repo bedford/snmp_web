@@ -539,7 +539,6 @@ static int receive_response(priv_info_t *priv, command_entry_t *entry)
 	unsigned int finish_flag = 0;
 	while(!finish_flag) {
 		receive_data(priv, entry);
-        printf("func: %s, line %d, receive buf:%s\n", __func__, __LINE__, priv->recv_buf);
 
 		int len = strlen(priv->recv_buf);
 		int offset = 0;
