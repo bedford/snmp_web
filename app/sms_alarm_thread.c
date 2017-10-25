@@ -309,10 +309,10 @@ static void *sms_alarm_process(void *arg)
 	int count = 0;
 	char sca_code[32] = {0};
 	while (ret != 0) {
-		count++;
-		if (count >= 10) {
+		if (count >= 5) {
 			break;
 		}
+		count++;
 
 		printf("try to get sca time: %d\n", count);
 		if (priv->modem->connected(priv->modem)) {
