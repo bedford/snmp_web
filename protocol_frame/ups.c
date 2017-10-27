@@ -233,8 +233,7 @@ static int calculate_device_data(property_t *property, char *data, int len, list
     int ret = -1;
     switch (cmd->cmd_id) {
     case READ_UPS_STATUS_CMD:
-        calculate_device_status(cmd, param_desc_list, data, len, valid_value);
-        ret = 0;
+        ret = calculate_device_status(cmd, param_desc_list, data, len, valid_value);
         break;
     default:
         break;
