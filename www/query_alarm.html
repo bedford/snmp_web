@@ -199,11 +199,13 @@
 		}
 
 		function export_data() {
-			//$('#alarm_table').tableExport({type:'excel', separator: ';', fileName:'alarm_record', escape:'false'});
+			var date = new Date();
+			var download_filename = 'alarm_record' + date.getFullYear().toString() + addzero(date.getMonth() + 1)
+				+ addzero(date.getDate()) + '.xls';
 			$('#alarm_table').table2excel({
 				exclude:".noEx1",
 				name: "Excel Document Name",
-				filename: "alarm_record.xls",
+				filename: download_filename,
 				exclude_img: true,
 				exclude_links: true,
 				exclude_inputs: true

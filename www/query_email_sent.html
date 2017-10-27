@@ -203,10 +203,13 @@
 		}
 
 		function export_data() {
+			var date = new Date();
+			var download_filename = 'email_record' + date.getFullYear().toString() + addzero(date.getMonth() + 1)
+				+ addzero(date.getDate()) + '.xls';
 			$('#email_table').table2excel({
 				exclude:".noEx1",
 				name: "Excel Document Name",
-				filename: "email_record.xls",
+				filename: download_filename,
 				exclude_img: true,
 				exclude_links: true,
 				exclude_inputs: true
