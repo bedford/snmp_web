@@ -94,7 +94,7 @@ static void set_signal_handler(int signum, void func(int))
  */
 static int watchdog_open(void)
 {
-    int fd = open("/dev/watchdog",O_RDWR);
+    int fd = open("/dev/watchdog", O_RDWR);
     if(fd < 0){
         perror("/dev/watchdog");
         return -1;
@@ -766,8 +766,8 @@ int main(void)
     if (fd < 0) {
         exit(1);
     }
-    unsigned long timeout = 30;
-    watchdog_set_timeout(fd, timeout);	/* 设置看门狗超时时间，不得超过30秒 */
+    //unsigned long timeout = 30;
+    //watchdog_set_timeout(fd, timeout);	/* 设置看门狗超时时间，不得超过30秒 */
 
 	int reboot_flag = 0;
     while (runnable) {
@@ -874,11 +874,6 @@ int main(void)
 
 	free(priv);
 	priv = NULL;
-
-	int i = 0;
-    for (i = 0; i < 8; i++) {
-		drv_gpio_close(i);
-    }
 
 	if (reboot_flag == 1) {
 		reboot(RB_AUTOBOOT);
